@@ -10,9 +10,7 @@ return new class extends Migration
     {
         Schema::create('nutricion', function (Blueprint $table) {
             $table->id('id_nutricion');
-            $table->foreignId('id_usuario')
-                  ->constrained('users', 'id_usuario')
-                  ->onDelete('restrict');
+            $table->foreignId('user_id')->constrained();
             $table->text('informacion');
             $table->text('plan_dieta')->nullable();
             $table->date('fecha_asignacion');

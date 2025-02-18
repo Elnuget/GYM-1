@@ -10,9 +10,7 @@ return new class extends Migration
     {
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id('id_asistencia');
-            $table->foreignId('id_usuario')
-                  ->constrained('users', 'id_usuario')
-                  ->onDelete('restrict');
+            $table->foreignId('user_id')->constrained();
             $table->date('fecha_asistencia');
             $table->time('hora_ingreso');
             $table->time('hora_salida')->nullable();

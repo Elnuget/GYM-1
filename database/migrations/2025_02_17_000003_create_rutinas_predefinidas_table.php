@@ -10,9 +10,7 @@ return new class extends Migration
     {
         Schema::create('rutinas_predefinidas', function (Blueprint $table) {
             $table->id('id_rutina');
-            $table->foreignId('id_usuario')
-                  ->constrained('users', 'id_usuario')
-                  ->onDelete('restrict');
+            $table->foreignId('user_id')->constrained();
             $table->string('nombre_rutina');
             $table->text('descripcion');
             $table->string('objetivo');

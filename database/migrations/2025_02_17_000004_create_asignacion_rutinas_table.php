@@ -10,11 +10,9 @@ return new class extends Migration
     {
         Schema::create('asignacion_rutinas', function (Blueprint $table) {
             $table->id('id_asignacion');
+            $table->foreignId('user_id')->constrained();
             $table->foreignId('id_rutina')
                   ->constrained('rutinas_predefinidas', 'id_rutina')
-                  ->onDelete('restrict');
-            $table->foreignId('id_usuario')
-                  ->constrained('users', 'id_usuario')
                   ->onDelete('restrict');
             $table->date('fecha_asignacion');
             $table->enum('dia_semana', ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'])
