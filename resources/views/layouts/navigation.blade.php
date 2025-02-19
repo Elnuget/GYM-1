@@ -1,160 +1,142 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                    </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    
-                    <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')">
-                        {{ __('Membresías') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')">
-                        {{ __('Pagos') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('metodos-pago.index')" :active="request()->routeIs('metodos-pago.*')">
-                        {{ __('Métodos de Pago') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')">
-                        {{ __('Rutinas Predefinidas') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('asignacion-rutinas.index')" :active="request()->routeIs('asignacion-rutinas.*')">
-                        {{ __('Asignación de Rutinas') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')">
-                        {{ __('Asistencias') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')">
-                        {{ __('Nutrición') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('implementos.index')" :active="request()->routeIs('implementos.*')">
-                        {{ __('Implementos') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+<!-- Sidebar Navigation -->
+<nav class="fixed left-0 top-0 h-full w-64 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800 text-white shadow-xl">
+    <!-- Logo Section -->
+    <div class="p-6 border-b border-teal-600/50">
+        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
+            <x-application-logo class="block h-10 w-auto fill-current text-emerald-300" />
+            <span class="text-xl font-bold tracking-wider text-emerald-100">GymFlow</span>
+        </a>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            
-            <x-responsive-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')">
-                {{ __('Membresías') }}
-            </x-responsive-nav-link>
+    <!-- Navigation Links -->
+    <div class="mt-6 space-y-2 px-4">
+        <!-- Dashboard -->
+        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            {{ __('Panel') }}
+        </x-nav-link>
 
-            <x-responsive-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')">
-                {{ __('Pagos') }}
-            </x-responsive-nav-link>
+        <!-- Memberships -->
+        <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+            </svg>
+            {{ __('Membresías') }}
+        </x-nav-link>
 
-            <x-responsive-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')">
-                {{ __('Rutinas Predefinidas') }}
-            </x-responsive-nav-link>
+        <!-- Payments -->
+        <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            {{ __('Pagos') }}
+        </x-nav-link>
 
-            <x-responsive-nav-link :href="route('asignacion-rutinas.index')" :active="request()->routeIs('asignacion-rutinas.*')">
-                {{ __('Asignación de Rutinas') }}
-            </x-responsive-nav-link>
+        <!-- Payment Methods -->
+        <x-nav-link :href="route('metodos-pago.index')" :active="request()->routeIs('metodos-pago.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            {{ __('Métodos de Pago') }}
+        </x-nav-link>
 
-            <x-responsive-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')">
-                {{ __('Asistencias') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')">
-                {{ __('Nutrición') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('implementos.index')" :active="request()->routeIs('implementos.*')">
-                {{ __('Implementos') }}
-            </x-responsive-nav-link>
+        <!-- Training Section -->
+        <div class="mt-6 border-t border-teal-600/50 pt-4">
+            <span class="px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Entrenamiento</span>
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+        <!-- Routines -->
+        <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            {{ __('Rutinas Predefinidas') }}
+        </x-nav-link>
+
+        <!-- Routine Assignment -->
+        <x-nav-link :href="route('asignacion-rutinas.index')" :active="request()->routeIs('asignacion-rutinas.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            {{ __('Asignación de Rutinas') }}
+        </x-nav-link>
+
+        <!-- Attendance -->
+        <x-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            {{ __('Control de Asistencias') }}
+        </x-nav-link>
+
+        <!-- Nutrition -->
+        <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+            </svg>
+            {{ __('Nutrición') }}
+        </x-nav-link>
+
+        <!-- Equipment -->
+        <x-nav-link :href="route('implementos.index')" :active="request()->routeIs('implementos.*')" 
+            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+            {{ __('Implementos') }}
+        </x-nav-link>
+    </div>
+
+    <!-- User Profile Section -->
+    <div class="absolute bottom-0 w-full border-t border-teal-600/50">
+        <div class="p-4">
+            <div class="flex items-center p-3 rounded-lg bg-emerald-700/50 backdrop-blur-sm">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
+                        <span class="text-lg font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                    </div>
+                </div>
+                <div class="ml-3">
+                    <div class="text-sm font-medium text-emerald-100">{{ Auth::user()->name }}</div>
+                    <div class="text-xs text-emerald-300">{{ Auth::user()->email }}</div>
+                </div>
             </div>
 
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
+            <!-- Logout Button -->
+            <form method="POST" action="{{ route('logout') }}" class="mt-3">
+                @csrf
+                <button type="submit" class="w-full flex items-center p-3 text-gray-100 hover:bg-orange-500/20 hover:text-orange-200 rounded-lg transition-all duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    {{ __('Cerrar Sesión') }}
+                </button>
+            </form>
         </div>
     </div>
 </nav>
+
+<!-- Main Content Wrapper -->
+<div class="ml-64 min-h-screen bg-gray-50">
+    {{ $slot }}
+</div>

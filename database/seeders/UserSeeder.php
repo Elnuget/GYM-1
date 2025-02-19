@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
             'email' => 'cangulo009@outlook.es',
             'password' => Hash::make('gym'),
             'email_verified_at' => now(),
+            'rol' => 'admin'
         ]);
 
         User::create([
@@ -22,6 +23,7 @@ class UserSeeder extends Seeder
             'email' => 'jahxs2328@gmail.com',
             'password' => Hash::make('gym'),
             'email_verified_at' => now(),
+            'rol' => 'admin'
         ]);
     }
 } 

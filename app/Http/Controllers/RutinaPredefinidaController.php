@@ -15,8 +15,8 @@ class RutinaPredefinidaController extends Controller
 
     public function create()
     {
-        // Verificar si el usuario es admin o entrenador
-        if (!in_array(auth()->user()->rol, ['admin', 'entrenador'])) {
+        // Modificamos la verificación para incluir el rol 'admin'
+        if (!auth()->check() || !in_array(auth()->user()->rol, ['admin', 'entrenador'])) {
             abort(403, 'No tienes permiso para crear rutinas.');
         }
 
@@ -25,8 +25,8 @@ class RutinaPredefinidaController extends Controller
 
     public function store(Request $request)
     {
-        // Verificar si el usuario es admin o entrenador
-        if (!in_array(auth()->user()->rol, ['admin', 'entrenador'])) {
+        // También modificamos aquí la verificación
+        if (!auth()->check() || !in_array(auth()->user()->rol, ['admin', 'entrenador'])) {
             abort(403, 'No tienes permiso para crear rutinas.');
         }
 
@@ -37,9 +37,9 @@ class RutinaPredefinidaController extends Controller
             'estado' => 'required|in:activa,inactiva'
         ]);
 
-        // Agregar el id del usuario que crea la rutina (admin o entrenador)
+        // Agregamos el id del usuario que crea la rutina
         $validated['id_usuario'] = auth()->id();
-
+        
         RutinaPredefinida::create($validated);
 
         return redirect()->route('rutinas-predefinidas.index')
