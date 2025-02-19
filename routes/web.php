@@ -9,6 +9,7 @@ use App\Http\Controllers\AsignacionRutinaController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\NutricionController;
 use App\Http\Controllers\ImplementoController;
+use App\Http\Controllers\DuenoGimnasioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function () {
         ->name('asistencias.salida');
     Route::resource('nutricion', NutricionController::class);
     Route::resource('implementos', ImplementoController::class);
+    Route::resource('duenos-gimnasio', DuenoGimnasioController::class);
 });
 
 require __DIR__.'/auth.php';
