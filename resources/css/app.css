@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Importar estilos personalizados */
+@import 'custom.css';
+
+/* Estilos base adicionales */
+@layer base {
+    body {
+        @apply bg-gray-50;
+    }
+
+    h1 {
+        @apply text-2xl font-bold text-gray-900;
+    }
+
+    h2 {
+        @apply text-xl font-semibold text-gray-800;
+    }
+
+    h3 {
+        @apply text-lg font-medium text-gray-700;
+    }
+}
+
+/* Componentes personalizados */
+@layer components {
+    .page-header {
+        @apply mb-6;
+    }
+
+    .page-title {
+        @apply text-2xl font-bold text-gray-900;
+    }
+
+    .page-subtitle {
+        @apply mt-1 text-sm text-gray-500;
+    }
+}

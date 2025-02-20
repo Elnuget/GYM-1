@@ -1,135 +1,166 @@
+<!-- Mobile Menu Button (visible solo en móvil) -->
+<div class="fixed top-0 left-0 m-4 z-50 lg:hidden">
+    <button @click="mobileMenuOpen = !mobileMenuOpen" 
+            class="flex items-center p-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-colors duration-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </button>
+</div>
+
 <!-- Sidebar Navigation -->
-<nav class="fixed left-0 top-0 h-full w-64 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800 text-white shadow-xl">
+<nav x-data="{ isExpanded: false }" 
+     :class="{'w-16': !isExpanded, 'w-64': isExpanded}"
+     class="fixed left-0 top-0 h-screen bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800 text-white shadow-xl transition-all duration-300 ease-in-out z-40">
+    
+    <!-- Toggle Button -->
+    <button @click="isExpanded = !isExpanded" 
+            class="absolute -right-3 top-4 bg-emerald-600 rounded-full p-1 shadow-lg border-2 border-white z-50">
+        <svg class="w-4 h-4 text-white transform transition-transform" 
+             :class="{'rotate-180': !isExpanded}"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+
     <!-- Logo Section -->
-    <div class="p-6 border-b border-teal-600/50">
-        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-            <x-application-logo class="block h-10 w-auto fill-current text-emerald-300" />
-            <span class="text-xl font-bold tracking-wider text-emerald-100">GymFlow</span>
+    <div class="sticky top-0 z-10 border-b border-teal-600/50 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800">
+        <a href="{{ route('dashboard') }}" class="flex items-center justify-center p-4">
+            <x-application-logo class="block h-8 w-auto fill-current text-emerald-300" />
+            <span x-show="isExpanded" 
+                  x-transition:enter="transition-opacity duration-300"
+                  x-transition:enter-start="opacity-0"
+                  x-transition:enter-end="opacity-100"
+                  class="ml-3 text-xl font-bold tracking-wider text-emerald-100 whitespace-nowrap">GymFlow</span>
         </a>
     </div>
 
     <!-- Navigation Links -->
-    <div class="mt-6 space-y-2 px-4">
-        <!-- Dashboard -->
-        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-            </svg>
-            {{ __('Panel') }}
-        </x-nav-link>
+    <div class="flex flex-col h-[calc(100vh-180px)] overflow-y-auto py-4">
+        <div class="flex-1 space-y-1 px-2">
+            <!-- Dashboard -->
+            <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
+                class="flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <div class="flex items-center w-full">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                    <span x-show="isExpanded" 
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3 whitespace-nowrap overflow-hidden">{{ __('Panel') }}</span>
+                </div>
+            </x-nav-link>
 
-        <!-- Memberships -->
-        <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-            </svg>
-            {{ __('Membresías') }}
-        </x-nav-link>
+            <!-- Memberships -->
+            <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')" 
+                class="flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <div class="flex items-center w-full">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                    </svg>
+                    <span x-show="isExpanded"
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3 whitespace-nowrap overflow-hidden">{{ __('Membresías') }}</span>
+                </div>
+            </x-nav-link>
 
-        <!-- Payments -->
-        <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            {{ __('Pagos') }}
-        </x-nav-link>
+            <!-- Training Section Header -->
+            <div x-show="isExpanded" class="mt-6 mb-2">
+                <span class="px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Entrenamiento</span>
+            </div>
 
-        <!-- Payment Methods -->
-        <x-nav-link :href="route('metodos-pago.index')" :active="request()->routeIs('metodos-pago.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-            </svg>
-            {{ __('Métodos de Pago') }}
-        </x-nav-link>
+            <!-- Routines -->
+            <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')" 
+                class="flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <div class="flex items-center w-full">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span x-show="isExpanded"
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3 whitespace-nowrap overflow-hidden">{{ __('Rutinas Predefinidas') }}</span>
+                </div>
+            </x-nav-link>
 
-        <!-- Training Section -->
-        <div class="mt-6 border-t border-teal-600/50 pt-4">
-            <span class="px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Entrenamiento</span>
+            <!-- Routine Assignment -->
+            <x-nav-link :href="route('asignacion-rutinas.index')" :active="request()->routeIs('asignacion-rutinas.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span class="flex-1">{{ __('Asignación de Rutinas') }}</span>
+            </x-nav-link>
+
+            <!-- Management Section Header -->
+            <div class="mt-6 mb-2">
+                <span class="px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Gestión</span>
+            </div>
+
+            <!-- Attendance -->
+            <x-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span class="flex-1">{{ __('Control de Asistencias') }}</span>
+            </x-nav-link>
+
+            <!-- Nutrition -->
+            <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                <span class="flex-1">{{ __('Nutrición') }}</span>
+            </x-nav-link>
         </div>
-
-        <!-- Routines -->
-        <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            {{ __('Rutinas Predefinidas') }}
-        </x-nav-link>
-
-        <!-- Routine Assignment -->
-        <x-nav-link :href="route('asignacion-rutinas.index')" :active="request()->routeIs('asignacion-rutinas.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-            </svg>
-            {{ __('Asignación de Rutinas') }}
-        </x-nav-link>
-
-        <!-- Attendance -->
-        <x-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            {{ __('Control de Asistencias') }}
-        </x-nav-link>
-
-        <!-- Nutrition -->
-        <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-            </svg>
-            {{ __('Nutrición') }}
-        </x-nav-link>
-
-        <!-- Equipment -->
-        <x-nav-link :href="route('implementos.index')" :active="request()->routeIs('implementos.*')" 
-            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-            </svg>
-            {{ __('Implementos') }}
-        </x-nav-link>
     </div>
 
     <!-- User Profile Section -->
-    <div class="absolute bottom-0 w-full border-t border-teal-600/50">
-        <div class="p-4">
-            <div class="flex items-center p-3 rounded-lg bg-emerald-700/50 backdrop-blur-sm">
+    <div class="sticky bottom-0 w-full border-t border-teal-600/50 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800">
+        <div class="p-2">
+            <div class="flex items-center justify-center p-2 rounded-lg bg-emerald-700/50 backdrop-blur-sm">
                 <div class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
-                        <span class="text-lg font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
+                        <span class="text-sm font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
                     </div>
                 </div>
-                <div class="ml-3">
-                    <div class="text-sm font-medium text-emerald-100">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-emerald-300">{{ Auth::user()->email }}</div>
+                <div x-show="isExpanded" 
+                     x-transition:enter="transition-opacity duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     class="ml-3 flex-1 min-w-0 overflow-hidden">
+                    <div class="text-sm font-medium text-emerald-100 truncate">{{ Auth::user()->name }}</div>
+                    <div class="text-xs text-emerald-300 truncate">{{ Auth::user()->email }}</div>
                 </div>
             </div>
 
             <!-- Logout Button -->
-            <form method="POST" action="{{ route('logout') }}" class="mt-3">
+            <form method="POST" action="{{ route('logout') }}" class="mt-2">
                 @csrf
-                <button type="submit" class="w-full flex items-center p-3 text-gray-100 hover:bg-orange-500/20 hover:text-orange-200 rounded-lg transition-all duration-200">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="submit" class="w-full flex items-center justify-center p-2 text-gray-100 hover:bg-orange-500/20 hover:text-orange-200 rounded-lg transition-all duration-200">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
-                    {{ __('Cerrar Sesión') }}
+                    <span x-show="isExpanded"
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3 whitespace-nowrap overflow-hidden">{{ __('Cerrar Sesión') }}</span>
                 </button>
             </form>
         </div>
@@ -137,6 +168,19 @@
 </nav>
 
 <!-- Main Content Wrapper -->
-<div class="ml-64 min-h-screen bg-gray-50">
-    {{ $slot }}
+<div :class="{'ml-16': !isExpanded, 'ml-64': isExpanded}" 
+     class="min-h-screen bg-gray-50 transition-all duration-300">
+    <!-- Page Heading -->
+    @isset($header)
+        <header class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                {{ $header }}
+            </div>
+        </header>
+    @endisset
+
+    <!-- Page Content -->
+    <main class="py-6 px-4 sm:px-6 lg:px-8">
+        {{ $slot }}
+    </main>
 </div>

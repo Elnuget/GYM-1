@@ -1,0 +1,168 @@
+/* Estilos base para tarjetas */
+.card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200;
+}
+
+.card-header {
+    @apply px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-cyan-50;
+}
+
+.card-body {
+    @apply p-6;
+}
+
+/* Estilos para botones */
+.btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2;
+}
+
+.btn-primary {
+    @apply bg-gradient-to-r from-cyan-600 to-emerald-600 text-white hover:from-cyan-700 hover:to-emerald-700 shadow-sm hover:shadow;
+}
+
+.btn-secondary {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+}
+
+.btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600;
+}
+
+/* Estilos para formularios */
+.form-input {
+    @apply rounded-lg border-gray-300 focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 transition-all duration-200;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.form-group {
+    @apply mb-4;
+}
+
+/* Estilos para tablas */
+.table-container {
+    @apply overflow-x-auto rounded-lg border border-gray-100 bg-white;
+}
+
+.table {
+    @apply min-w-full divide-y divide-gray-200;
+}
+
+.table thead {
+    @apply bg-gradient-to-r from-emerald-50 to-cyan-50;
+}
+
+.table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-600;
+}
+
+.table tr {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+}
+
+/* Estilos para badges */
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-emerald-100 text-emerald-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+    @apply bg-red-100 text-red-800;
+}
+
+/* Estilos para pestañas */
+.tabs {
+    @apply border-b border-gray-200;
+}
+
+.tab {
+    @apply py-4 px-6 text-center border-b-2 font-medium text-sm cursor-pointer transition-all duration-200;
+}
+
+.tab-active {
+    @apply border-emerald-500 text-emerald-600;
+}
+
+.tab-inactive {
+    @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+}
+
+/* Estilos para modales */
+.modal-content {
+    @apply bg-white rounded-lg shadow-xl transform transition-all sm:w-full sm:max-w-lg;
+}
+
+.modal-header {
+    @apply px-6 py-4 bg-gradient-to-r from-emerald-50 to-cyan-50 border-b border-gray-100;
+}
+
+.modal-body {
+    @apply px-6 py-4;
+}
+
+.modal-footer {
+    @apply px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3;
+}
+
+/* Estilos para alertas */
+.alert {
+    @apply p-4 rounded-lg mb-4;
+}
+
+.alert-success {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.alert-warning {
+    @apply bg-yellow-50 text-yellow-700 border border-yellow-200;
+}
+
+.alert-danger {
+    @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+/* Animaciones */
+.fade-enter {
+    @apply transition-opacity duration-300 ease-out;
+}
+
+.fade-enter-from {
+    @apply opacity-0;
+}
+
+.fade-enter-to {
+    @apply opacity-100;
+}
+
+/* Estilos para la navegación */
+.nav-section {
+    @apply mt-6 border-t border-teal-600/50 pt-4;
+}
+
+.nav-header {
+    @apply px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider;
+}
+
+/* Estilos para el scroll */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 23, 42, 0.2) rgba(15, 23, 42, 0.1);
+}
+
+/* Estilos para tooltips */
+.tooltip {
+    @apply absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm;
+} 
