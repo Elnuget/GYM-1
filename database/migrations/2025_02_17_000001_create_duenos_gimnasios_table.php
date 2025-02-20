@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id('id_dueno');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('nombre_comercial');
-            $table->string('telefono', 20)->nullable();
-            $table->string('direccion')->nullable();
             $table->timestamps();
         });
     }

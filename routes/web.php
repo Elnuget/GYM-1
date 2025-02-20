@@ -10,6 +10,8 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\NutricionController;
 use App\Http\Controllers\ImplementoController;
 use App\Http\Controllers\DuenoGimnasioController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -52,6 +54,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('nutricion', NutricionController::class);
     Route::resource('implementos', ImplementoController::class);
     Route::resource('duenos-gimnasio', DuenoGimnasioController::class);
+
+    // Rutas para roles y usuarios (protegidas con middleware de admin)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::resource('roles', RoleController::class);
+        Route::resource('users', UserController::class);
+    });
 });
 
 require __DIR__.'/auth.php';
