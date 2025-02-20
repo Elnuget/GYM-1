@@ -15,3 +15,7 @@ php artisan route:clear
 php artisan route:cache
 
 para actualizar repositorio git reset --hard origin/master git pull origin master sudo chmod 777 storage/logs/ -R sudo chmod 777 storage/ -R sudo service php8.3-fpm restart sudo service nginx restart sudo php artisan config:clear sudo php artisan config:cache sudo php artisan route:clear sudo php artisan route:cache
+
+composer require spatie/laravel-permission
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+php artisan migrate
