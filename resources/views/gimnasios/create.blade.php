@@ -14,11 +14,12 @@
 
                         <div>
                             <label for="dueno_id" class="block text-sm font-medium text-gray-700">Dueño del Gimnasio</label>
-                            <select id="dueno_id" name="dueno_id" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md @error('dueno_id') border-red-500 @enderror">
+                            <select id="dueno_id" name="dueno_id" required 
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md @error('dueno_id') border-red-500 @enderror">
                                 <option value="">Seleccione un dueño</option>
-                                @foreach(\App\Models\DuenoGimnasio::all() as $dueno)
-                                    <option value="{{ $dueno->id_dueno }}" {{ old('dueno_id') == $dueno->id_dueno ? 'selected' : '' }}>
-                                        {{ $dueno->nombre_comercial }}
+                                @foreach($duenos as $dueno)
+                                    <option value="{{ $dueno->id }}" {{ old('dueno_id') == $dueno->id ? 'selected' : '' }}>
+                                        {{ $dueno->name }} - {{ $dueno->email }}
                                     </option>
                                 @endforeach
                             </select>

@@ -15,7 +15,9 @@ class AsistenciaController extends Controller
             ->orderBy('fecha_asistencia', 'desc')
             ->orderBy('hora_ingreso', 'desc')
             ->paginate(10);
-        return view('asistencias.index', compact('asistencias'));
+        $usuarios = User::where('rol', 'cliente')->get();
+        
+        return view('asistencias.index', compact('asistencias', 'usuarios'));
     }
 
     public function create()

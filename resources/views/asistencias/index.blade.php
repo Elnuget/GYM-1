@@ -1,117 +1,110 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Control de Asistencias') }}
-        </h2>
-    </x-slot>
+    <div x-data="{ 
+        isModalOpen: false,
+        currentAsistencia: null,
+        toggleModal() {
+            this.isModalOpen = !this.isModalOpen;
+        }
+    }">
+        <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Header con gradiente -->
+                <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-white">
+                        Control de Asistencias
+                    </h2>
+                    <button @click="toggleModal()" 
+                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Nuevo Registro
+                    </button>
+                </div>
 
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    @if (session('success'))
-                        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
-                            {{ session('success') }}
-                        </div>
-                    @endif
+                @if(session('success'))
+                    <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        {{ session('success') }}
+                    </div>
+                @endif
 
-                    @if (session('error'))
-                        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                            {{ session('error') }}
-                        </div>
-                    @endif
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        {{ session('error') }}
+                    </div>
+                @endif
 
-                    <div class="mb-4 flex justify-between items-center">
-                        <div>
-                            <a href="{{ route('asistencias.create') }}" 
-                               class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
-                                Nuevo Registro
-                            </a>
-                        </div>
-                        
-                        <!-- Formulario de Registro Rápido -->
-                        <form action="{{ route('asistencias.entrada') }}" method="POST" class="flex gap-2">
-                            @csrf
+                <!-- Formulario de Registro Rápido -->
+                <div class="mb-6 p-4 bg-white rounded-lg shadow-md">
+                    <form action="{{ route('asistencias.entrada') }}" method="POST" class="flex gap-4 items-center">
+                        @csrf
+                        <div class="flex-grow">
                             <select name="id_usuario" 
-                                    class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    class="w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                 <option value="">Seleccionar cliente</option>
                                 @foreach(App\Models\User::where('rol', 'cliente')->get() as $usuario)
                                     <option value="{{ $usuario->id_usuario }}">{{ $usuario->name }}</option>
                                 @endforeach
                             </select>
-                            <button type="submit" 
-                                    class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
-                                Registrar Entrada
-                            </button>
-                        </form>
-                    </div>
+                        </div>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md">
+                            Registrar Entrada
+                        </button>
+                    </form>
+                </div>
 
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <!-- Tabla -->
+                <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                    <table class="min-w-full divide-y divide-emerald-200">
+                        <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
                             <tr>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Cliente
-                                </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Fecha
-                                </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Entrada
-                                </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Salida
-                                </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Estado
-                                </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Acciones
-                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Entrada</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Salida</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-emerald-100">
                             @foreach ($asistencias as $asistencia)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $asistencia->usuario->name }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $asistencia->fecha_asistencia->format('d/m/Y') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ \Carbon\Carbon::parse($asistencia->hora_ingreso)->format('H:i') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $asistencia->hora_salida ? \Carbon\Carbon::parse($asistencia->hora_salida)->format('H:i') : 'No registrada' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                                             {{ $asistencia->estado === 'presente' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                             {{ ucfirst($asistencia->estado) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex space-x-2">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex space-x-3">
                                             @if(!$asistencia->hora_salida)
-                                                <form action="{{ route('asistencias.salida', $asistencia) }}" 
-                                                      method="POST" 
-                                                      class="inline">
+                                                <form action="{{ route('asistencias.salida', $asistencia) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit" 
-                                                            class="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600">
+                                                            class="text-emerald-600 hover:text-emerald-900">
                                                         Registrar Salida
                                                     </button>
                                                 </form>
                                             @endif
-
-                                            <form action="{{ route('asistencias.destroy', $asistencia) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('¿Estás seguro?')" 
-                                                  class="inline">
+                                            <form action="{{ route('asistencias.destroy', $asistencia) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                        class="px-3 py-1 text-white bg-red-500 rounded hover:bg-red-600">
+                                                        class="text-red-600 hover:text-red-900"
+                                                        onclick="return confirm('¿Está seguro?')">
                                                     Eliminar
                                                 </button>
                                             </form>
@@ -121,9 +114,81 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
 
-                    <div class="mt-4">
-                        {{ $asistencias->links() }}
+                <div class="mt-4">
+                    {{ $asistencias->links() }}
+                </div>
+
+                <!-- Modal Crear -->
+                <div x-show="isModalOpen" 
+                     class="fixed inset-0 z-50 overflow-y-auto"
+                     style="display: none;">
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                    <div class="flex items-center justify-center min-h-screen p-4">
+                        <div class="relative bg-gradient-to-br from-white to-emerald-50 rounded-xl max-w-md w-full shadow-xl">
+                            <div class="p-6">
+                                <div class="absolute inset-x-0 top-0 bg-gradient-to-r from-emerald-600 to-teal-600 h-2 rounded-t-xl"></div>
+                                <h2 class="text-lg font-medium text-emerald-900 mb-6 mt-4">
+                                    Registrar Nueva Asistencia
+                                </h2>
+                                <form action="{{ route('asistencias.store') }}" method="POST">
+                                    @csrf
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Cliente</label>
+                                            <select name="id_usuario" required
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="">Seleccione un cliente</option>
+                                                @foreach($usuarios as $usuario)
+                                                    <option value="{{ $usuario->id_usuario }}">{{ $usuario->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Fecha</label>
+                                            <input type="date" name="fecha_asistencia" required
+                                                   value="{{ now()->format('Y-m-d') }}"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Hora de Ingreso</label>
+                                            <input type="time" name="hora_ingreso" required
+                                                   value="{{ now()->format('H:i') }}"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Hora de Salida (Opcional)</label>
+                                            <input type="time" name="hora_salida"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Estado</label>
+                                            <select name="estado" required
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="presente">Presente</option>
+                                                <option value="ausente">Ausente</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6 flex justify-end space-x-3">
+                                        <button type="button" @click="toggleModal()"
+                                                class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors duration-200">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit"
+                                                class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md">
+                                            Registrar Asistencia
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

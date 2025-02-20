@@ -25,7 +25,6 @@ class RutinaPredefinidaController extends Controller
 
     public function store(Request $request)
     {
-        // También modificamos aquí la verificación
         if (!auth()->check() || !in_array(auth()->user()->rol, ['admin', 'entrenador'])) {
             abort(403, 'No tienes permiso para crear rutinas.');
         }
@@ -33,23 +32,30 @@ class RutinaPredefinidaController extends Controller
         $validated = $request->validate([
             'nombre_rutina' => 'required|string|max:255',
             'descripcion' => 'required|string',
-            'objetivo' => 'required|string',
-            'estado' => 'required|in:activa,inactiva'
+            'objetivo' => 'required|in:fuerza,resistencia,tonificacion,perdida_peso,ganancia_muscular,flexibilidad,rehabilitacion,mantenimiento',
+            'estado' => 'required|in:activo,inactivo'
         ]);
 
-        // Agregamos el id del usuario que crea la rutina
-        $validated['id_usuario'] = auth()->id();
-        
-        RutinaPredefinida::create($validated);
+        try {
+            $validated['id_entrenador'] = auth()->id();
+            $validated['fecha_creacion'] = now()->format('Y-m-d');
 
-        return redirect()->route('rutinas-predefinidas.index')
-            ->with('success', 'Rutina creada exitosamente');
+            $rutina = RutinaPredefinida::create($validated);
+
+            return redirect()->route('rutinas-predefinidas.index')
+                ->with('success', 'Rutina creada exitosamente');
+        } catch (\Exception $e) {
+            \Log::error('Error al crear rutina: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error al crear la rutina: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function edit(RutinaPredefinida $rutinaPredefinida)
     {
         // Permitir editar solo al creador o al admin
-        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_usuario) {
+        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_entrenador) {
             abort(403, 'No tienes permiso para editar esta rutina.');
         }
 
@@ -58,16 +64,15 @@ class RutinaPredefinidaController extends Controller
 
     public function update(Request $request, RutinaPredefinida $rutinaPredefinida)
     {
-        // Permitir editar solo al creador o al admin
-        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_usuario) {
+        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_entrenador) {
             abort(403, 'No tienes permiso para editar esta rutina.');
         }
 
         $validated = $request->validate([
             'nombre_rutina' => 'required|string|max:255',
             'descripcion' => 'required|string',
-            'objetivo' => 'required|string',
-            'estado' => 'required|in:activa,inactiva'
+            'objetivo' => 'required|in:fuerza,resistencia,tonificacion,perdida_peso,ganancia_muscular,flexibilidad,rehabilitacion,mantenimiento',
+            'estado' => 'required|in:activo,inactivo'
         ]);
 
         $rutinaPredefinida->update($validated);
@@ -79,7 +84,7 @@ class RutinaPredefinidaController extends Controller
     public function destroy(RutinaPredefinida $rutinaPredefinida)
     {
         // Permitir eliminar solo al creador o al admin
-        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_usuario) {
+        if (auth()->user()->rol !== 'admin' && auth()->id() !== $rutinaPredefinida->id_entrenador) {
             abort(403, 'No tienes permiso para eliminar esta rutina.');
         }
 

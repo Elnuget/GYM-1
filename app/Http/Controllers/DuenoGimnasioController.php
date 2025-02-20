@@ -64,6 +64,15 @@ class DuenoGimnasioController extends Controller
             'direccion' => 'required|string|max:255'
         ]);
 
+        // Primero actualizamos los datos básicos
+        $duenosGimnasio->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'telefono' => $request->telefono,
+            'direccion' => $request->direccion
+        ]);
+
+        // Si se proporcionó una nueva contraseña
         if ($request->filled('password')) {
             $request->validate([
                 'password' => 'required|string|min:8|confirmed',
@@ -73,13 +82,6 @@ class DuenoGimnasioController extends Controller
                 'password' => Hash::make($request->password),
             ]);
         }
-
-        $duenosGimnasio->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion
-        ]);
 
         return redirect()->route('duenos-gimnasio.index')
             ->with('success', 'Dueño de gimnasio actualizado exitosamente');

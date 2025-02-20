@@ -11,7 +11,8 @@ class MembresiaController extends Controller
     public function index()
     {
         $membresias = Membresia::with('usuario')->paginate(10);
-        return view('membresias.index', compact('membresias'));
+        $usuarios = User::all();
+        return view('membresias.index', compact('membresias', 'usuarios'));
     }
 
     public function create()
@@ -43,8 +44,9 @@ class MembresiaController extends Controller
 
     public function edit(Membresia $membresia)
     {
-        $usuarios = User::all();
-        return view('membresias.edit', compact('membresia', 'usuarios'));
+        $membresia->fecha_compra = $membresia->fecha_compra->format('Y-m-d');
+        $membresia->fecha_vencimiento = $membresia->fecha_vencimiento->format('Y-m-d');
+        return response()->json($membresia);
     }
 
     public function update(Request $request, Membresia $membresia)

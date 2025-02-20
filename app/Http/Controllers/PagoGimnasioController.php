@@ -14,7 +14,14 @@ class PagoGimnasioController extends Controller
     public function index()
     {
         $pagos = PagoGimnasio::with('dueno')->get();
-        return view('pagos-gimnasios.index', compact('pagos'));
+        $duenos = DuenoGimnasio::all();
+        $metodos_pago = [
+            'tarjeta_credito' => 'Tarjeta de Crédito',
+            'efectivo' => 'Efectivo',
+            'transferencia_bancaria' => 'Transferencia Bancaria'
+        ];
+        
+        return view('pagos-gimnasios.index', compact('pagos', 'duenos', 'metodos_pago'));
     }
 
     /**

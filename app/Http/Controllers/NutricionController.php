@@ -13,7 +13,8 @@ class NutricionController extends Controller
         $registros = Nutricion::with('usuario')
             ->orderBy('fecha_asignacion', 'desc')
             ->paginate(10);
-        return view('nutricion.index', compact('registros'));
+        $usuarios = User::where('rol', 'cliente')->get();
+        return view('nutricion.index', compact('registros', 'usuarios'));
     }
 
     public function create()

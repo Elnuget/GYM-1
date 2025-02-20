@@ -56,7 +56,8 @@ Route::middleware('auth')->group(function () {
         ->name('asistencias.salida');
     Route::resource('nutricion', NutricionController::class);
     Route::resource('implementos', ImplementoController::class);
-    Route::resource('duenos-gimnasio', DuenoGimnasioController::class);
+    Route::resource('duenos-gimnasio', DuenoGimnasioController::class)
+        ->middleware(['auth', 'verified']);
     Route::resource('gimnasios', GimnasioController::class);
     Route::resource('clientes', ClienteController::class);
     Route::resource('pagos-gimnasios', PagoGimnasioController::class);

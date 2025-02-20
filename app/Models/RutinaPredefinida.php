@@ -15,16 +15,17 @@ class RutinaPredefinida extends Model
         'descripcion',
         'objetivo',
         'estado',
-        'id_usuario'
+        'id_entrenador',
+        'fecha_creacion'
     ];
 
     protected $casts = [
-        'estado' => 'string'
+        'fecha_creacion' => 'date'
     ];
 
     public function entrenador(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_usuario', 'id_usuario');
+        return $this->belongsTo(User::class, 'id_entrenador', 'id');
     }
 
     public function getRouteKeyName()

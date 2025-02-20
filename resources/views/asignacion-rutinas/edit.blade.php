@@ -42,7 +42,8 @@
                                 @foreach($rutinas as $rutina)
                                     <option value="{{ $rutina->id_rutina }}" 
                                             {{ old('id_rutina', $asignacionRutina->id_rutina) == $rutina->id_rutina ? 'selected' : '' }}>
-                                        {{ $rutina->nombre_rutina }}
+                                        {{ $rutina->nombre_rutina }} - {{ ucfirst($rutina->objetivo) }}
+                                        ({{ $rutina->entrenador->name }})
                                     </option>
                                 @endforeach
                             </select>

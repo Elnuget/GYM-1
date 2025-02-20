@@ -14,7 +14,8 @@ class ClienteController extends Controller
     public function index()
     {
         $clientes = Cliente::with('gimnasio')->get();
-        return view('clientes.index', compact('clientes'));
+        $gimnasios = Gimnasio::all();
+        return view('clientes.index', compact('clientes', 'gimnasios'));
     }
 
     /**

@@ -11,16 +11,10 @@ class AsignacionRutinaController extends Controller
 {
     public function index()
     {
-        $asignaciones = AsignacionRutina::with(['rutina', 'usuario'])
-            ->paginate(10);
-        return view('asignacion-rutinas.index', compact('asignaciones'));
-    }
-
-    public function create()
-    {
-        $rutinas = RutinaPredefinida::where('activo', true)->get();
+        $asignaciones = AsignacionRutina::with(['rutina', 'usuario'])->paginate(10);
+        $rutinas = RutinaPredefinida::where('estado', 'activo')->get();
         $usuarios = User::where('rol', 'cliente')->get();
-        return view('asignacion-rutinas.create', compact('rutinas', 'usuarios'));
+        return view('asignacion-rutinas.index', compact('asignaciones', 'rutinas', 'usuarios'));
     }
 
     public function store(Request $request)
@@ -36,13 +30,6 @@ class AsignacionRutinaController extends Controller
 
         return redirect()->route('asignacion-rutinas.index')
             ->with('success', 'Rutina asignada exitosamente');
-    }
-
-    public function edit(AsignacionRutina $asignacionRutina)
-    {
-        $rutinas = RutinaPredefinida::where('activo', true)->get();
-        $usuarios = User::where('rol', 'cliente')->get();
-        return view('asignacion-rutinas.edit', compact('asignacionRutina', 'rutinas', 'usuarios'));
     }
 
     public function update(Request $request, AsignacionRutina $asignacionRutina)

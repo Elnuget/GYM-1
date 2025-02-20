@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('rol', ['admin', 'entrenador', 'dueño', 'cliente'])->default('cliente');
-            $table->string('telefono', 20)->nullable();
+            $table->string('telefono')->nullable();
             $table->string('direccion')->nullable();
             $table->rememberToken();
             $table->timestamps();
