@@ -12,6 +12,9 @@ use App\Http\Controllers\ImplementoController;
 use App\Http\Controllers\DuenoGimnasioController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GimnasioController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\PagoGimnasioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -54,6 +57,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('nutricion', NutricionController::class);
     Route::resource('implementos', ImplementoController::class);
     Route::resource('duenos-gimnasio', DuenoGimnasioController::class);
+    Route::resource('gimnasios', GimnasioController::class);
+    Route::resource('clientes', ClienteController::class);
+    Route::resource('pagos-gimnasios', PagoGimnasioController::class);
 
     // Rutas para roles y usuarios (protegidas con middleware de admin)
     Route::middleware(['role:admin'])->group(function () {

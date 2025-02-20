@@ -137,6 +137,36 @@
                 <span class="flex-1">{{ __('Dueños de Gimnasios') }}</span>
             </x-nav-link>
 
+            <!-- Gimnasios -->
+            <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="flex-1">{{ __('Gimnasios') }}</span>
+            </x-nav-link>
+
+            <!-- Pagos de Gimnasios -->
+            <x-nav-link :href="route('pagos-gimnasios.index')" :active="request()->routeIs('pagos-gimnasios.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span class="flex-1">{{ __('Pagos de Gimnasios') }}</span>
+            </x-nav-link>
+
+            <!-- Clientes -->
+            <x-nav-link :href="route('clientes.index')" :active="request()->routeIs('clientes.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="flex-1">{{ __('Clientes') }}</span>
+            </x-nav-link>
+
             <!-- Attendance -->
             <x-nav-link :href="route('asistencias.index')" :active="request()->routeIs('asistencias.*')" 
                 class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
@@ -156,6 +186,7 @@
                 </svg>
                 <span class="flex-1">{{ __('Nutrición') }}</span>
             </x-nav-link>
+            
         </div>
     </div>
 
