@@ -10,10 +10,10 @@
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <div class="mb-4">
-                        <a href="{{ route('membresias.create') }}" 
-                           class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
+                        <button onclick="openCreateModal()" 
+                                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
                             Nueva Membresía
-                        </a>
+                        </button>
                     </div>
 
                     <table class="min-w-full divide-y divide-gray-200">
@@ -57,10 +57,10 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex space-x-2">
-                                            <a href="{{ route('membresias.edit', $membresia) }}" 
-                                               class="px-3 py-1 text-white bg-yellow-500 rounded hover:bg-yellow-600">
+                                            <button onclick="openEditModal({{ $membresia->id }})" 
+                                                    class="px-3 py-1 text-white bg-yellow-500 rounded hover:bg-yellow-600">
                                                 Editar
-                                            </a>
+                                            </button>
                                             
                                             @if($membresia->tipo_membresia === 'por_visitas')
                                                 <form action="{{ route('membresias.registrar-visita', $membresia) }}" 
@@ -98,4 +98,76 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Creación -->
+    <div id="createModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            
+            <div class="relative bg-white rounded-lg w-full max-w-2xl">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Nueva Membresía</h3>
+                    <form id="createForm" action="{{ route('membresias.store') }}" method="POST">
+                        @csrf
+                        <!-- Contenido del formulario de creación -->
+                        <!-- Se cargará dinámicamente -->
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            
+            <div class="relative bg-white rounded-lg w-full max-w-2xl">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Editar Membresía</h3>
+                    <form id="editForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <!-- Contenido del formulario de edición -->
+                        <!-- Se cargará dinámicamente -->
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCreateModal() {
+            fetch('{{ route("membresias.create") }}')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('createForm').innerHTML = html;
+                    document.getElementById('createModal').classList.remove('hidden');
+                });
+        }
+
+        function openEditModal(id) {
+            fetch(`/membresias/${id}/edit`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('editForm').innerHTML = html;
+                    document.getElementById('editForm').action = `/membresias/${id}`;
+                    document.getElementById('editModal').classList.remove('hidden');
+                });
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Cerrar modales al hacer clic fuera de ellos
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('fixed inset-0');
+            for (const modal of modals) {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+        }
+    </script>
 </x-app-layout> 
