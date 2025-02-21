@@ -419,6 +419,18 @@
                     <div class="text-xs text-emerald-300 truncate">{{ Auth::user()->email }}</div>
                 </div>
             </div>
+            <!-- Botón de Cerrar Sesión -->
+            <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                @csrf
+                <button type="submit" 
+                        class="w-full flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-orange-500/20 hover:text-orange-200 transition-all duration-200">
+                    <svg class="w-5 h-5" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span x-cloak x-show="isExpanded">{{ __('Cerrar Sesión') }}</span>
+                </button>
+            </form>
         </div>
     </div>
 </nav>
