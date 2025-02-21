@@ -16,13 +16,12 @@ class Gimnasio extends Model
         'nombre',
         'direccion',
         'telefono',
-        'email',
         'dueno_id'
     ];
 
     public function dueno()
     {
-        return $this->belongsTo(DuenoGimnasio::class, 'dueno_id', 'id_dueno');
+        return $this->belongsTo(User::class, 'dueno_id', 'id');
     }
 
     public function clientes()

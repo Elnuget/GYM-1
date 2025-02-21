@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('duenos_gimnasios', function (Blueprint $table) {
             $table->id('id_dueno');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('nombre_comercial');
+            $table->string('nombre_comercial')->nullable();
+            $table->string('telefono_gimnasio')->nullable();
+            $table->string('direccion_gimnasio')->nullable();
             $table->timestamps();
         });
     }

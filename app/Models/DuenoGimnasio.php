@@ -14,7 +14,9 @@ class DuenoGimnasio extends Model
 
     protected $fillable = [
         'user_id',
-        'nombre_comercial'
+        'nombre_comercial',
+        'telefono_gimnasio',
+        'direccion_gimnasio'
     ];
 
     public function user()

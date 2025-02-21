@@ -17,7 +17,7 @@
 
                         <div>
                             <h5 class="text-sm font-medium text-gray-500">Dueño</h5>
-                            <p class="mt-1 text-lg text-gray-900">{{ $gimnasio->dueno->nombre_comercial }}</p>
+                            <p class="mt-1 text-lg text-gray-900">{{ $gimnasio->dueno->name }}</p>
                         </div>
 
                         <div>

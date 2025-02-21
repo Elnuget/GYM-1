@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
@@ -55,33 +57,147 @@ class RegisterController extends Controller
 
     public function registerDueno(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'telefono' => ['required', 'string', 'max:20'],
-            'direccion' => ['required', 'string', 'max:255'],
-            'nombre_comercial' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        try {
+            // Validar todos los campos
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'telefono' => 'required|string|max:20',
+                'direccion' => 'required|string|max:255',
+            ], [], [
+                'name' => 'nombre',
+                'email' => 'correo electrónico',
+                'password' => 'contraseña',
+                'telefono' => 'teléfono personal',
+                'direccion' => 'dirección personal',
+            ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'rol' => 'dueño',
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-        ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-        DuenoGimnasio::create([
-            'user_id' => $user->id,
-            'nombre_comercial' => $request->nombre_comercial,
-        ]);
+            // Iniciar transacción para asegurar que todo se guarde o nada
+            DB::beginTransaction();
 
-        event(new Registered($user));
+            try {
+                // 1. Crear el usuario (dueño)
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'telefono' => $request->telefono,
+                    'direccion' => $request->direccion,
+                    'rol' => 'dueño'
+                ]);
 
-        Auth::login($user);
+                // 2. Crear el registro de dueño_gimnasio
+                $duenoGimnasio = DuenoGimnasio::create([
+                    'user_id' => $user->id
+                ]);
 
-        return redirect()->route('dashboard');
+                // Si todo salió bien, confirmar la transacción
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Registro completado con éxito',
+                    'dueno_id' => $duenoGimnasio->id
+                ]);
+
+            } catch (\Exception $e) {
+                // Si algo salió mal, deshacer todos los cambios
+                DB::rollBack();
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al crear el registro: ' . $e->getMessage()
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function registerGimnasio(Request $request)
+    {
+        try {
+            // Validar los campos del gimnasio
+            $validator = Validator::make($request->all(), [
+                'dueno_id' => 'required|exists:duenos_gimnasio,id',
+                'nombre_comercial' => 'required|string|max:255',
+                'telefono_gimnasio' => 'required|string|max:20',
+                'direccion_gimnasio' => 'required|string|max:255',
+            ], [], [
+                'dueno_id' => 'ID del dueño',
+                'nombre_comercial' => 'nombre comercial del gimnasio',
+                'telefono_gimnasio' => 'teléfono del gimnasio',
+                'direccion_gimnasio' => 'dirección del gimnasio',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Iniciar transacción
+            DB::beginTransaction();
+
+            try {
+                // Obtener el dueño del gimnasio
+                $duenoGimnasio = DuenoGimnasio::find($request->dueno_id);
+
+                if (!$duenoGimnasio) {
+                    throw new \Exception('No se encontró el registro del dueño del gimnasio');
+                }
+
+                // Actualizar el dueño del gimnasio con la información del gimnasio
+                $duenoGimnasio->update([
+                    'nombre_comercial' => $request->nombre_comercial,
+                    'telefono_gimnasio' => $request->telefono_gimnasio,
+                    'direccion_gimnasio' => $request->direccion_gimnasio
+                ]);
+
+                // Crear el gimnasio
+                $gimnasio = Gimnasio::create([
+                    'nombre' => $request->nombre_comercial,
+                    'telefono' => $request->telefono_gimnasio,
+                    'direccion' => $request->direccion_gimnasio,
+                    'dueno_id' => $duenoGimnasio->id
+                ]);
+
+                // Confirmar la transacción
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gimnasio registrado con éxito'
+                ]);
+
+            } catch (\Exception $e) {
+                // Si algo sale mal, deshacer los cambios
+                DB::rollBack();
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al registrar el gimnasio: ' . $e->getMessage()
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

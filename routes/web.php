@@ -75,6 +75,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register/cliente', [RegisterController::class, 'registerCliente'])->name('register.cliente');
     Route::post('/register/dueno', [RegisterController::class, 'registerDueno'])->name('register.dueno');
+    Route::post('/register/gimnasio', [RegisterController::class, 'registerGimnasio'])->name('register.gimnasio');
 });
 
 require __DIR__.'/auth.php';
