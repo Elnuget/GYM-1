@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
     });
+
+    Route::get('/completar-registro', [RegisterController::class, 'completarRegistro'])->name('completar.registro');
+    Route::post('/completar-registro', [RegisterController::class, 'completarRegistroStore'])->name('completar.registro.store');
 });
 
 // Rutas de registro personalizadas
@@ -76,6 +79,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register/cliente', [RegisterController::class, 'registerCliente'])->name('register.cliente');
     Route::post('/register/dueno', [RegisterController::class, 'registerDueno'])->name('register.dueno');
     Route::post('/register/gimnasio', [RegisterController::class, 'registerGimnasio'])->name('register.gimnasio');
+    Route::post('/register/empleado', [RegisterController::class, 'registerEmpleado'])->name('register.empleado');
 });
 
 require __DIR__.'/auth.php';

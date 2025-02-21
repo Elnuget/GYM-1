@@ -42,6 +42,9 @@ class RegisterController extends Controller
             'telefono' => $request->telefono,
         ]);
 
+        // Asignar rol usando Spatie Permission
+        $user->assignRole('cliente');
+
         Cliente::create([
             'user_id' => $user->id,
             'gimnasio_id' => $request->gimnasio_id,
@@ -52,7 +55,7 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('completar.registro');
     }
 
     public function registerDueno(Request $request)
@@ -64,13 +67,11 @@ class RegisterController extends Controller
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
                 'telefono' => 'required|string|max:20',
-                'direccion' => 'required|string|max:255',
             ], [], [
                 'name' => 'nombre',
                 'email' => 'correo electrónico',
                 'password' => 'contraseña',
                 'telefono' => 'teléfono personal',
-                'direccion' => 'dirección personal',
             ]);
 
             if ($validator->fails()) {
@@ -90,9 +91,11 @@ class RegisterController extends Controller
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
                     'telefono' => $request->telefono,
-                    'direccion' => $request->direccion,
                     'rol' => 'dueño'
                 ]);
+
+                // Asignar rol usando Spatie Permission
+                $user->assignRole('dueño');
 
                 // 2. Crear el registro de dueño_gimnasio
                 $duenoGimnasio = DuenoGimnasio::create([
@@ -102,10 +105,16 @@ class RegisterController extends Controller
                 // Si todo salió bien, confirmar la transacción
                 DB::commit();
 
+                // Registrar el evento
+                event(new Registered($user));
+
+                // Login automático
+                Auth::login($user);
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Registro completado con éxito',
-                    'dueno_id' => $duenoGimnasio->id
+                    'message' => '¡Registro completado con éxito! Redirigiendo...',
+                    'redirect' => route('completar.registro')
                 ]);
 
             } catch (\Exception $e) {
@@ -199,5 +208,64 @@ class RegisterController extends Controller
                 'message' => 'Error en el servidor: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function registerEmpleado(Request $request)
+    {
+        $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'telefono' => ['required', 'string', 'max:20'],
+            'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
+            'puesto' => ['required', 'string', 'max:100'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $user = User::create([
+                'name' => $request->nombre,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'rol' => 'entrenador',
+                'telefono' => $request->telefono,
+            ]);
+
+            // Asignar rol usando Spatie Permission
+            $user->assignRole('entrenador');
+
+            // Crear el registro de empleado
+            DB::table('empleados')->insert([
+                'user_id' => $user->id,
+                'gimnasio_id' => $request->gimnasio_id,
+                'puesto' => $request->puesto,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            event(new Registered($user));
+
+            Auth::login($user);
+
+            return redirect()->route('dashboard');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Error al registrar el empleado: ' . $e->getMessage()]);
+        }
+    }
+
+    public function completarRegistro()
+    {
+        return view('auth.completar-registro');
+    }
+
+    public function completarRegistroStore(Request $request)
+    {
+        // Aquí puedes agregar la lógica para guardar la información adicional
+        return redirect()->route('dashboard')->with('success', 'Registro completado con éxito');
     }
 }
