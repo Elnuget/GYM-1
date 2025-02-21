@@ -13,14 +13,20 @@ class Gimnasio extends Model
     protected $primaryKey = 'id_gimnasio';
 
     protected $fillable = [
-        'dueno_id',
         'nombre',
         'direccion',
-        'telefono'
+        'telefono',
+        'email',
+        'dueno_id'
     ];
 
     public function dueno()
     {
-        return $this->belongsTo(User::class, 'dueno_id', 'id');
+        return $this->belongsTo(DuenoGimnasio::class, 'dueno_id', 'id_dueno');
+    }
+
+    public function clientes()
+    {
+        return $this->hasMany(Cliente::class, 'gimnasio_id', 'id_gimnasio');
     }
 }

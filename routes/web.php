@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GimnasioController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoGimnasioController;
+use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -67,6 +68,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
     });
+});
+
+// Rutas de registro personalizadas
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register/cliente', [RegisterController::class, 'registerCliente'])->name('register.cliente');
+    Route::post('/register/dueno', [RegisterController::class, 'registerDueno'])->name('register.dueno');
 });
 
 require __DIR__.'/auth.php';

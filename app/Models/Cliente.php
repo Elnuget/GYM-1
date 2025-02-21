@@ -13,16 +13,19 @@ class Cliente extends Model
     protected $primaryKey = 'id_cliente';
 
     protected $fillable = [
+        'user_id',
         'gimnasio_id',
-        'nombre',
-        'email',
-        'telefono',
         'fecha_nacimiento'
     ];
 
     protected $casts = [
         'fecha_nacimiento' => 'date'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function gimnasio()
     {

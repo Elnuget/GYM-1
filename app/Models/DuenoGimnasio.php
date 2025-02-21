@@ -14,13 +14,16 @@ class DuenoGimnasio extends Model
 
     protected $fillable = [
         'user_id',
-        'nombre_comercial',
-        'telefono',
-        'direccion',
+        'nombre_comercial'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function gimnasios()
+    {
+        return $this->hasMany(Gimnasio::class, 'dueno_id', 'id_dueno');
     }
 } 

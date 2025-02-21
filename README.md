@@ -19,3 +19,6 @@ para actualizar repositorio git reset --hard origin/master git pull origin maste
 composer require spatie/laravel-permission
 php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
 php artisan migrate
+
+
+para pagina principal php artisan storage:link

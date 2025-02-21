@@ -13,10 +13,8 @@ return new class extends Migration
     {
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('gimnasio_id')->constrained('gimnasios', 'id_gimnasio')->onDelete('cascade');
-            $table->string('nombre');
-            $table->string('email')->unique();
-            $table->string('telefono', 20)->nullable();
             $table->date('fecha_nacimiento')->nullable();
             $table->timestamps();
         });
