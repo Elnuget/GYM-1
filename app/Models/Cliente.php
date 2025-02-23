@@ -15,7 +15,10 @@ class Cliente extends Model
     protected $fillable = [
         'user_id',
         'gimnasio_id',
-        'fecha_nacimiento'
+        'fecha_nacimiento',
+        'telefono',
+        'genero',
+        'ocupacion'
     ];
 
     protected $casts = [
@@ -24,11 +27,16 @@ class Cliente extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     public function gimnasio()
     {
         return $this->belongsTo(Gimnasio::class, 'gimnasio_id', 'id_gimnasio');
+    }
+
+    public function onboardingProgress()
+    {
+        return $this->hasOne(OnboardingProgress::class, 'cliente_id', 'id_cliente');
     }
 }

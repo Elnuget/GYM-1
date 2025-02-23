@@ -13,10 +13,16 @@ return new class extends Migration
     {
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('gimnasio_id')->constrained('gimnasios', 'id_gimnasio')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('gimnasio_id');
             $table->date('fecha_nacimiento')->nullable();
+            $table->string('telefono')->nullable();
+            $table->enum('genero', ['M', 'F', 'O'])->nullable();
+            $table->string('ocupacion')->nullable();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('gimnasio_id')->references('id_gimnasio')->on('gimnasios')->onDelete('cascade');
         });
     }
 

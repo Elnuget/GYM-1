@@ -79,18 +79,6 @@
                 </div>
 
                 <div class="mt-4">
-                    <x-input-label for="telefono" :value="__('Teléfono')" />
-                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono')" placeholder="Ej: +34 612345678" />
-                    <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
-                </div>
-
-                <div class="mt-4">
-                    <x-input-label for="fecha_nacimiento" :value="__('Fecha de Nacimiento')" />
-                    <x-text-input id="fecha_nacimiento" class="block mt-1 w-full" type="date" name="fecha_nacimiento" :value="old('fecha_nacimiento')" />
-                    <x-input-error :messages="$errors->get('fecha_nacimiento')" class="mt-2" />
-                </div>
-
-                <div class="mt-4">
                     <x-input-label for="gimnasio_id" :value="__('Selecciona tu Gimnasio')" />
                     <select id="gimnasio_id" name="gimnasio_id" required
                             class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">

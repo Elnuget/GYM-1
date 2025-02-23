@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Membresia extends Model
 {
+    use HasFactory;
+
+    protected $table = 'membresias';
     protected $primaryKey = 'id_membresia';
     
     protected $fillable = [
@@ -22,7 +26,7 @@ class Membresia extends Model
     protected $casts = [
         'fecha_compra' => 'date',
         'fecha_vencimiento' => 'date',
-        'renovacion' => 'boolean',
+        'renovacion' => 'boolean'
     ];
 
     public function usuario(): BelongsTo

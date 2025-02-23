@@ -25,15 +25,19 @@ return new class extends Migration
             $table->foreignId('dueno_id')->after('id_gimnasio')->constrained('users')->onDelete('cascade');
         });
 
-        // Recreamos las tablas dependientes
+        // Recreamos las tablas dependientes con la estructura correcta
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
-            $table->foreignId('gimnasio_id')->constrained('gimnasios', 'id_gimnasio')->onDelete('cascade');
-            $table->string('nombre');
-            $table->string('email')->unique();
-            $table->string('telefono', 20)->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('gimnasio_id');
             $table->date('fecha_nacimiento')->nullable();
+            $table->string('telefono')->nullable();
+            $table->enum('genero', ['M', 'F', 'O'])->nullable();
+            $table->string('ocupacion')->nullable();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('gimnasio_id')->references('id_gimnasio')->on('gimnasios')->onDelete('cascade');
         });
 
         Schema::create('pagos_gimnasios', function (Blueprint $table) {
@@ -66,20 +70,24 @@ return new class extends Migration
             $table->foreignId('dueno_id')->after('id_gimnasio')->constrained('duenos_gimnasios', 'id_dueno')->onDelete('cascade');
         });
 
-        // Recreamos las tablas dependientes con las relaciones originales
+        // Recreamos las tablas dependientes con la estructura original
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
-            $table->foreignId('gimnasio_id')->constrained('gimnasios', 'id_gimnasio')->onDelete('cascade');
-            $table->string('nombre');
-            $table->string('email')->unique();
-            $table->string('telefono', 20)->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('gimnasio_id');
             $table->date('fecha_nacimiento')->nullable();
+            $table->string('telefono')->nullable();
+            $table->enum('genero', ['M', 'F', 'O'])->nullable();
+            $table->string('ocupacion')->nullable();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('gimnasio_id')->references('id_gimnasio')->on('gimnasios')->onDelete('cascade');
         });
 
         Schema::create('pagos_gimnasios', function (Blueprint $table) {
             $table->id('id_pago');
-            $table->foreignId('dueno_id')->constrained('duenos_gimnasios', 'id_dueno')->onDelete('cascade');
+            $table->foreignId('dueno_id')->constrained('users')->onDelete('cascade');
             $table->decimal('monto', 10, 2);
             $table->date('fecha_pago');
             $table->enum('estado', ['pagado', 'pendiente'])->default('pendiente');

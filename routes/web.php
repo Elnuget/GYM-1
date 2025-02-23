@@ -16,6 +16,9 @@ use App\Http\Controllers\GimnasioController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoGimnasioController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Cliente\BienvenidaController;
+use App\Http\Controllers\Cliente\OnboardingController;
+use App\Http\Controllers\Cliente\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -71,6 +74,35 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/completar-registro', [RegisterController::class, 'completarRegistro'])->name('completar.registro');
     Route::post('/completar-registro', [RegisterController::class, 'completarRegistroStore'])->name('completar.registro.store');
+
+    // Grupo de rutas para clientes
+    Route::middleware(['auth', 'role:cliente'])->prefix('cliente')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [App\Http\Controllers\Cliente\DashboardController::class, 'index'])
+             ->name('cliente.dashboard');
+        
+        // Otras rutas del cliente...
+        Route::get('/membresias', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
+             ->name('cliente.membresias.index');
+        
+        Route::get('/perfil', [App\Http\Controllers\Cliente\PerfilController::class, 'index'])
+             ->name('cliente.perfil.index');
+        
+        Route::get('/servicios', [App\Http\Controllers\Cliente\ServicioController::class, 'index'])
+             ->name('cliente.servicios.index');
+    });
+
+    // Rutas de onboarding separadas
+    Route::middleware(['auth', 'role:cliente'])->prefix('onboarding')->group(function () {
+        Route::get('/perfil', [OnboardingController::class, 'perfil'])->name('onboarding.perfil');
+        Route::post('/perfil', [OnboardingController::class, 'storePerfil'])->name('onboarding.perfil.store');
+        Route::get('/medidas', [OnboardingController::class, 'medidas'])->name('onboarding.medidas');
+        Route::post('/medidas', [OnboardingController::class, 'storeMedidas'])->name('onboarding.medidas.store');
+        Route::get('/objetivos', [OnboardingController::class, 'objetivos'])->name('onboarding.objetivos');
+        Route::post('/objetivos', [OnboardingController::class, 'storeObjetivos'])->name('onboarding.objetivos.store');
+        Route::get('/tour', [OnboardingController::class, 'tour'])->name('onboarding.tour');
+        Route::post('/tour/complete', [OnboardingController::class, 'completeTour'])->name('onboarding.tour.complete');
+    });
 });
 
 // Rutas de registro personalizadas

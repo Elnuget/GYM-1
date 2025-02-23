@@ -28,8 +28,6 @@ class RegisterController extends Controller
         $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'telefono' => ['nullable', 'string', 'max:20'],
-            'fecha_nacimiento' => ['nullable', 'date'],
             'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -39,23 +37,20 @@ class RegisterController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'rol' => 'cliente',
-            'telefono' => $request->telefono,
         ]);
 
-        // Asignar rol usando Spatie Permission
         $user->assignRole('cliente');
 
-        Cliente::create([
+        $cliente = Cliente::create([
             'user_id' => $user->id,
             'gimnasio_id' => $request->gimnasio_id,
-            'fecha_nacimiento' => $request->fecha_nacimiento,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect()->route('completar.registro');
+        return redirect()->route('onboarding.perfil');
     }
 
     public function registerDueno(Request $request)
@@ -267,5 +262,14 @@ class RegisterController extends Controller
     {
         // Aquí puedes agregar la lógica para guardar la información adicional
         return redirect()->route('dashboard')->with('success', 'Registro completado con éxito');
+    }
+
+    protected function redirectTo()
+    {
+        if (auth()->user()->hasRole('cliente')) {
+            return route('cliente.bienvenida');
+        }
+        // ... otras redirecciones según el rol ...
+        return route('dashboard');
     }
 }
