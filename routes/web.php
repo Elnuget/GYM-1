@@ -80,7 +80,8 @@ Route::middleware('auth')->group(function () {
     // Grupo de rutas para clientes
     Route::middleware(['auth', 'role:cliente'])->prefix('cliente')->group(function () {
         // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('cliente.dashboard');
+        Route::get('/dashboard', [App\Http\Controllers\Cliente\DashboardController::class, 'index'])
+            ->name('cliente.dashboard');
         
         // Perfil
         Route::prefix('perfil')->group(function () {
@@ -95,17 +96,27 @@ Route::middleware('auth')->group(function () {
             Route::get('/actual', [RutinaController::class, 'actual'])->name('cliente.rutinas.actual');
             Route::get('/historial', [RutinaController::class, 'historial'])->name('cliente.rutinas.historial');
             Route::get('/ejercicios', [RutinaController::class, 'ejercicios'])->name('cliente.rutinas.ejercicios');
+            Route::get('ejercicios/{id}', [RutinaController::class, 'ejercicioDetalles'])->name('cliente.rutinas.ejercicio');
+            Route::put('{rutina}/progreso', [RutinaController::class, 'actualizarProgreso'])->name('cliente.rutinas.progreso');
+            Route::post('{rutina}/solicitar-cambio', [RutinaController::class, 'solicitarCambio'])->name('cliente.rutinas.solicitar-cambio');
         });
 
         // Nutrición
         Route::prefix('nutricion')->group(function () {
-            Route::get('/', [NutricionController::class, 'index'])->name('cliente.nutricion');
-            Route::get('/plan-actual', [NutricionController::class, 'planActual'])->name('cliente.nutricion.plan-actual');
-            Route::get('/historial', [NutricionController::class, 'historial'])->name('cliente.nutricion.historial');
+            Route::get('/', [App\Http\Controllers\Cliente\NutricionController::class, 'actual'])->name('cliente.nutricion');
+            Route::get('/historial', [App\Http\Controllers\Cliente\NutricionController::class, 'historial'])->name('cliente.nutricion.historial');
+            Route::get('/{nutricion}', [App\Http\Controllers\Cliente\NutricionController::class, 'show'])->name('cliente.nutricion.show');
+            Route::post('/{nutricion}/registrar', [App\Http\Controllers\Cliente\NutricionController::class, 'registrarComida'])->name('cliente.nutricion.registrar');
+            Route::post('/{nutricion}/solicitar-cambio', [App\Http\Controllers\Cliente\NutricionController::class, 'solicitarCambio'])->name('cliente.nutricion.solicitar-cambio');
         });
 
         // Asistencias
-        Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('cliente.asistencias');
+        Route::get('/asistencias', [App\Http\Controllers\Cliente\AsistenciaController::class, 'index'])
+            ->name('cliente.asistencias');
+        Route::post('/asistencias/entrada', [App\Http\Controllers\Cliente\AsistenciaController::class, 'registrarEntrada'])
+            ->name('cliente.asistencias.entrada');
+        Route::post('/asistencias/{asistencia}/salida', [App\Http\Controllers\Cliente\AsistenciaController::class, 'registrarSalida'])
+            ->name('cliente.asistencias.salida');
         
         // Membresía (ya existe el controlador)
         Route::get('/membresia', [MembresiaController::class, 'index'])->name('cliente.membresia');

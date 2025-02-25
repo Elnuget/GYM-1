@@ -110,4 +110,10 @@ class RutinaController extends Controller
 
         return view('cliente.rutinas.ejercicios', compact('ejercicios'));
     }
+
+    public function ejercicioDetalles($id)
+    {
+        $ejercicio = Ejercicio::findOrFail($id);
+        return response()->json($ejercicio);
+    }
 } 

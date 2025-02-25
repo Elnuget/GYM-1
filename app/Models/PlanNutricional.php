@@ -7,30 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Nutricion extends Model
+class PlanNutricional extends Model
 {
     use HasFactory;
 
-    protected $table = 'nutricion';
-    protected $primaryKey = 'id_nutricion';
-    
+    protected $table = 'planes_nutricionales';
+    protected $primaryKey = 'id_plan';
+
     protected $fillable = [
         'cliente_id',
         'nombre_plan',
-        'informacion',
-        'plan_dieta',
+        'descripcion',
         'estado',
         'calorias_diarias',
         'proteinas',
         'carbohidratos',
         'grasas',
+        'notas_nutricionales',
         'recomendaciones',
-        'fecha_asignacion',
+        'fecha_inicio',
         'fecha_fin'
     ];
 
     protected $casts = [
-        'fecha_asignacion' => 'date',
+        'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
         'calorias_diarias' => 'integer',
         'proteinas' => 'integer',
@@ -45,7 +45,7 @@ class Nutricion extends Model
 
     public function comidas(): HasMany
     {
-        return $this->hasMany(ComidaNutricion::class, 'nutricion_id', 'id_nutricion');
+        return $this->hasMany(ComidaPlan::class, 'plan_id', 'id_plan');
     }
 
     public function getMacrosAttribute()

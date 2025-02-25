@@ -126,15 +126,63 @@
 
                     @else
                         <!-- Estado sin Rutina -->
-                        <div class="text-center py-12">
-                            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
+                        <div class="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 rounded-xl p-8">
+                            <div class="max-w-lg mx-auto text-center">
+                                <!-- Icono -->
+                                <div class="mb-6">
+                                    <svg class="w-16 h-16 text-emerald-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+
+                                <!-- Título y Descripción -->
+                                <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                                    No tienes una rutina asignada
+                                </h3>
+                                <p class="text-gray-600 mb-8">
+                                    Tu entrenador está diseñando un plan personalizado basado en tus objetivos y nivel actual. 
+                                    Pronto tendrás acceso a tu rutina.
+                                </p>
+
+                                <!-- Cards Informativas -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div class="bg-white rounded-xl p-6 shadow-sm border border-emerald-100/50">
+                                        <div class="text-emerald-500 mb-3">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                            </svg>
+                                        </div>
+                                        <h4 class="font-medium text-gray-900 mb-2">Mientras tanto</h4>
+                                        <p class="text-gray-600 text-sm">
+                                            Explora nuestro catálogo de ejercicios para familiarizarte con ellos
+                                        </p>
+                                    </div>
+
+                                    <div class="bg-white rounded-xl p-6 shadow-sm border border-emerald-100/50">
+                                        <div class="text-emerald-500 mb-3">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                        <h4 class="font-medium text-gray-900 mb-2">Próximamente</h4>
+                                        <p class="text-gray-600 text-sm">
+                                            Tu rutina personalizada estará lista en los próximos días
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Botón de Acción -->
+                                <a href="{{ route('cliente.rutinas.ejercicios') }}" 
+                                   class="inline-flex items-center px-6 py-3 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors duration-200">
+                                    Ver catálogo de ejercicios
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                    </svg>
+                                </a>
                             </div>
-                            <h3 class="text-lg font-medium text-gray-900">No tienes una rutina asignada</h3>
-                            <p class="mt-2 text-sm text-gray-500">Tu entrenador te asignará una rutina pronto.</p>
                         </div>
                     @endif
                 </div>
@@ -183,21 +231,172 @@
         </div>
     </div>
 
+    <!-- Modal de Actualizar Progreso -->
+    <div x-data="progresoModal()"
+         x-show="isOpen"
+         @open-modal.window="openModal($event.detail)"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         style="display: none;">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4" @click.away="isOpen = false">
+            <form @submit.prevent="actualizarProgreso">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold mb-4">Actualizar Progreso</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Progreso Actual: <span x-text="progreso + '%'"></span>
+                        </label>
+                        <input type="range" 
+                               x-model="progreso"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                               min="0" 
+                               max="100"
+                               step="5">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button"
+                                @click="isOpen = false"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Solicitar Cambio -->
+    <div x-data="solicitudModal()"
+         x-show="isOpen"
+         @open-modal.window="openModal($event.detail)"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         style="display: none;">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4" @click.away="isOpen = false">
+            <form @submit.prevent="enviarSolicitud">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold mb-4">Solicitar Cambio de Rutina</h3>
+                    
+                    <div class="mb-4">
+                        <label for="motivo" class="block text-sm font-medium text-gray-700 mb-2">
+                            Motivo de la solicitud
+                        </label>
+                        <textarea id="motivo"
+                                x-model="motivo"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+                                rows="4"
+                                required></textarea>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button"
+                                @click="isOpen = false"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                            Enviar Solicitud
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         function ejercicioModal() {
             return {
                 isOpen: false,
                 ejercicio: null,
-                showEjercicio(id) {
-                    // Aquí iría la lógica para cargar los detalles del ejercicio mediante AJAX
-                    this.ejercicio = {
-                        nombre: 'Nombre del ejercicio',
-                        descripcion: 'Descripción del ejercicio...',
-                        instrucciones: 'Instrucciones detalladas...',
-                        video_url: null
-                    };
-                    this.isOpen = true;
+                async showEjercicio(id) {
+                    try {
+                        const response = await fetch(`/cliente/rutinas/ejercicios/${id}`);
+                        if (response.ok) {
+                            this.ejercicio = await response.json();
+                            this.isOpen = true;
+                        } else {
+                            throw new Error('Error al cargar el ejercicio');
+                        }
+                    } catch (error) {
+                        alert('Error al cargar los detalles del ejercicio');
+                    }
+                }
+            }
+        }
+
+        function progresoModal() {
+            return {
+                isOpen: false,
+                progreso: {{ $rutinaActual ? $rutinaActual->progreso : 0 }},
+                rutinaId: {{ $rutinaActual ? $rutinaActual->id_rutina_cliente : 'null' }},
+
+                openModal(detail) {
+                    if (detail.type === 'actualizar-progreso') {
+                        this.isOpen = true;
+                    }
+                },
+
+                async actualizarProgreso() {
+                    try {
+                        const response = await fetch(`/cliente/rutinas/${this.rutinaId}/progreso`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ progreso: this.progreso })
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            throw new Error('Error al actualizar el progreso');
+                        }
+                    } catch (error) {
+                        alert('Ocurrió un error al actualizar el progreso');
+                    }
+                }
+            }
+        }
+
+        function solicitudModal() {
+            return {
+                isOpen: false,
+                motivo: '',
+                rutinaId: {{ $rutinaActual ? $rutinaActual->id_rutina_cliente : 'null' }},
+
+                openModal(detail) {
+                    if (detail.type === 'solicitar-cambio') {
+                        this.isOpen = true;
+                    }
+                },
+
+                async enviarSolicitud() {
+                    try {
+                        const response = await fetch(`/cliente/rutinas/${this.rutinaId}/solicitar-cambio`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ motivo: this.motivo })
+                        });
+
+                        if (response.ok) {
+                            this.isOpen = false;
+                            alert('Solicitud enviada correctamente');
+                        } else {
+                            throw new Error('Error al enviar la solicitud');
+                        }
+                    } catch (error) {
+                        alert('Ocurrió un error al enviar la solicitud');
+                    }
                 }
             }
         }

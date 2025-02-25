@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('rutinas_cliente', function (Blueprint $table) {
             $table->id('id_rutina_cliente');
-            $table->foreignId('cliente_id')->constrained('clientes', 'id_cliente');
-            $table->foreignId('rutina_id')->constrained('rutinas_predefinidas', 'id_rutina');
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin')->nullable();
+            $table->foreignId('cliente_id')->constrained('clientes', 'id_cliente')->onDelete('cascade');
+            $table->foreignId('rutina_id')->constrained('rutinas_predefinidas', 'id_rutina')->onDelete('cascade');
             $table->enum('estado', ['activa', 'completada', 'cancelada'])->default('activa');
             $table->integer('progreso')->default(0);
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin')->nullable();
             $table->text('notas_entrenador')->nullable();
             $table->timestamps();
         });

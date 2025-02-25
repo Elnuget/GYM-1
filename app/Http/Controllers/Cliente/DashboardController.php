@@ -22,64 +22,25 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
-        $cliente = Cliente::where('user_id', $user->id)->firstOrFail();
+        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
 
-        // Obtener datos para el dashboard
-        $datos = [
-            'proxima_sesion' => 'Por definir',
-            'asistencias_mes' => 0,
-            'membresia' => null,
-            'medidas' => null,
-            'objetivos' => null,
-            'rutina_actual' => null
-        ];
-
-        // Obtener asistencias del mes actual
-        $datos['asistencias_mes'] = Asistencia::where('user_id', $user->id)
-            ->whereMonth('fecha_asistencia', Carbon::now()->month)
-            ->where('estado', 'presente')
+        // Obtener estadísticas de asistencia
+        $asistenciasMes = Asistencia::where('cliente_id', $cliente->id_cliente)
+            ->whereMonth('fecha', Carbon::now()->month)
+            ->where('estado', 'completada')
             ->count();
 
-        // Obtener membresía activa
-        $membresia = Membresia::where('id_usuario', $user->id)
-            ->where('fecha_vencimiento', '>=', now())
+        // Obtener última asistencia
+        $ultimaAsistencia = Asistencia::where('cliente_id', $cliente->id_cliente)
+            ->where('estado', 'completada')
+            ->latest('fecha')
             ->first();
 
-        if ($membresia) {
-            $datos['membresia'] = [
-                'tipo' => $membresia->tipo_membresia,
-                'fecha_fin' => $membresia->fecha_vencimiento->format('d/m/Y'),
-                'estado' => 'activa'
-            ];
-        }
-
-        // Obtener últimas medidas
-        $ultimasMedidas = MedidaCorporal::where('cliente_id', $cliente->id_cliente)
-            ->latest('fecha_medicion')
+        // Obtener asistencia actual si existe
+        $asistenciaActual = Asistencia::where('cliente_id', $cliente->id_cliente)
+            ->where('estado', 'activa')
+            ->whereDate('fecha', Carbon::today())
             ->first();
-
-        if ($ultimasMedidas) {
-            $datos['medidas'] = [
-                'peso' => $ultimasMedidas->peso,
-                'altura' => $ultimasMedidas->altura,
-                'imc' => round($ultimasMedidas->peso / pow($ultimasMedidas->altura / 100, 2), 2),
-                'fecha_medicion' => $ultimasMedidas->fecha_medicion->format('d/m/Y')
-            ];
-        }
-
-        // Obtener objetivos activos
-        $objetivos = ObjetivoCliente::where('cliente_id', $cliente->id_cliente)
-            ->where('activo', true)
-            ->first();
-
-        if ($objetivos) {
-            $datos['objetivos'] = [
-                'principal' => ucfirst(str_replace('_', ' ', $objetivos->objetivo_principal)),
-                'nivel' => ucfirst($objetivos->nivel_experiencia),
-                'dias_entrenamiento' => $objetivos->dias_entrenamiento
-            ];
-        }
 
         // Obtener rutina actual
         $rutinaActual = RutinaCliente::where('cliente_id', $cliente->id_cliente)
@@ -87,20 +48,16 @@ class DashboardController extends Controller
             ->with('rutina')
             ->first();
 
-        if ($rutinaActual) {
-            $datos['rutina_actual'] = [
-                'nombre' => $rutinaActual->rutina->nombre_rutina,
-                'objetivo' => $rutinaActual->rutina->objetivo,
-                'progreso' => $rutinaActual->progreso,
-                'fecha_inicio' => $rutinaActual->fecha_inicio->format('d/m/Y'),
-                'id_rutina' => $rutinaActual->id_rutina_cliente
-            ];
-        }
+        // Obtener plan nutricional activo (cuando esté implementado)
+        $planNutricional = null; // Por ahora es null hasta que se implemente
 
-        return view('cliente.dashboard.index', [
-            'cliente' => $cliente,
-            'datos' => $datos
-        ]);
+        return view('cliente.dashboard.index', compact(
+            'asistenciasMes',
+            'ultimaAsistencia',
+            'asistenciaActual',
+            'rutinaActual',
+            'planNutricional'
+        ));
     }
 
     private function onboardingCompleto($onboarding)

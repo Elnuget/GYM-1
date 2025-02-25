@@ -36,7 +36,7 @@
             <div class="p-3 space-y-1">
                 <!-- Dashboard -->
                 <a href="{{ route('cliente.dashboard') }}" 
-                   class="flex items-center px-3 py-2.5 rounded-lg text-white {{ request()->routeIs('cliente.dashboard') ? 'bg-white/10 font-medium' : 'hover:bg-white/5' }} transition-all duration-200">
+                   class="flex items-center px-3 py-2.5 rounded-lg text-white hover:bg-white/5 transition-all duration-200">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -114,7 +114,8 @@
                 <a href="{{ route('cliente.asistencias') }}" 
                    class="flex items-center px-3 py-2.5 rounded-lg text-white hover:bg-white/5 transition-all duration-200">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     <span x-show="isExpanded" 
                           x-transition:enter="transition-opacity duration-300"
