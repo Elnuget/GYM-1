@@ -8,6 +8,9 @@ use App\Models\Cliente;
 use App\Models\OnboardingProgress;
 use App\Models\Asistencia;
 use App\Models\Membresia;
+use App\Models\MedidaCorporal;
+use App\Models\ObjetivoCliente;
+use App\Models\RutinaCliente;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -20,45 +23,23 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $cliente = Cliente::where('user_id', $user->id)->first();
-
-        // Si no existe el cliente, lo creamos junto con su onboarding
-        if (!$cliente) {
-            $cliente = Cliente::create([
-                'user_id' => $user->id,
-                'gimnasio_id' => session('gimnasio_id'),
-            ]);
-
-            OnboardingProgress::create([
-                'cliente_id' => $cliente->id_cliente,
-                'perfil_completado' => false,
-                'medidas_iniciales' => false,
-                'objetivos_definidos' => false,
-                'tutorial_visto' => false
-            ]);
-
-            return redirect()->route('onboarding.perfil');
-        }
-
-        // Verificar onboarding
-        $onboarding = $cliente->onboardingProgress;
-        if (!$onboarding || !$this->onboardingCompleto($onboarding)) {
-            return $this->redirigirOnboarding($onboarding);
-        }
+        $cliente = Cliente::where('user_id', $user->id)->firstOrFail();
 
         // Obtener datos para el dashboard
         $datos = [
             'proxima_sesion' => 'Por definir',
             'asistencias_mes' => 0,
-            'membresia' => null
+            'membresia' => null,
+            'medidas' => null,
+            'objetivos' => null,
+            'rutina_actual' => null
         ];
 
         // Obtener asistencias del mes actual
-        $asistencias = Asistencia::where('user_id', $user->id)
+        $datos['asistencias_mes'] = Asistencia::where('user_id', $user->id)
             ->whereMonth('fecha_asistencia', Carbon::now()->month)
             ->where('estado', 'presente')
             ->count();
-        $datos['asistencias_mes'] = $asistencias;
 
         // Obtener membresía activa
         $membresia = Membresia::where('id_usuario', $user->id)
@@ -69,15 +50,50 @@ class DashboardController extends Controller
             $datos['membresia'] = [
                 'tipo' => $membresia->tipo_membresia,
                 'fecha_fin' => $membresia->fecha_vencimiento->format('d/m/Y'),
-                'estado' => $membresia->fecha_vencimiento >= now() ? 'activa' : 'vencida'
+                'estado' => 'activa'
             ];
-        } else {
-            // Obtener membresía por defecto del gimnasio
-            $membresiaPorDefecto = $cliente->gimnasio->membresia_default;
-            $datos['membresia'] = [
-                'tipo' => $membresiaPorDefecto ? $membresiaPorDefecto->tipo_membresia : 'Por definir',
-                'fecha_fin' => 'Pendiente de activación',
-                'estado' => 'inactiva'
+        }
+
+        // Obtener últimas medidas
+        $ultimasMedidas = MedidaCorporal::where('cliente_id', $cliente->id_cliente)
+            ->latest('fecha_medicion')
+            ->first();
+
+        if ($ultimasMedidas) {
+            $datos['medidas'] = [
+                'peso' => $ultimasMedidas->peso,
+                'altura' => $ultimasMedidas->altura,
+                'imc' => round($ultimasMedidas->peso / pow($ultimasMedidas->altura / 100, 2), 2),
+                'fecha_medicion' => $ultimasMedidas->fecha_medicion->format('d/m/Y')
+            ];
+        }
+
+        // Obtener objetivos activos
+        $objetivos = ObjetivoCliente::where('cliente_id', $cliente->id_cliente)
+            ->where('activo', true)
+            ->first();
+
+        if ($objetivos) {
+            $datos['objetivos'] = [
+                'principal' => ucfirst(str_replace('_', ' ', $objetivos->objetivo_principal)),
+                'nivel' => ucfirst($objetivos->nivel_experiencia),
+                'dias_entrenamiento' => $objetivos->dias_entrenamiento
+            ];
+        }
+
+        // Obtener rutina actual
+        $rutinaActual = RutinaCliente::where('cliente_id', $cliente->id_cliente)
+            ->where('estado', 'activa')
+            ->with('rutina')
+            ->first();
+
+        if ($rutinaActual) {
+            $datos['rutina_actual'] = [
+                'nombre' => $rutinaActual->rutina->nombre_rutina,
+                'objetivo' => $rutinaActual->rutina->objetivo,
+                'progreso' => $rutinaActual->progreso,
+                'fecha_inicio' => $rutinaActual->fecha_inicio->format('d/m/Y'),
+                'id_rutina' => $rutinaActual->id_rutina_cliente
             ];
         }
 

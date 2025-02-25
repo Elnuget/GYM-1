@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\OnboardingProgress;
+use App\Models\MedidaCorporal;
+use App\Models\ObjetivoCliente;
+use Carbon\Carbon;
 
 class OnboardingController extends Controller
 {
@@ -68,22 +71,37 @@ class OnboardingController extends Controller
         $request->validate([
             'peso' => 'required|numeric|min:20|max:300',
             'altura' => 'required|numeric|min:100|max:250',
+            'cuello' => 'nullable|numeric|min:20|max:100',
+            'hombros' => 'nullable|numeric|min:40|max:200',
+            'pecho' => 'nullable|numeric|min:40|max:200',
             'cintura' => 'nullable|numeric|min:40|max:200',
             'cadera' => 'nullable|numeric|min:40|max:200',
+            'biceps' => 'nullable|numeric|min:20|max:100',
+            'antebrazos' => 'nullable|numeric|min:20|max:100',
+            'muslos' => 'nullable|numeric|min:20|max:200',
+            'pantorrillas' => 'nullable|numeric|min:20|max:100',
         ]);
 
         $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
         
-        // Guardar medidas en una nueva tabla o en un campo JSON
-        $medidas = [
+        // Guardar medidas corporales
+        MedidaCorporal::create([
+            'cliente_id' => $cliente->id_cliente,
             'peso' => $request->peso,
             'altura' => $request->altura,
-            'cintura' => $request->cintura ?: null,
-            'cadera' => $request->cadera ?: null,
-            'fecha' => now()
-        ];
+            'cuello' => $request->cuello,
+            'hombros' => $request->hombros,
+            'pecho' => $request->pecho,
+            'cintura' => $request->cintura,
+            'cadera' => $request->cadera,
+            'biceps' => $request->biceps,
+            'antebrazos' => $request->antebrazos,
+            'muslos' => $request->muslos,
+            'pantorrillas' => $request->pantorrillas,
+            'fecha_medicion' => Carbon::now()
+        ]);
 
-        // Actualizar el progreso del onboarding
+        // Actualizar progreso del onboarding
         $onboarding = OnboardingProgress::where('cliente_id', $cliente->id_cliente)->firstOrFail();
         $onboarding->update([
             'medidas_iniciales' => true
@@ -95,7 +113,7 @@ class OnboardingController extends Controller
     public function storeObjetivos(Request $request)
     {
         $request->validate([
-            'objetivo_principal' => 'required|in:perdida_peso,ganancia_muscular,mantenimiento',
+            'objetivo_principal' => 'required|in:perdida_peso,ganancia_muscular,mantenimiento,tonificacion,resistencia,flexibilidad',
             'nivel_experiencia' => 'required|in:principiante,intermedio,avanzado',
             'dias_entrenamiento' => 'required|in:2-3,3-4,4-5,6+',
             'condiciones_medicas' => 'nullable|string|max:500',
@@ -104,15 +122,16 @@ class OnboardingController extends Controller
         $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
         
         // Guardar objetivos
-        $objetivos = [
+        ObjetivoCliente::create([
+            'cliente_id' => $cliente->id_cliente,
             'objetivo_principal' => $request->objetivo_principal,
             'nivel_experiencia' => $request->nivel_experiencia,
             'dias_entrenamiento' => $request->dias_entrenamiento,
             'condiciones_medicas' => $request->condiciones_medicas,
-            'fecha' => now()
-        ];
+            'activo' => true
+        ]);
 
-        // Actualizar el progreso del onboarding
+        // Actualizar progreso del onboarding
         $onboarding = OnboardingProgress::where('cliente_id', $cliente->id_cliente)->firstOrFail();
         $onboarding->update([
             'objetivos_definidos' => true
