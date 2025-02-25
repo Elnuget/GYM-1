@@ -123,6 +123,20 @@
                           x-transition:enter-end="opacity-100"
                           class="ml-3">Asistencias</span>
                 </a>
+
+                <!-- Membresía -->
+                <a href="{{ route('cliente.membresia') }}" 
+                   class="flex items-center px-3 py-2.5 rounded-lg text-white hover:bg-white/5 transition-all duration-200 {{ request()->routeIs('cliente.membresia') ? 'bg-white/10' : '' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 9a2 2 0 10-4 0v5a2 2 0 01-2 2h6m-6-4h4m8 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span x-show="isExpanded" 
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3">Membresía</span>
+                </a>
             </div>
 
             <!-- User Profile Section -->

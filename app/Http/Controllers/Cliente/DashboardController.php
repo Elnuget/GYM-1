@@ -24,6 +24,11 @@ class DashboardController extends Controller
     {
         $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
 
+        // Obtener membresía activa - ajustado a la estructura actual de la BD
+        $membresia = Membresia::where('id_usuario', auth()->id())
+            ->where('fecha_vencimiento', '>=', Carbon::now())
+            ->first();
+
         // Obtener estadísticas de asistencia
         $asistenciasMes = Asistencia::where('cliente_id', $cliente->id_cliente)
             ->whereMonth('fecha', Carbon::now()->month)
@@ -56,7 +61,8 @@ class DashboardController extends Controller
             'ultimaAsistencia',
             'asistenciaActual',
             'rutinaActual',
-            'planNutricional'
+            'planNutricional',
+            'membresia'
         ));
     }
 

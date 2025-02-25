@@ -118,8 +118,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/asistencias/{asistencia}/salida', [App\Http\Controllers\Cliente\AsistenciaController::class, 'registrarSalida'])
             ->name('cliente.asistencias.salida');
         
-        // Membresía (ya existe el controlador)
-        Route::get('/membresia', [MembresiaController::class, 'index'])->name('cliente.membresia');
+        // Membresía
+        Route::get('/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
+            ->name('cliente.membresia');
     });
 
     // Rutas de onboarding separadas
