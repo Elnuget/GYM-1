@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\RutinaCliente;
 use App\Models\RutinaPredefinida;
+use App\Models\Ejercicio;
 
 class RutinaController extends Controller
 {
@@ -30,16 +31,22 @@ class RutinaController extends Controller
 
     public function show(RutinaCliente $rutina)
     {
-        $this->authorize('view', $rutina);
-        
-        $rutina->load('rutina');
+        if ($rutina->cliente_id !== auth()->user()->cliente->id_cliente) {
+            abort(403);
+        }
+
+        $rutina->load(['rutina' => function($query) {
+            $query->with('ejercicios');
+        }]);
 
         return view('cliente.rutinas.show', compact('rutina'));
     }
 
     public function actualizarProgreso(Request $request, RutinaCliente $rutina)
     {
-        $this->authorize('update', $rutina);
+        if ($rutina->cliente_id !== auth()->user()->cliente->id_cliente) {
+            abort(403);
+        }
 
         $request->validate([
             'progreso' => 'required|integer|min:0|max:100'
@@ -54,7 +61,9 @@ class RutinaController extends Controller
 
     public function solicitarCambio(Request $request, RutinaCliente $rutina)
     {
-        $this->authorize('update', $rutina);
+        if ($rutina->cliente_id !== auth()->user()->cliente->id_cliente) {
+            abort(403);
+        }
 
         $request->validate([
             'motivo' => 'required|string|max:500'
@@ -67,10 +76,13 @@ class RutinaController extends Controller
 
     public function actual()
     {
-        $cliente = auth()->user()->cliente;
+        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        
         $rutinaActual = RutinaCliente::where('cliente_id', $cliente->id_cliente)
             ->where('estado', 'activa')
-            ->with('rutina')
+            ->with(['rutina' => function($query) {
+                $query->with('ejercicios');
+            }])
             ->first();
 
         return view('cliente.rutinas.actual', compact('rutinaActual'));
@@ -78,7 +90,8 @@ class RutinaController extends Controller
 
     public function historial()
     {
-        $cliente = auth()->user()->cliente;
+        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        
         $rutinas = RutinaCliente::where('cliente_id', $cliente->id_cliente)
             ->where('estado', '!=', 'activa')
             ->with('rutina')
@@ -90,9 +103,9 @@ class RutinaController extends Controller
 
     public function ejercicios()
     {
-        // Reutilizar la tabla rutinas_predefinidas para mostrar ejercicios
-        $ejercicios = RutinaPredefinida::where('estado', 'activo')
-            ->orderBy('nombre_rutina')
+        $ejercicios = Ejercicio::where('activo', true)
+            ->orderBy('grupo_muscular')
+            ->orderBy('nombre')
             ->get();
 
         return view('cliente.rutinas.ejercicios', compact('ejercicios'));
