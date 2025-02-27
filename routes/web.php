@@ -21,6 +21,7 @@ use App\Http\Controllers\Cliente\OnboardingController;
 use App\Http\Controllers\Cliente\DashboardController;
 use App\Http\Controllers\Cliente\PerfilController;
 use App\Http\Controllers\Cliente\RutinaController;
+use App\Http\Controllers\Cliente\ReporteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -78,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/completar-registro', [RegisterController::class, 'completarRegistroStore'])->name('completar.registro.store');
 
     // Grupo de rutas para clientes
-    Route::middleware(['auth', 'role:cliente'])->prefix('cliente')->group(function () {
+    Route::middleware(['auth', 'role:cliente'])->prefix('cliente')->name('cliente.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [App\Http\Controllers\Cliente\DashboardController::class, 'index'])
             ->name('cliente.dashboard');
@@ -133,6 +134,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/mensajes/{mensaje}/marcar-leido', [App\Http\Controllers\Cliente\ComunicacionController::class, 'marcarMensajeLeido'])
                 ->name('cliente.comunicacion.marcar-mensaje-leido');
         });
+
+        // Reportes
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes');
+        Route::get('/reportes/pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.pdf');
+        Route::get('/reportes/excel', [ReporteController::class, 'exportarExcel'])->name('reportes.excel');
     });
 
     // Rutas de onboarding separadas

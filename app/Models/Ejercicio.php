@@ -16,21 +16,18 @@ class Ejercicio extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
-        'imagen_url',
-        'video_url',
-        'instrucciones',
+        'tipo',
         'grupo_muscular',
-        'equipamiento_necesario',
-        'activo'
+        'imagen_url',
+        'video_url'
     ];
 
     protected $casts = [
         'activo' => 'boolean'
     ];
 
-    public function rutinas(): BelongsToMany
+    public function rutinas()
     {
-        return $this->belongsToMany(RutinaPredefinida::class, 'rutina_ejercicios', 'ejercicio_id', 'rutina_id')
-                    ->withPivot(['dia', 'orden', 'series', 'repeticiones', 'peso_sugerido', 'notas']);
+        return $this->hasMany(EjercicioRutina::class, 'ejercicio_id', 'id_ejercicio');
     }
 } 

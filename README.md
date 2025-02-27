@@ -22,3 +22,7 @@ php artisan migrate
 
 
 para pagina principal php artisan storage:link
+
+INSTALAR DOMPDF y EXCEL:
+composer require barryvdh/laravel-dompdf 
+composer require maatwebsite/excel
