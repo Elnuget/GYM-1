@@ -90,6 +90,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/medidas', [PerfilController::class, 'medidas'])->name('perfil.medidas');
             Route::get('/objetivos', [PerfilController::class, 'objetivos'])->name('perfil.objetivos');
             Route::put('/actualizar', [PerfilController::class, 'actualizar'])->name('perfil.actualizar');
+            
+            // Agregar estas dos rutas para manejar el almacenamiento
+            Route::post('/medidas', [PerfilController::class, 'storeMedidas'])->name('perfil.medidas.store');
+            Route::post('/objetivos', [PerfilController::class, 'storeObjetivo'])->name('perfil.objetivos.store');
         });
 
         // Rutinas

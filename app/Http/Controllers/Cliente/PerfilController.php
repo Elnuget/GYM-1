@@ -64,4 +64,65 @@ class PerfilController extends Controller
             ->route('cliente.perfil.informacion')
             ->with('success', 'Información actualizada correctamente');
     }
+
+    public function storeMedidas(Request $request)
+    {
+        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        
+        $request->validate([
+            'fecha_medicion' => 'required|date',
+            'peso' => 'required|numeric|min:0',
+            'altura' => 'required|numeric|min:0',
+            'cintura' => 'required|numeric|min:0',
+            'pecho' => 'required|numeric|min:0',
+            'biceps' => 'required|numeric|min:0',
+            'muslos' => 'required|numeric|min:0',
+            'pantorrillas' => 'required|numeric|min:0',
+        ]);
+
+        MedidaCorporal::create([
+            'cliente_id' => $cliente->id_cliente,
+            'fecha_medicion' => $request->fecha_medicion,
+            'peso' => $request->peso,
+            'altura' => $request->altura,
+            'cintura' => $request->cintura,
+            'pecho' => $request->pecho,
+            'biceps' => $request->biceps,
+            'muslos' => $request->muslos,
+            'pantorrillas' => $request->pantorrillas,
+        ]);
+
+        return redirect()->route('cliente.perfil.medidas')
+            ->with('success', 'Medidas registradas correctamente');
+    }
+
+    public function storeObjetivo(Request $request)
+    {
+        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        
+        $request->validate([
+            'objetivo_principal' => 'required|string',
+            'nivel_experiencia' => 'required|in:principiante,intermedio,avanzado',
+            'dias_entrenamiento' => 'required|integer|min:1|max:7',
+            'condiciones_medicas' => 'nullable|string',
+        ]);
+
+        // Desactivar objetivos anteriores
+        ObjetivoCliente::where('cliente_id', $cliente->id_cliente)
+            ->where('activo', true)
+            ->update(['activo' => false]);
+
+        // Crear nuevo objetivo
+        ObjetivoCliente::create([
+            'cliente_id' => $cliente->id_cliente,
+            'objetivo_principal' => $request->objetivo_principal,
+            'nivel_experiencia' => $request->nivel_experiencia,
+            'dias_entrenamiento' => $request->dias_entrenamiento,
+            'condiciones_medicas' => $request->condiciones_medicas,
+            'activo' => true
+        ]);
+
+        return redirect()->route('cliente.perfil.objetivos')
+            ->with('success', 'Objetivo registrado correctamente');
+    }
 } 
