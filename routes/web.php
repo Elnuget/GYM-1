@@ -121,6 +121,18 @@ Route::middleware('auth')->group(function () {
         // Membresía
         Route::get('/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
             ->name('cliente.membresia');
+
+        // Comunicación
+        Route::prefix('comunicacion')->group(function () {
+            Route::get('/', [App\Http\Controllers\Cliente\ComunicacionController::class, 'index'])
+                ->name('cliente.comunicacion');
+            Route::post('/mensajes', [App\Http\Controllers\Cliente\ComunicacionController::class, 'enviarMensaje'])
+                ->name('cliente.comunicacion.enviar-mensaje');
+            Route::post('/notificaciones/{notificacion}/marcar-leida', [App\Http\Controllers\Cliente\ComunicacionController::class, 'marcarNotificacionLeida'])
+                ->name('cliente.comunicacion.marcar-notificacion-leida');
+            Route::post('/mensajes/{mensaje}/marcar-leido', [App\Http\Controllers\Cliente\ComunicacionController::class, 'marcarMensajeLeido'])
+                ->name('cliente.comunicacion.marcar-mensaje-leido');
+        });
     });
 
     // Rutas de onboarding separadas

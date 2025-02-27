@@ -144,7 +144,6 @@ class OnboardingController extends Controller
     {
         $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
         
-        // Actualizar el progreso del onboarding
         $onboarding = OnboardingProgress::where('cliente_id', $cliente->id_cliente)->firstOrFail();
         $onboarding->update([
             'tutorial_visto' => true

@@ -110,6 +110,22 @@
                           class="ml-3">Nutrición</span>
                 </a>
 
+                <!-- Comunicación -->
+                <a href="{{ route('cliente.comunicacion') }}" 
+                   class="flex items-center px-3 py-2.5 text-white hover:bg-white/10 rounded-lg {{ request()->routeIs('cliente.comunicacion*') ? 'bg-white/10' : '' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                    </svg>
+                    <span x-show="isExpanded" class="ml-3">Comunicación</span>
+                    @if(isset($notificacionesNoLeidas) && $notificacionesNoLeidas > 0)
+                        <span x-show="isExpanded" 
+                              class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            {{ $notificacionesNoLeidas }}
+                        </span>
+                    @endif
+                </a>
+
                 <!-- Asistencias -->
                 <a href="{{ route('cliente.asistencias') }}" 
                    class="flex items-center px-3 py-2.5 rounded-lg text-white hover:bg-white/5 transition-all duration-200">
