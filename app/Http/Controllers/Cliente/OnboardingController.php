@@ -21,8 +21,7 @@ class OnboardingController extends Controller
 
     public function perfil()
     {
-        $cliente = auth()->user()->cliente;
-        return view('cliente.onboarding.perfil', compact('cliente'));
+        return view('cliente.onboarding.perfil');
     }
 
     public function storePerfil(Request $request)
@@ -30,16 +29,23 @@ class OnboardingController extends Controller
         $request->validate([
             'fecha_nacimiento' => 'required|date',
             'telefono' => 'required|string',
-            'genero' => 'required|in:M,F,O',
+            'genero' => 'required|in:masculino,femenino,otro',
             'ocupacion' => 'required|string'
         ]);
 
         $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
         
+        // Mapear los valores del género si es necesario
+        $generoMap = [
+            'masculino' => 'M',
+            'femenino' => 'F',
+            'otro' => 'O'
+        ];
+
         $cliente->update([
             'fecha_nacimiento' => $request->fecha_nacimiento,
             'telefono' => $request->telefono,
-            'genero' => $request->genero,
+            'genero' => $generoMap[$request->genero] ?? $request->genero,
             'ocupacion' => $request->ocupacion
         ]);
 
