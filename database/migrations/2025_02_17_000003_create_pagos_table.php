@@ -14,8 +14,11 @@ return new class extends Migration
             $table->foreignId('id_usuario')->constrained('users', 'id');
             $table->decimal('monto', 10, 2);
             $table->date('fecha_pago');
-            $table->enum('estado_pago', ['pagado', 'pendiente', 'parcial']);
+            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente');
             $table->foreignId('id_metodo_pago')->constrained('metodos_pago', 'id_metodo_pago');
+            $table->string('comprobante_url')->nullable();
+            $table->text('notas')->nullable();
+            $table->timestamp('fecha_aprobacion')->nullable();
             $table->timestamps();
         });
     }

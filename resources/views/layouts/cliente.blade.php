@@ -154,6 +154,17 @@
                           class="ml-3">Membresía</span>
                 </a>
 
+                <!-- Pagos en Línea - Nueva opción -->
+                <a href="{{ route('cliente.pagos.index') }}" 
+                   class="flex items-center px-3 py-2.5 rounded-lg text-white hover:bg-white/5 transition-all duration-200 {{ request()->routeIs('cliente.pagos.*') ? 'bg-white/10' : '' }}">
+                    <x-icons.payment class="w-5 h-5 shrink-0" />
+                    <span x-show="isExpanded" 
+                          x-transition:enter="transition-opacity duration-300"
+                          x-transition:enter-start="opacity-0"
+                          x-transition:enter-end="opacity-100"
+                          class="ml-3">Pagos en Línea</span>
+                </a>
+
                 <!-- Reportes -->
                 <a href="{{ route('cliente.reportes') }}" 
                    class="flex items-center px-3 py-2.5 text-white hover:bg-white/10 rounded-lg {{ request()->routeIs('cliente.reportes*') ? 'bg-white/10' : '' }}">

@@ -98,9 +98,16 @@ class ReporteController extends Controller
                 ->whereNotNull('hora_salida')
                 ->get()
                 ->sum(function($asistencia) {
-                    $entrada = Carbon::parse($asistencia->fecha_asistencia->format('Y-m-d') . ' ' . $asistencia->hora_ingreso);
-                    $salida = Carbon::parse($asistencia->fecha_asistencia->format('Y-m-d') . ' ' . $asistencia->hora_salida);
-                    return $entrada->diffInMinutes($salida);
+                    try {
+                        if (!$asistencia->fecha_asistencia || !$asistencia->hora_ingreso || !$asistencia->hora_salida) {
+                            return 0;
+                        }
+                        $entrada = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_ingreso);
+                        $salida = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_salida);
+                        return $entrada->diffInMinutes($salida);
+                    } catch (\Exception $e) {
+                        return 0;
+                    }
                 })
         ];
 
@@ -185,9 +192,16 @@ class ReporteController extends Controller
                 ->whereNotNull('hora_salida')
                 ->get()
                 ->sum(function($asistencia) {
-                    $entrada = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_ingreso);
-                    $salida = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_salida);
-                    return $entrada->diffInMinutes($salida);
+                    try {
+                        if (!$asistencia->fecha_asistencia || !$asistencia->hora_ingreso || !$asistencia->hora_salida) {
+                            return 0;
+                        }
+                        $entrada = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_ingreso);
+                        $salida = Carbon::parse($asistencia->fecha_asistencia . ' ' . $asistencia->hora_salida);
+                        return $entrada->diffInMinutes($salida);
+                    } catch (\Exception $e) {
+                        return 0;
+                    }
                 }),
             'cambio_peso' => $this->calcularCambioPeso($cliente->id_cliente)
         ];

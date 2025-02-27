@@ -94,10 +94,10 @@ class AsistenciasSheet implements FromCollection, WithHeadings, WithTitle
             ->get()
             ->map(function($asistencia) {
                 return [
-                    'Fecha' => $asistencia->fecha_asistencia,
-                    'Hora Ingreso' => $asistencia->hora_ingreso,
+                    'Fecha' => $asistencia->fecha_asistencia ?? 'N/A',
+                    'Hora Ingreso' => $asistencia->hora_ingreso ?? 'N/A',
                     'Hora Salida' => $asistencia->hora_salida ?? 'No registrada',
-                    'Estado' => ucfirst($asistencia->estado)
+                    'Estado' => ucfirst($asistencia->estado ?? 'N/A')
                 ];
             });
     }
