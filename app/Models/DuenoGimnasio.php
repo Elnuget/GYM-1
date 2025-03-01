@@ -16,7 +16,8 @@ class DuenoGimnasio extends Model
         'user_id',
         'nombre_comercial',
         'telefono_gimnasio',
-        'direccion_gimnasio'
+        'direccion_gimnasio',
+        'logo'
     ];
 
     public function user()

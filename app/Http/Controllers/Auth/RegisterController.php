@@ -418,116 +418,244 @@ class RegisterController extends Controller
     
     public function completarRegistroDueno(Request $request)
     {
-        $user = auth()->user();
-        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
-        
-        $request->validate([
-            'nombre_comercial' => 'required|string|max:255',
-            'telefono_gimnasio' => 'required|string|max:20',
-            'direccion_gimnasio' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'logo_gimnasio' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'telefono_personal' => 'required|string|max:20',
-            'direccion_personal' => 'required|string|max:255',
-            'membresia_nombre' => 'required|string|max:255',
-            'membresia_precio' => 'required|numeric|min:0',
-            'membresia_duracion' => 'required|integer|min:1',
-            'membresia_tipo' => 'required|in:basica,estandar,premium',
-            'membresia_descripcion' => 'nullable|string',
-        ]);
-        
-        // Procesar foto de perfil
-        if ($request->hasFile('foto_perfil')) {
-            $fotoPerfilPath = $request->file('foto_perfil')->store('fotos_perfil', 'public');
-            $user->foto_perfil = 'storage/' . $fotoPerfilPath;
-            $user->save();
-        }
-        
-        // Actualizar información personal del dueño
-        $user->telefono = $request->telefono_personal;
-        $user->direccion = $request->direccion_personal;
-        $user->save();
-        
-        // Actualizar información del dueño
-        $dueno->update([
-            'nombre_comercial' => $request->nombre_comercial,
-            'telefono_gimnasio' => $request->telefono_gimnasio,
-            'direccion_gimnasio' => $request->direccion_gimnasio,
-        ]);
-        
-        // Crear el gimnasio si no existe
-        $gimnasio = Gimnasio::where('dueno_id', $dueno->id_dueno)->first();
-        
-        if (!$gimnasio) {
-            // Asegurarse de que dueno_id no sea nulo
-            if (!$dueno->id_dueno) {
-                // Log para depuración
-                \Log::error('Error: id_dueno es nulo para el usuario ' . $user->id);
-                return redirect()->back()->with('error', 'Error al registrar el gimnasio: ID de dueño no encontrado');
+        try {
+            // Validar los datos del paso 3 (membresía)
+            $validator = Validator::make($request->all(), [
+                'membresia_nombre' => 'required|string|max:255',
+                'membresia_precio' => 'required|numeric|min:0',
+                'membresia_duracion' => 'required|integer|min:1',
+                'membresia_tipo' => 'required|string|in:basica,estandar,premium',
+                'membresia_descripcion' => 'nullable|string|max:1000',
+            ]);
+
+            if ($validator->fails()) {
+                return back()->withErrors($validator)->withInput();
             }
-            
+
+            // Obtener datos de los pasos anteriores desde la sesión
+            $paso1 = session('dueno_paso1', []);
+            $paso2 = session('dueno_paso2', []);
+
+            // Iniciar transacción
+            DB::beginTransaction();
+
             try {
-                $gimnasio = Gimnasio::create([
-                    'nombre' => $request->nombre_comercial,
-                    'telefono' => $request->telefono_gimnasio,
-                    'direccion' => $request->direccion_gimnasio,
-                    'descripcion' => $request->descripcion,
-                    'dueno_id' => $dueno->id_dueno // Usar id_dueno en lugar de id
-                ]);
+                // Obtener el usuario actual (dueño)
+                $user = auth()->user();
+                $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+
+                if (!$duenoGimnasio) {
+                    throw new \Exception('No se encontró el registro del dueño del gimnasio');
+                }
+
+                // Crear el gimnasio si no existe
+                $gimnasio = Gimnasio::where('dueno_id', $duenoGimnasio->id)->first();
                 
-                // Procesar logo del gimnasio
-                if ($request->hasFile('logo_gimnasio')) {
-                    $logoPath = $request->file('logo_gimnasio')->store('logos_gimnasio', 'public');
-                    $gimnasio->logo = 'storage/' . $logoPath;
+                if (!$gimnasio) {
+                    $gimnasio = new Gimnasio();
+                    $gimnasio->nombre = $paso2['nombre_comercial'] ?? $request->nombre_comercial;
+                    $gimnasio->telefono = $paso2['telefono_gimnasio'] ?? $request->telefono_gimnasio;
+                    $gimnasio->direccion = $paso2['direccion_gimnasio'] ?? $request->direccion_gimnasio;
+                    // La descripción se guarda en la tabla gimnasios, no en duenos_gimnasios
+                    $gimnasio->descripcion = $paso2['descripcion'] ?? $request->descripcion;
+                    $gimnasio->dueno_id = $duenoGimnasio->id;
+                    
+                    if (isset($paso2['logo_gimnasio'])) {
+                        $gimnasio->logo = str_replace('public/', 'storage/', $paso2['logo_gimnasio']);
+                    } elseif ($request->hasFile('logo_gimnasio')) {
+                        $path = $request->file('logo_gimnasio')->store('public/gimnasios/logos');
+                        $gimnasio->logo = str_replace('public/', 'storage/', $path);
+                    }
+                    
                     $gimnasio->save();
                 }
+
+                // Crear la membresía inicial
+                $membresia = new \App\Models\Membresia();
+                $membresia->gimnasio_id = $gimnasio->id_gimnasio;
+                $membresia->nombre = $request->membresia_nombre;
+                $membresia->precio = $request->membresia_precio;
+                $membresia->duracion_dias = $request->membresia_duracion;
+                $membresia->tipo = $request->membresia_tipo;
+                $membresia->descripcion = $request->membresia_descripcion;
+                $membresia->activa = true;
+                $membresia->save();
+
+                // Marcar al usuario como configurado
+                $user->configuracion_completa = true;
+                $user->save();
+
+                // Limpiar datos de sesión
+                session()->forget(['dueno_paso1', 'dueno_paso2', 'current_step']);
+
+                // Confirmar transacción
+                DB::commit();
+
+                // Redirigir al dashboard con mensaje de éxito
+                return redirect()->route('dashboard')->with('success', '¡Registro completado con éxito! Ya puedes comenzar a administrar tu gimnasio.');
+
             } catch (\Exception $e) {
-                \Log::error('Error al crear gimnasio: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Error al registrar el gimnasio: ' . $e->getMessage());
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Error al completar el registro: ' . $e->getMessage()])->withInput();
             }
-        } else {
-            // Actualizar gimnasio existente
-            $gimnasio->update([
-                'nombre' => $request->nombre_comercial,
-                'telefono' => $request->telefono_gimnasio,
-                'direccion' => $request->direccion_gimnasio,
-                'descripcion' => $request->descripcion,
-            ]);
-            
-            // Procesar logo del gimnasio
-            if ($request->hasFile('logo_gimnasio')) {
-                $logoPath = $request->file('logo_gimnasio')->store('logos_gimnasio', 'public');
-                $gimnasio->logo = 'storage/' . $logoPath;
-                $gimnasio->save();
-            }
-        }
-        
-        // Crear tipo de membresía
-        try {
-            \App\Models\TipoMembresia::create([
-                'gimnasio_id' => $gimnasio->id_gimnasio,
-                'nombre' => $request->membresia_nombre,
-                'descripcion' => $request->membresia_descripcion,
-                'precio' => $request->membresia_precio,
-                'duracion_dias' => $request->membresia_duracion,
-                'tipo' => $request->membresia_tipo,
-                'estado' => true
-            ]);
         } catch (\Exception $e) {
-            \Log::error('Error al crear tipo de membresía: ' . $e->getMessage());
-            // No retornamos error aquí para no interrumpir el flujo, pero registramos el error
+            return back()->withErrors(['error' => 'Error en el servidor: ' . $e->getMessage()])->withInput();
         }
-        
-        return redirect()->route('dashboard')->with('success', 'Información del gimnasio actualizada correctamente');
     }
 
     protected function redirectTo()
     {
         if (auth()->user()->hasRole('cliente')) {
-            return route('cliente.bienvenida');
+            return route('cliente.dashboard');
+        } elseif (auth()->user()->hasRole('dueño')) {
+            return route('dashboard');
+        } elseif (auth()->user()->hasRole('empleado')) {
+            return route('dashboard');
+        } else {
+            return route('dashboard');
         }
-        // ... otras redirecciones según el rol ...
-        return route('dashboard');
+    }
+    
+    /**
+     * Guarda los datos de un paso específico del formulario de registro de dueño
+     */
+    public function guardarPasoDueno(Request $request)
+    {
+        try {
+            // Obtener el paso actual
+            $currentStep = $request->input('current_step', 1);
+            
+            // Validar según el paso actual
+            switch ($currentStep) {
+                case 1:
+                    $validator = Validator::make($request->all(), [
+                        'telefono_personal' => 'required|string|max:20',
+                        'direccion_personal' => 'required|string|max:255',
+                        'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                    ]);
+                    
+                    if ($validator->fails()) {
+                        return response()->json([
+                            'success' => false,
+                            'errors' => $validator->errors()
+                        ], 422);
+                    }
+                    
+                    // Guardar datos en sesión
+                    session(['dueno_paso1' => [
+                        'telefono_personal' => $request->telefono_personal,
+                        'direccion_personal' => $request->direccion_personal,
+                    ]]);
+                    
+                    // Guardar el paso actual en la sesión
+                    session(['current_step' => 2]);
+                    
+                    // Procesar foto de perfil si existe
+                    if ($request->hasFile('foto_perfil')) {
+                        $path = $request->file('foto_perfil')->store('public/usuarios/fotos');
+                        session(['dueno_paso1.foto_perfil' => $path]);
+                    }
+                    
+                    // Actualizar datos del usuario
+                    $user = auth()->user();
+                    $user->telefono = $request->telefono_personal;
+                    $user->direccion = $request->direccion_personal;
+                    
+                    // Guardar foto de perfil si existe
+                    if ($request->hasFile('foto_perfil')) {
+                        $user->foto_perfil = str_replace('public/', 'storage/', $path);
+                    }
+                    
+                    $user->save();
+                    
+                    // Actualizar o crear registro de dueño de gimnasio
+                    $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+                    if (!$duenoGimnasio) {
+                        $duenoGimnasio = new DuenoGimnasio();
+                        $duenoGimnasio->user_id = $user->id;
+                        $duenoGimnasio->save();
+                    }
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Información personal guardada correctamente'
+                    ]);
+                    
+                case 2:
+                    $validator = Validator::make($request->all(), [
+                        'nombre_comercial' => 'required|string|max:255',
+                        'telefono_gimnasio' => 'required|string|max:20',
+                        'direccion_gimnasio' => 'required|string|max:255',
+                        'descripcion' => 'nullable|string|max:1000',
+                        'logo_gimnasio' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                    ]);
+                    
+                    if ($validator->fails()) {
+                        return response()->json([
+                            'success' => false,
+                            'errors' => $validator->errors()
+                        ], 422);
+                    }
+                    
+                    // Guardar datos en sesión
+                    session(['dueno_paso2' => [
+                        'nombre_comercial' => $request->nombre_comercial,
+                        'telefono_gimnasio' => $request->telefono_gimnasio,
+                        'direccion_gimnasio' => $request->direccion_gimnasio,
+                        'descripcion' => $request->descripcion,
+                    ]]);
+                    
+                    // Guardar el paso actual en la sesión
+                    session(['current_step' => 3]);
+                    
+                    // Procesar logo del gimnasio si existe
+                    if ($request->hasFile('logo_gimnasio')) {
+                        $path = $request->file('logo_gimnasio')->store('public/gimnasios/logos');
+                        session(['dueno_paso2.logo_gimnasio' => $path]);
+                    }
+                    
+                    // Actualizar datos del dueño del gimnasio
+                    $duenoGimnasio = DuenoGimnasio::where('user_id', auth()->id())->first();
+                    if ($duenoGimnasio) {
+                        // Actualizar solo los campos que existen en la tabla
+                        $duenoGimnasio->nombre_comercial = $request->nombre_comercial;
+                        $duenoGimnasio->telefono_gimnasio = $request->telefono_gimnasio;
+                        $duenoGimnasio->direccion_gimnasio = $request->direccion_gimnasio;
+                        // No intentamos guardar la descripción en la tabla duenos_gimnasios
+                        // ya que esta columna no existe
+                        
+                        // Guardar el logo solo si se ha subido un nuevo archivo
+                        if ($request->hasFile('logo_gimnasio')) {
+                            // Ya hemos almacenado el archivo arriba, solo necesitamos actualizar la ruta
+                            $duenoGimnasio->logo = str_replace('public/', 'storage/', $path);
+                        }
+                        
+                        $duenoGimnasio->save();
+                    }
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Información del gimnasio guardada correctamente'
+                    ]);
+                    
+                case 3:
+                    // No es necesario validar aquí ya que el paso 3 se envía directamente al completar el registro
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Datos de membresía listos para ser guardados'
+                    ]);
+                    
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Paso no válido'
+                    ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar los datos: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

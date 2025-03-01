@@ -51,7 +51,7 @@
         <div x-data="{ mobileMenuOpen: false }">
             <div class="min-h-screen">
                 @include('layouts.navigation')
-                
+                <!-- NO INCLUYAS SLOT POR QUE YA SE LLAMA DENTRO DE NAVIGATION -->
             
             </div>
 

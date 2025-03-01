@@ -83,6 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/completar-registro/cliente', [RegisterController::class, 'completarRegistroCliente'])->name('completar.registro.cliente');
     Route::post('/completar-registro/empleado', [RegisterController::class, 'completarRegistroEmpleado'])->name('completar.registro.empleado');
     Route::post('/completar-registro/dueno', [RegisterController::class, 'completarRegistroDueno'])->name('completar.registro.dueno');
+    Route::post('/completar-registro/dueno/guardar-paso', [RegisterController::class, 'guardarPasoDueno'])->name('guardar.paso.dueno');
 
     // Grupo de rutas para clientes
     Route::middleware(['auth', 'role:cliente'])

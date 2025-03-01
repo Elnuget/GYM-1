@@ -1,7 +1,52 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div x-data="{ step: 1 }" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div x-data="{ 
+                step: {{ session('current_step', 1) }},
+                showSuccessModal: false,
+                modalMessage: '',
+                formData: {},
+                
+                saveStep(currentStep) {
+                    // Recopilar datos del formulario actual
+                    const formElement = this.$refs.form;
+                    const formData = new FormData(formElement);
+                    
+                    // Guardar datos del paso actual mediante AJAX
+                    fetch('{{ route('guardar.paso.dueno') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Mostrar modal de éxito
+                            this.modalMessage = data.message || `Paso ${currentStep} guardado correctamente`;
+                            this.showSuccessModal = true;
+                            
+                            // Avanzar al siguiente paso después de un breve retraso
+                            setTimeout(() => {
+                                this.showSuccessModal = false;
+                                if (currentStep < 3) {
+                                    this.step = currentStep + 1;
+                                }
+                            }, 1500);
+                        } else {
+                            // Mostrar errores si los hay
+                            alert(data.message || 'Ha ocurrido un error al guardar los datos');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ha ocurrido un error al procesar la solicitud');
+                    });
+                }
+            }" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <!-- Indicador de Progreso -->
                     <div class="mb-8">
@@ -35,8 +80,32 @@
                         </div>
                     </div>
                     
+                    <!-- Modal de Éxito -->
+                    <div x-show="showSuccessModal" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform scale-90"
+                         x-transition:enter-end="opacity-100 transform scale-100"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 transform scale-100"
+                         x-transition:leave-end="opacity-0 transform scale-90"
+                         class="fixed inset-0 z-50 flex items-center justify-center">
+                        <div class="fixed inset-0 bg-black opacity-50"></div>
+                        <div class="relative bg-white rounded-lg p-8 max-w-md mx-auto shadow-xl">
+                            <div class="text-center">
+                                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h3 class="mt-3 text-lg font-medium text-gray-900">¡Éxito!</h3>
+                                <p class="mt-2 text-sm text-gray-500" x-text="modalMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form method="POST" action="{{ route('completar.registro.dueno') }}" enctype="multipart/form-data" x-ref="form">
                         @csrf
+                        <input type="hidden" name="current_step" x-bind:value="step">
                         
                         <!-- Paso 1: Información Personal -->
                         <div x-show="step === 1">
@@ -73,8 +142,8 @@
                             </div>
                             
                             <div class="flex justify-end mt-6">
-                                <button type="button" x-on:click="step = 2" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    Siguiente
+                                <button type="button" x-on:click="saveStep(1)" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Guardar y Continuar
                                 </button>
                             </div>
                         </div>
@@ -89,21 +158,52 @@
                                 <!-- Nombre Comercial -->
                                 <div>
                                     <x-input-label for="nombre_comercial" :value="__('Nombre Comercial del Gimnasio')" />
-                                    <x-text-input id="nombre_comercial" class="block mt-1 w-full" type="text" name="nombre_comercial" :value="old('nombre_comercial')" required autofocus />
+                                    @php
+                                        $duenoGimnasio = \App\Models\DuenoGimnasio::where('user_id', auth()->id())->first();
+                                        $nombreComercial = old('nombre_comercial');
+                                        if (!$nombreComercial) {
+                                            if ($duenoGimnasio && $duenoGimnasio->nombre_comercial) {
+                                                $nombreComercial = $duenoGimnasio->nombre_comercial;
+                                            } elseif (session()->has('dueno_paso2.nombre_comercial')) {
+                                                $nombreComercial = session('dueno_paso2.nombre_comercial');
+                                            }
+                                        }
+                                    @endphp
+                                    <x-text-input id="nombre_comercial" class="block mt-1 w-full" type="text" name="nombre_comercial" :value="$nombreComercial" required autofocus />
                                     <x-input-error :messages="$errors->get('nombre_comercial')" class="mt-2" />
                                 </div>
                                 
                                 <!-- Teléfono del Gimnasio -->
                                 <div>
                                     <x-input-label for="telefono_gimnasio" :value="__('Teléfono del Gimnasio')" />
-                                    <x-text-input id="telefono_gimnasio" class="block mt-1 w-full" type="text" name="telefono_gimnasio" :value="old('telefono_gimnasio')" required placeholder="+34 912345678" />
+                                    @php
+                                        $telefonoGimnasio = old('telefono_gimnasio');
+                                        if (!$telefonoGimnasio) {
+                                            if ($duenoGimnasio && $duenoGimnasio->telefono_gimnasio) {
+                                                $telefonoGimnasio = $duenoGimnasio->telefono_gimnasio;
+                                            } elseif (session()->has('dueno_paso2.telefono_gimnasio')) {
+                                                $telefonoGimnasio = session('dueno_paso2.telefono_gimnasio');
+                                            }
+                                        }
+                                    @endphp
+                                    <x-text-input id="telefono_gimnasio" class="block mt-1 w-full" type="text" name="telefono_gimnasio" :value="$telefonoGimnasio" required placeholder="+34 912345678" />
                                     <x-input-error :messages="$errors->get('telefono_gimnasio')" class="mt-2" />
                                 </div>
                                 
                                 <!-- Dirección del Gimnasio -->
                                 <div class="md:col-span-2">
                                     <x-input-label for="direccion_gimnasio" :value="__('Dirección del Gimnasio')" />
-                                    <x-text-input id="direccion_gimnasio" class="block mt-1 w-full" type="text" name="direccion_gimnasio" :value="old('direccion_gimnasio')" required />
+                                    @php
+                                        $direccionGimnasio = old('direccion_gimnasio');
+                                        if (!$direccionGimnasio) {
+                                            if ($duenoGimnasio && $duenoGimnasio->direccion_gimnasio) {
+                                                $direccionGimnasio = $duenoGimnasio->direccion_gimnasio;
+                                            } elseif (session()->has('dueno_paso2.direccion_gimnasio')) {
+                                                $direccionGimnasio = session('dueno_paso2.direccion_gimnasio');
+                                            }
+                                        }
+                                    @endphp
+                                    <x-text-input id="direccion_gimnasio" class="block mt-1 w-full" type="text" name="direccion_gimnasio" :value="$direccionGimnasio" required />
                                     <x-input-error :messages="$errors->get('direccion_gimnasio')" class="mt-2" />
                                 </div>
                                 
@@ -112,7 +212,25 @@
                                     <x-input-label for="logo_gimnasio" :value="__('Logo del Gimnasio')" />
                                     <div class="mt-2 flex items-center">
                                         <div class="w-32 h-32 bg-gray-200 flex items-center justify-center overflow-hidden">
-                                            <img id="preview-logo" src="{{ asset('images/default-gym-logo.png') }}" alt="Vista previa del logo" class="w-full h-full object-contain">
+                                            @php
+                                                $duenoGimnasio = \App\Models\DuenoGimnasio::where('user_id', auth()->id())->first();
+                                                $logoUrl = null;
+                                                
+                                                // Verificar si hay un logo en la sesión
+                                                if (session()->has('dueno_paso2.logo_gimnasio')) {
+                                                    $logoUrl = str_replace('public/', 'storage/', session('dueno_paso2.logo_gimnasio'));
+                                                } 
+                                                // Si no hay en sesión, verificar si hay en la base de datos
+                                                elseif ($duenoGimnasio && $duenoGimnasio->logo) {
+                                                    $logoUrl = $duenoGimnasio->logo;
+                                                }
+                                                
+                                                // Verificar si la imagen existe físicamente
+                                                if ($logoUrl && !file_exists(public_path($logoUrl))) {
+                                                    $logoUrl = null;
+                                                }
+                                            @endphp
+                                            <img id="preview-logo" src="{{ $logoUrl ? asset($logoUrl) : asset('images/default-gym-logo.png') }}" alt="Vista previa del logo" class="w-full h-full object-contain">
                                         </div>
                                         <input type="file" id="logo_gimnasio" name="logo_gimnasio" class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*" onchange="document.getElementById('preview-logo').src = window.URL.createObjectURL(this.files[0])">
                                     </div>
@@ -122,7 +240,19 @@
                                 <!-- Descripción -->
                                 <div class="md:col-span-2">
                                     <x-input-label for="descripcion" :value="__('Descripción del Gimnasio')" />
-                                    <textarea id="descripcion" name="descripcion" rows="4" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Describe brevemente tu gimnasio, servicios, especialidades, etc.">{{ old('descripcion') }}</textarea>
+                                    @php
+                                        $descripcion = old('descripcion');
+                                        if (!$descripcion) {
+                                            // Intentar obtener la descripción del gimnasio si existe
+                                            $gimnasio = \App\Models\Gimnasio::where('dueno_id', $duenoGimnasio->id_dueno ?? null)->first();
+                                            if ($gimnasio && $gimnasio->descripcion) {
+                                                $descripcion = $gimnasio->descripcion;
+                                            } elseif (session()->has('dueno_paso2.descripcion')) {
+                                                $descripcion = session('dueno_paso2.descripcion');
+                                            }
+                                        }
+                                    @endphp
+                                    <textarea id="descripcion" name="descripcion" rows="4" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Describe brevemente tu gimnasio, servicios, especialidades, etc.">{{ $descripcion }}</textarea>
                                     <x-input-error :messages="$errors->get('descripcion')" class="mt-2" />
                                 </div>
                             </div>
@@ -131,8 +261,8 @@
                                 <button type="button" x-on:click="step = 1" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Anterior
                                 </button>
-                                <button type="button" x-on:click="step = 3" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    Siguiente
+                                <button type="button" x-on:click="saveStep(2)" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Guardar y Continuar
                                 </button>
                             </div>
                         </div>
@@ -226,8 +356,38 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('formData', () => ({
-                step: 1
+                step: {{ session('current_step', 1) }}
             }));
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay mensajes de error en el formulario
+            const hasErrors = {{ $errors->any() ? 'true' : 'false' }};
+            
+            // Si hay errores y estamos en el paso 3, mostrar el paso 3
+            if (hasErrors && {{ session('current_step', 1) }} === 3) {
+                const stepElement = document.querySelector('[x-data]');
+                if (stepElement && typeof Alpine !== 'undefined') {
+                    Alpine.evaluate(stepElement, 'step = 3');
+                }
+            }
+            
+            // Asegurar que el formulario se envíe correctamente en el paso 3
+            const form = document.querySelector('form');
+            const submitButton = document.querySelector('button[type="submit"]');
+            
+            if (form && submitButton) {
+                submitButton.addEventListener('click', function() {
+                    // Asegurar que el paso actual sea 3 antes de enviar
+                    const currentStepInput = document.querySelector('input[name="current_step"]');
+                    if (currentStepInput) {
+                        currentStepInput.value = 3;
+                    }
+                    
+                    // Enviar el formulario
+                    form.submit();
+                });
+            }
         });
     </script>
     @endpush
