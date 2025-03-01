@@ -1,14 +1,15 @@
 <x-guest-layout>
     <div x-data="{ 
-        userType: 'cliente',
+        userType: '',
         showModal: false,
         modalType: '',
-        modalMessage: ''
+        modalMessage: '',
+        showForm: false
     }" class="flex gap-8">
         <!-- Columna de botones a la izquierda -->
-        <div class="w-1/3 space-y-4">
+        <div class="w-full md:w-1/3 space-y-4" :class="{'md:w-1/3': !showForm, 'md:w-1/3': showForm}">
             <!-- Botón para Dueños de Gimnasio -->
-            <div @click="userType = 'dueno'" 
+            <div @click="userType = 'dueno'; showForm = true" 
                  :class="{'ring-2 ring-emerald-500 bg-emerald-50': userType === 'dueno'}"
                  class="cursor-pointer rounded-xl border p-6 hover:shadow-lg transition-all duration-200">
                 <div class="flex items-center gap-4">
@@ -25,7 +26,7 @@
             </div>
 
             <!-- Botón para Clientes -->
-            <div @click="userType = 'cliente'"
+            <div @click="userType = 'cliente'; showForm = true"
                  :class="{'ring-2 ring-emerald-500 bg-emerald-50': userType === 'cliente'}"
                  class="cursor-pointer rounded-xl border p-6 hover:shadow-lg transition-all duration-200">
                 <div class="flex items-center gap-4">
@@ -42,7 +43,7 @@
             </div>
 
             <!-- Botón para Empleados -->
-            <div @click="userType = 'empleado'"
+            <div @click="userType = 'empleado'; showForm = true"
                  :class="{'ring-2 ring-emerald-500 bg-emerald-50': userType === 'empleado'}"
                  class="cursor-pointer rounded-xl border p-6 hover:shadow-lg transition-all duration-200">
                 <div class="flex items-center gap-4">
@@ -60,7 +61,7 @@
         </div>
 
         <!-- Contenedor de formularios a la derecha -->
-        <div class="w-2/3">
+        <div class="w-full md:w-2/3" x-show="showForm" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
             <!-- Formulario para Clientes -->
             <form x-show="userType === 'cliente'" 
                   method="POST" 
@@ -131,6 +132,11 @@
                     })">
                 @csrf
                 <input type="hidden" name="role" value="cliente">
+
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-700 mb-2">Registro de Cliente</h2>
+                    <p class="text-gray-600">Únete a nuestra comunidad fitness y comienza tu viaje hacia una vida más saludable. Regístrate para acceder a todos nuestros servicios.</p>
+                </div>
 
                 <div>
                     <x-input-label for="nombre" :value="__('Nombre Completo')" />
@@ -377,6 +383,11 @@
                     })">
                 @csrf
                 <input type="hidden" name="role" value="empleado">
+
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-700 mb-2">Registro de Empleado</h2>
+                    <p class="text-gray-600">Como miembro del equipo, tendrás acceso a herramientas especiales para gestionar tus actividades y horarios en el gimnasio.</p>
+                </div>
 
                 <div>
                     <x-input-label for="nombre_empleado" :value="__('Nombre Completo')" />
