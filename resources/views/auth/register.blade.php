@@ -62,7 +62,73 @@
         <!-- Contenedor de formularios a la derecha -->
         <div class="w-2/3">
             <!-- Formulario para Clientes -->
-            <form x-show="userType === 'cliente'" method="POST" action="{{ route('register.cliente') }}" class="bg-white p-8 rounded-xl shadow-sm border max-w-2xl">
+            <form x-show="userType === 'cliente'" 
+                  method="POST" 
+                  action="{{ route('register.cliente') }}" 
+                  class="bg-white p-8 rounded-xl shadow-sm border max-w-2xl"
+                  @submit.prevent="
+                    const formData = new FormData($el);
+                    fetch($el.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 422) {
+                                return response.json().then(data => {
+                                    throw { type: 'validation', errors: data.errors };
+                                });
+                            } else if (response.status === 500) {
+                                return response.json().then(data => {
+                                    throw { type: 'server', message: data.message || 'Error interno del servidor' };
+                                });
+                            }
+                            throw { type: 'http', status: response.status };
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showModal = true;
+                        if (data.success) {
+                            modalType = 'success';
+                            modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
+                            setTimeout(() => {
+                                window.location.href = '{{ route('dashboard') }}';
+                            }, 2000);
+                        } else {
+                            modalType = 'error';
+                            if (data.errors) {
+                                const errorMessages = Object.values(data.errors).flat();
+                                modalMessage = JSON.stringify(errorMessages);
+                            } else {
+                                modalMessage = JSON.stringify([data.message || 'Ha ocurrido un error inesperado durante el registro.']);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        showModal = true;
+                        modalType = 'error';
+                        if (error.type === 'validation') {
+                            const errorMessages = Object.values(error.errors).flat();
+                            modalMessage = JSON.stringify(errorMessages);
+                        } else if (error.type === 'server') {
+                            modalMessage = JSON.stringify(['Error del servidor: ' + error.message]);
+                        } else if (error.type === 'http') {
+                            modalMessage = JSON.stringify(['Error de respuesta del servidor (HTTP ' + error.status + '). Por favor, intenta nuevamente.']);
+                        } else {
+                            console.error('Error detallado:', error);
+                            modalMessage = JSON.stringify([
+                                'Error de conexión. Verifica:',
+                                '1. Tu conexión a internet',
+                                '2. Que el servidor esté funcionando',
+                                '3. Que no haya problemas con el cortafuegos'
+                            ]);
+                        }
+                    })">
                 @csrf
                 <input type="hidden" name="role" value="cliente">
 
@@ -121,32 +187,67 @@
                   action="{{ route('register.dueno') }}" 
                   class="bg-white p-8 rounded-xl shadow-sm border max-w-2xl"
                   @submit.prevent="
+                    const formData = new FormData($el);
                     fetch($el.action, {
                         method: 'POST',
-                        body: new FormData($el),
+                        body: formData,
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json'
                         }
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 422) {
+                                return response.json().then(data => {
+                                    throw { type: 'validation', errors: data.errors };
+                                });
+                            } else if (response.status === 500) {
+                                return response.json().then(data => {
+                                    throw { type: 'server', message: data.message || 'Error interno del servidor' };
+                                });
+                            }
+                            throw { type: 'http', status: response.status };
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        showModal = true;
                         if (data.success) {
-                            showModal = true;
                             modalType = 'success';
-                            modalMessage = data.message;
+                            modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
                             setTimeout(() => {
                                 window.location.href = '{{ route('dashboard') }}';
                             }, 2000);
                         } else {
-                            showModal = true;
                             modalType = 'error';
-                            modalMessage = data.message || 'Error al registrar. Por favor, intenta nuevamente.';
+                            if (data.errors) {
+                                const errorMessages = Object.values(data.errors).flat();
+                                modalMessage = JSON.stringify(errorMessages);
+                            } else {
+                                modalMessage = JSON.stringify([data.message || 'Ha ocurrido un error inesperado durante el registro.']);
+                            }
                         }
                     })
                     .catch(error => {
                         showModal = true;
                         modalType = 'error';
-                        modalMessage = 'Error al procesar la solicitud. Por favor, intenta nuevamente.';
+                        if (error.type === 'validation') {
+                            const errorMessages = Object.values(error.errors).flat();
+                            modalMessage = JSON.stringify(errorMessages);
+                        } else if (error.type === 'server') {
+                            modalMessage = JSON.stringify(['Error del servidor: ' + error.message]);
+                        } else if (error.type === 'http') {
+                            modalMessage = JSON.stringify(['Error de respuesta del servidor (HTTP ' + error.status + '). Por favor, intenta nuevamente.']);
+                        } else {
+                            console.error('Error detallado:', error);
+                            modalMessage = JSON.stringify([
+                                'Error de conexión. Verifica:',
+                                '1. Tu conexión a internet',
+                                '2. Que el servidor esté funcionando',
+                                '3. Que no haya problemas con el cortafuegos'
+                            ]);
+                        }
                     })">
                 @csrf
                 <input type="hidden" name="role" value="dueno">
@@ -207,7 +308,73 @@
             </form>
 
             <!-- Formulario para Empleados -->
-            <form x-show="userType === 'empleado'" method="POST" action="{{ route('register.empleado') }}" class="bg-white p-8 rounded-xl shadow-sm border max-w-2xl">
+            <form x-show="userType === 'empleado'" 
+                  method="POST" 
+                  action="{{ route('register.empleado') }}" 
+                  class="bg-white p-8 rounded-xl shadow-sm border max-w-2xl"
+                  @submit.prevent="
+                    const formData = new FormData($el);
+                    fetch($el.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 422) {
+                                return response.json().then(data => {
+                                    throw { type: 'validation', errors: data.errors };
+                                });
+                            } else if (response.status === 500) {
+                                return response.json().then(data => {
+                                    throw { type: 'server', message: data.message || 'Error interno del servidor' };
+                                });
+                            }
+                            throw { type: 'http', status: response.status };
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showModal = true;
+                        if (data.success) {
+                            modalType = 'success';
+                            modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
+                            setTimeout(() => {
+                                window.location.href = '{{ route('dashboard') }}';
+                            }, 2000);
+                        } else {
+                            modalType = 'error';
+                            if (data.errors) {
+                                const errorMessages = Object.values(data.errors).flat();
+                                modalMessage = JSON.stringify(errorMessages);
+                            } else {
+                                modalMessage = JSON.stringify([data.message || 'Ha ocurrido un error inesperado durante el registro.']);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        showModal = true;
+                        modalType = 'error';
+                        if (error.type === 'validation') {
+                            const errorMessages = Object.values(error.errors).flat();
+                            modalMessage = JSON.stringify(errorMessages);
+                        } else if (error.type === 'server') {
+                            modalMessage = JSON.stringify(['Error del servidor: ' + error.message]);
+                        } else if (error.type === 'http') {
+                            modalMessage = JSON.stringify(['Error de respuesta del servidor (HTTP ' + error.status + '). Por favor, intenta nuevamente.']);
+                        } else {
+                            console.error('Error detallado:', error);
+                            modalMessage = JSON.stringify([
+                                'Error de conexión. Verifica:',
+                                '1. Tu conexión a internet',
+                                '2. Que el servidor esté funcionando',
+                                '3. Que no haya problemas con el cortafuegos'
+                            ]);
+                        }
+                    })">
                 @csrf
                 <input type="hidden" name="role" value="empleado">
 
@@ -282,24 +449,52 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0">
-            <div class="bg-white rounded-lg p-6 max-w-sm mx-auto"
-                 :class="{ 'border-green-500': modalType === 'success', 'border-red-500': modalType === 'error' }">
-                <div class="flex items-center justify-center mb-4">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                 :class="{ 'border-l-4 border-green-500': modalType === 'success', 'border-l-4 border-red-500': modalType === 'error' }">
+                <div class="flex items-start">
+                    <!-- Icono de éxito -->
                     <template x-if="modalType === 'success'">
-                        <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
                     </template>
+                    <!-- Icono de error -->
                     <template x-if="modalType === 'error'">
-                        <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </template>
+                    
+                    <div class="ml-3 w-full">
+                        <h3 class="text-lg font-medium" :class="{ 'text-green-700': modalType === 'success', 'text-red-700': modalType === 'error' }">
+                            <span x-text="modalType === 'success' ? 'Operación Exitosa' : 'Error en el Registro'"></span>
+                        </h3>
+                        
+                        <!-- Mensaje principal -->
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-700" x-text="modalMessage"></p>
+                        </div>
+                        
+                        <!-- Lista de errores específicos -->
+                        <template x-if="modalType === 'error' && Array.isArray(JSON.parse(modalMessage || '[]'))">
+                            <div class="mt-3 bg-red-50 p-3 rounded-md">
+                                <ul class="list-disc list-inside text-sm text-red-600">
+                                    <template x-for="error in JSON.parse(modalMessage)" :key="error">
+                                        <li x-text="error"></li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <p class="text-center text-lg font-semibold mb-4" x-text="modalMessage"></p>
-                <div class="flex justify-center">
+                
+                <div class="mt-4 flex justify-end">
                     <button @click="showModal = false" 
-                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
                         Cerrar
                     </button>
                 </div>
@@ -307,3 +502,4 @@
         </div>
     </div>
 </x-guest-layout>
+

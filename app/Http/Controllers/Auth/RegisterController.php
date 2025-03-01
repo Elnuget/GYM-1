@@ -25,32 +25,66 @@ class RegisterController extends Controller
 
     public function registerCliente(Request $request)
     {
-        $request->validate([
-            'nombre' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'nombre' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
 
-        $user = User::create([
-            'name' => $request->nombre,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'rol' => 'cliente',
-        ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-        $user->assignRole('cliente');
+            DB::beginTransaction();
+            try {
+                // Crear el usuario
+                $user = User::create([
+                    'name' => $request->nombre,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'rol' => 'cliente'
+                ]);
 
-        $cliente = Cliente::create([
-            'user_id' => $user->id,
-            'gimnasio_id' => $request->gimnasio_id,
-        ]);
+                // Asignar rol
+                $user->assignRole('cliente');
 
-        event(new Registered($user));
+                // Crear el cliente
+                $cliente = new Cliente();
+                $cliente->user_id = $user->id;
+                $cliente->gimnasio_id = $request->gimnasio_id;
+                $cliente->nombre = $request->nombre;
+                $cliente->email = $request->email;
+                $cliente->save();
 
-        Auth::login($user);
+                DB::commit();
 
-        return redirect()->route('onboarding.perfil');
+                event(new Registered($user));
+                Auth::login($user);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => '¡Registro completado con éxito! Redirigiendo...',
+                    'redirect' => route('onboarding.perfil')
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al crear el registro: ' . $e->getMessage()
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function registerDueno(Request $request)
