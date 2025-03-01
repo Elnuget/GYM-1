@@ -241,49 +241,90 @@ class RegisterController extends Controller
 
     public function registerEmpleado(Request $request)
     {
-        $request->validate([
-            'nombre' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'telefono' => ['required', 'string', 'max:20'],
-            'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
-            'puesto' => ['required', 'string', 'max:100'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        DB::beginTransaction();
-
         try {
-            $user = User::create([
-                'name' => $request->nombre,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'rol' => 'entrenador',
-                'telefono' => $request->telefono,
+            $validator = Validator::make($request->all(), [
+                'nombre' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'telefono' => ['required', 'string', 'max:20'],
+                'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
+                'puesto' => ['required', 'string', 'max:100'],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'especialidad' => ['nullable', 'string', 'max:255'],
+                'certificaciones' => ['nullable', 'string', 'max:255'],
+                'experiencia' => ['nullable', 'string'],
+                'horario_disponibilidad' => ['nullable', 'string', 'max:255'],
+            ], [], [
+                'nombre' => 'nombre completo',
+                'email' => 'correo electrónico',
+                'telefono' => 'teléfono',
+                'gimnasio_id' => 'gimnasio',
+                'puesto' => 'puesto',
+                'password' => 'contraseña',
+                'especialidad' => 'especialidad',
+                'certificaciones' => 'certificaciones',
+                'experiencia' => 'experiencia',
+                'horario_disponibilidad' => 'horario de disponibilidad',
             ]);
 
-            // Asignar rol usando Spatie Permission
-            $user->assignRole('entrenador');
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-            // Crear el registro de empleado
-            DB::table('empleados')->insert([
-                'user_id' => $user->id,
-                'gimnasio_id' => $request->gimnasio_id,
-                'puesto' => $request->puesto,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            DB::beginTransaction();
 
-            DB::commit();
+            try {
+                // Crear el usuario
+                $user = User::create([
+                    'name' => $request->nombre,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'rol' => 'entrenador',
+                    'telefono' => $request->telefono,
+                ]);
 
-            event(new Registered($user));
+                // Asignar rol usando Spatie Permission
+                $user->assignRole('entrenador');
 
-            Auth::login($user);
+                // Crear el registro de entrenador
+                DB::table('entrenadores')->insert([
+                    'user_id' => $user->id,
+                    'gimnasio_id' => $request->gimnasio_id,
+                    'especialidad' => $request->especialidad,
+                    'certificaciones' => $request->certificaciones,
+                    'telefono' => $request->telefono,
+                    'experiencia' => $request->experiencia,
+                    'horario_disponibilidad' => $request->horario_disponibilidad,
+                    'estado' => 'activo',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            return redirect()->route('dashboard');
+                DB::commit();
 
+                event(new Registered($user));
+                Auth::login($user);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => '¡Registro completado con éxito! Redirigiendo...',
+                    'redirect' => route('dashboard')
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al registrar el entrenador: ' . $e->getMessage()
+                ], 500);
+            }
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Error al registrar el empleado: ' . $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage()
+            ], 500);
         }
     }
 

@@ -376,7 +376,7 @@
 
         <!-- Menú Entrenador -->
         @role('entrenador')
-        <div x-data="{ open: {{ request()->routeIs('rutinas.*') || request()->routeIs('clientes.*') || request()->routeIs('nutricion.*') ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ request()->routeIs('rutinas-predefinidas.*') || request()->routeIs('clientes.*') || request()->routeIs('nutricion.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" 
                     class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                     :class="{'bg-emerald-600/30': open}">
@@ -391,7 +391,7 @@
                 </div>
             </button>
             <div x-show="open" class="pl-4 mt-1 space-y-1">
-                <x-nav-link :href="route('rutinas.index')" :active="request()->routeIs('rutinas.*')" 
+                <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')" 
                     class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
