@@ -75,8 +75,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
     });
 
+    // Rutas para completar registro (accesible a todos los roles)
     Route::get('/completar-registro', [RegisterController::class, 'completarRegistro'])->name('completar.registro');
-    Route::post('/completar-registro', [RegisterController::class, 'completarRegistroStore'])->name('completar.registro.store');
+    Route::get('/completar-registro/cliente', [RegisterController::class, 'mostrarFormularioCliente'])->name('completar.registro.cliente.form');
+    Route::get('/completar-registro/empleado', [RegisterController::class, 'mostrarFormularioEmpleado'])->name('completar.registro.empleado.form');
+    Route::get('/completar-registro/dueno', [RegisterController::class, 'mostrarFormularioDueno'])->name('completar.registro.dueno.form');
+    Route::post('/completar-registro/cliente', [RegisterController::class, 'completarRegistroCliente'])->name('completar.registro.cliente');
+    Route::post('/completar-registro/empleado', [RegisterController::class, 'completarRegistroEmpleado'])->name('completar.registro.empleado');
+    Route::post('/completar-registro/dueno', [RegisterController::class, 'completarRegistroDueno'])->name('completar.registro.dueno');
 
     // Grupo de rutas para clientes
     Route::middleware(['auth', 'role:cliente'])

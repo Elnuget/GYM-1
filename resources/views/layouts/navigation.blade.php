@@ -42,6 +42,8 @@
     <!-- Scrollable Navigation Links Container -->
     <div class="flex-1 overflow-y-auto">
         <div class="p-4 space-y-2">
+            <!-- Alerta de Perfil Incompleto (Móvil) - Eliminada para evitar duplicación -->
+            
             <!-- Panel -->
             <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
                 class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
@@ -217,6 +219,66 @@
 
     <!-- Navigation Links -->
     <div class="flex-1 space-y-1 px-2 py-4">
+        <!-- Alerta de Perfil Incompleto (Escritorio) -->
+        @php
+            $user = Auth::user();
+            $perfilIncompleto = false;
+            $rutaCompletarPerfil = '';
+            $mensajeAlerta = '';
+            
+            if (Auth::check()) {
+                if ($user->hasRole('cliente') && !$user->cliente) {
+                    $perfilIncompleto = true;
+                    $rutaCompletarPerfil = route('completar.registro.cliente.form');
+                    $mensajeAlerta = 'Para acceder a todas las funcionalidades, completa tu perfil personal.';
+                } elseif ($user->hasRole('dueño') && (!$user->duenoGimnasio || !$user->duenoGimnasio->gimnasio)) {
+                    $perfilIncompleto = true;
+                    $rutaCompletarPerfil = route('completar.registro.dueno.form');
+                    $mensajeAlerta = 'Para acceder a todas las funcionalidades, registra tu gimnasio.';
+                } elseif (($user->hasRole('entrenador') || $user->hasRole('empleado')) && !$user->empleado) {
+                    $perfilIncompleto = true;
+                    $rutaCompletarPerfil = route('completar.registro.empleado.form');
+                    $mensajeAlerta = 'Para acceder a todas las funcionalidades, completa tu perfil profesional.';
+                }
+            }
+        @endphp
+        
+        @if($perfilIncompleto)
+        <div x-show="isExpanded" class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-md shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-amber-800">{{ __('Tu perfil está incompleto') }}</h3>
+                    <div class="mt-2 text-amber-700">
+                        <p>{{ __($mensajeAlerta) }}</p>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ $rutaCompletarPerfil }}" class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 focus:bg-amber-700 active:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            {{ __('Completar mi perfil ahora') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div x-show="!isExpanded" class="flex justify-center mb-4">
+            <a href="{{ $rutaCompletarPerfil }}" class="relative group">
+                <div class="p-1 bg-amber-500 rounded-full">
+                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <span class="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                    {{ __('Completar perfil') }}
+                </span>
+            </a>
+        </div>
+        @endif
+        
         <!-- Panel para todos los roles -->
         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
             class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">

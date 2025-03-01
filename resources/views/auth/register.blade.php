@@ -98,7 +98,7 @@
                             modalType = 'success';
                             modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
                             setTimeout(() => {
-                                window.location.href = '{{ route('dashboard') }}';
+                                window.location.href = '{{ route('completar.registro') }}';
                             }, 2000);
                         } else {
                             modalType = 'error';
@@ -223,7 +223,7 @@
                             modalType = 'success';
                             modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
                             setTimeout(() => {
-                                window.location.href = '{{ route('dashboard') }}';
+                                window.location.href = '{{ route('completar.registro') }}';
                             }, 2000);
                         } else {
                             modalType = 'error';
@@ -349,7 +349,7 @@
                             modalType = 'success';
                             modalMessage = data.message || '¡Registro exitoso! Redirigiendo...';
                             setTimeout(() => {
-                                window.location.href = '{{ route('dashboard') }}';
+                                window.location.href = '{{ route('completar.registro') }}';
                             }, 2000);
                         } else {
                             modalType = 'error';

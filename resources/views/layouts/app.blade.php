@@ -51,6 +51,8 @@
         <div x-data="{ mobileMenuOpen: false }">
             <div class="min-h-screen">
                 @include('layouts.navigation')
+                
+            
             </div>
 
             <!-- Notificaciones Toast -->

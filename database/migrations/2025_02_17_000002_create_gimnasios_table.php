@@ -13,6 +13,8 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('direccion');
             $table->string('telefono', 20)->nullable();
+            $table->text('descripcion')->nullable();
+            $table->string('logo')->nullable();
             $table->foreignId('dueno_id')->constrained('duenos_gimnasios', 'id_dueno')->onDelete('cascade');
             $table->timestamps();
         });

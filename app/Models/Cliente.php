@@ -20,7 +20,13 @@ class Cliente extends Model
         'fecha_nacimiento',
         'telefono',
         'genero',
-        'ocupacion'
+        'ocupacion',
+        'direccion',
+        'peso',
+        'altura',
+        'objetivo_fitness',
+        'condiciones_medicas',
+        'nivel_actividad'
     ];
 
     protected $casts = [

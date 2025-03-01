@@ -25,6 +25,7 @@ class User extends Authenticatable
         'rol',
         'telefono',
         'direccion',
+        'foto_perfil'
     ];
 
     /**

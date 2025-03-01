@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('rol', ['admin', 'entrenador', 'dueño', 'cliente'])->default('cliente');
             $table->string('telefono')->nullable();
             $table->string('direccion')->nullable();
+            $table->string('foto_perfil')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
