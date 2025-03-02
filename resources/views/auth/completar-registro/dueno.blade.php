@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div x-data="{ 
                 step: {{ session('current_step', 1) }},
                 showSuccessModal: false,
@@ -101,31 +101,66 @@
                     
                     <!-- Indicador de Progreso -->
                     <div class="mb-8">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                    <span class="text-white font-bold">1</span>
+                        <!-- Indicador de progreso para móviles (vertical) -->
+                        <div class="sm:hidden">
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm">1</span>
+                                    </div>
+                                    <div class="ml-2 flex-1">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Información Personal</p>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > 1, 'bg-gray-200': step <= 1 }" class="h-1 w-full mt-2"></div>
+                                    </div>
                                 </div>
-                                <div class="ml-2">
-                                    <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Información Personal</p>
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 2, 'bg-gray-300': step < 2 }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm">2</span>
+                                    </div>
+                                    <div class="ml-2 flex-1">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 2, 'text-gray-500': step < 2 }">Información del Gimnasio</p>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > 2, 'bg-gray-200': step <= 2 }" class="h-1 w-full mt-2"></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm">3</span>
+                                    </div>
+                                    <div class="ml-2 flex-1">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Membresía Inicial</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="w-16 h-1 bg-gray-200" x-bind:class="{ 'bg-emerald-300': step > 1 }"></div>
-                            <div class="flex items-center">
-                                <div x-bind:class="{ 'bg-emerald-500': step >= 2, 'bg-gray-300': step < 2 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                    <span class="text-white font-bold">2</span>
+                        </div>
+                        
+                        <!-- Indicador de progreso para desktop (horizontal) -->
+                        <div class="hidden sm:block">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center mb-0">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold">1</span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Información Personal</p>
+                                    </div>
                                 </div>
-                                <div class="ml-2">
-                                    <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 2, 'text-gray-500': step < 2 }">Información del Gimnasio</p>
+                                <div class="w-16 h-1 bg-gray-200" x-bind:class="{ 'bg-emerald-300': step > 1 }"></div>
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 2, 'bg-gray-300': step < 2 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold">2</span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 2, 'text-gray-500': step < 2 }">Información del Gimnasio</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="w-16 h-1 bg-gray-200" x-bind:class="{ 'bg-emerald-300': step > 2 }"></div>
-                            <div class="flex items-center">
-                                <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                    <span class="text-white font-bold">3</span>
-                                </div>
-                                <div class="ml-2">
-                                    <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Membresía Inicial</p>
+                                <div class="w-16 h-1 bg-gray-200" x-bind:class="{ 'bg-emerald-300': step > 2 }"></div>
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold">3</span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Membresía Inicial</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -139,9 +174,9 @@
                          x-transition:leave="transition ease-in duration-300"
                          x-transition:leave-start="opacity-100 transform scale-100"
                          x-transition:leave-end="opacity-0 transform scale-90"
-                         class="fixed inset-0 z-50 flex items-center justify-center">
+                         class="fixed inset-0 z-50 flex items-center justify-center px-4">
                         <div class="fixed inset-0 bg-black opacity-50"></div>
-                        <div class="relative bg-white rounded-lg p-8 max-w-md mx-auto shadow-xl">
+                        <div class="relative bg-white rounded-lg p-4 sm:p-8 max-w-sm mx-auto shadow-xl">
                             <div class="text-center">
                                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                                     <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -174,9 +209,9 @@
                          x-transition:leave="transition ease-in duration-300"
                          x-transition:leave-start="opacity-100 transform scale-100"
                          x-transition:leave-end="opacity-0 transform scale-90"
-                         class="fixed inset-0 z-50 flex items-center justify-center">
+                         class="fixed inset-0 z-50 flex items-center justify-center px-4">
                         <div class="fixed inset-0 bg-black opacity-50"></div>
-                        <div class="relative bg-white rounded-lg p-8 max-w-md mx-auto shadow-xl">
+                        <div class="relative bg-white rounded-lg p-4 sm:p-8 max-w-sm mx-auto shadow-xl">
                             <div class="text-center">
                                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                                     <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,16 +280,16 @@
                         
                         <!-- Paso 1: Información Personal -->
                         <div x-show="step === 1">
-                            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Información Personal</h2>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Información Personal</h2>
                             
-                            <p class="mb-6 text-gray-600">Completa tu información personal para configurar tu cuenta como dueño de gimnasio.</p>
+                            <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Completa tu información personal para configurar tu cuenta como dueño de gimnasio.</p>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 <!-- Foto de Perfil -->
                                 <div class="md:col-span-2">
                                     <x-input-label for="foto_perfil" :value="__('Foto de Perfil')" />
-                                    <div class="mt-2 flex items-center">
-                                        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden" id="foto-perfil-container">
+                                    <div class="mt-2 flex flex-col sm:flex-row items-center">
+                                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mb-3 sm:mb-0" id="foto-perfil-container">
                                             @if($user->foto_perfil && file_exists(public_path($user->foto_perfil)))
                                                 <img id="preview-image" src="{{ asset($user->foto_perfil) }}" alt="Vista previa" class="w-full h-full object-cover">
                                             @else
@@ -263,7 +298,7 @@
                                                 </svg>
                                             @endif
                                         </div>
-                                        <input type="file" id="foto_perfil" name="foto_perfil" class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*" onchange="previewUserImage(this)">
+                                        <input type="file" id="foto_perfil" name="foto_perfil" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 sm:ml-5" accept="image/*" onchange="previewUserImage(this)">
                                     </div>
                                     <x-input-error :messages="$errors->get('foto_perfil')" class="mt-2" />
                                 </div>
@@ -283,8 +318,8 @@
                                 </div>
                             </div>
                             
-                            <div class="flex justify-end mt-6">
-                                <button type="button" x-on:click="saveStep(1)" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                                <button type="button" x-on:click="saveStep(1)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Guardar y Continuar
                                 </button>
                             </div>
@@ -352,8 +387,8 @@
                                 <!-- Logo del Gimnasio -->
                                 <div class="md:col-span-2">
                                     <x-input-label for="logo_gimnasio" :value="__('Logo del Gimnasio')" />
-                                    <div class="mt-2 flex items-center">
-                                        <div class="w-32 h-32 bg-gray-200 flex items-center justify-center overflow-hidden" id="logo-gimnasio-container">
+                                    <div class="mt-2 flex flex-col sm:flex-row items-center">
+                                        <div class="w-24 h-24 sm:w-32 sm:h-32 bg-gray-200 flex items-center justify-center overflow-hidden mb-3 sm:mb-0" id="logo-gimnasio-container">
                                             @php
                                                 $duenoGimnasio = \App\Models\DuenoGimnasio::where('user_id', auth()->id())->first();
                                                 $logoUrl = null;
@@ -387,7 +422,7 @@
                                                 </svg>
                                             @endif
                                         </div>
-                                        <input type="file" id="logo_gimnasio" name="logo_gimnasio" class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*" onchange="previewGymLogo(this)">
+                                        <input type="file" id="logo_gimnasio" name="logo_gimnasio" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 sm:ml-5" accept="image/*" onchange="previewGymLogo(this)">
                                     </div>
                                     <x-input-error :messages="$errors->get('logo_gimnasio')" class="mt-2" />
                                 </div>
@@ -412,11 +447,11 @@
                                 </div>
                             </div>
                             
-                            <div class="flex justify-between mt-6">
-                                <button type="button" x-on:click="step = 1" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                                <button type="button" x-on:click="step = 1" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Anterior
                                 </button>
-                                <button type="button" x-on:click="saveStep(2)" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <button type="button" x-on:click="saveStep(2)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Guardar y Continuar
                                 </button>
                             </div>
@@ -428,7 +463,7 @@
                             
                             <input type="hidden" name="configuracion_completa" value="1">
                             
-                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 sm:p-4 mb-4 sm:mb-6">
                                 <div class="flex">
                                     <div class="flex-shrink-0">
                                         <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -436,7 +471,7 @@
                                         </svg>
                                     </div>
                                     <div class="ml-3">
-                                        <p class="text-sm text-blue-700">
+                                        <p class="text-xs sm:text-sm text-blue-700">
                                             Las membresías son los planes que ofreces a tus clientes. Define al menos una para comenzar.
                                         </p>
                                     </div>
@@ -527,13 +562,16 @@
                                 </div>
                             </div>
                             
-                            <div class="flex justify-between mt-6">
-                                <button type="button" x-on:click="step = 2" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                                <button type="button" x-on:click="step = 2" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Anterior
                                 </button>
-                                <x-primary-button class="ml-3 bg-emerald-600 hover:bg-emerald-700">
+                                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 border border-transparent rounded-lg text-base font-semibold text-white uppercase tracking-wider hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
                                     {{ __('Completar Registro') }}
-                                </x-primary-button>
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -544,13 +582,33 @@
     
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('formData', () => ({
-                step: {{ session('current_step', 1) }}
-            }));
-        });
-        
+        // Detectar si el dispositivo es móvil para ajustes adicionales
         document.addEventListener('DOMContentLoaded', function() {
+            const isMobile = window.innerWidth < 640;
+            
+            if (isMobile) {
+                // Ajustar altura de textareas en móviles
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach(textarea => {
+                    if (textarea.rows > 3) {
+                        textarea.rows = 3;
+                    }
+                });
+                
+                // Hacer que los inputs de archivo sean más compactos
+                const fileInputs = document.querySelectorAll('input[type="file"]');
+                fileInputs.forEach(input => {
+                    input.classList.add('text-xs');
+                });
+            }
+            
+            // Resto del código existente...
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('formData', () => ({
+                    step: {{ session('current_step', 1) }}
+                }));
+            });
+            
             // Verificar si hay mensajes de error en el formulario
             const hasErrors = {{ $errors->any() ? 'true' : 'false' }};
             
@@ -560,23 +618,6 @@
                 if (stepElement && typeof Alpine !== 'undefined') {
                     Alpine.evaluate(stepElement, 'step = 3');
                 }
-            }
-            
-            // Asegurar que el formulario se envíe correctamente en el paso 3
-            const form = document.querySelector('form');
-            const submitButton = document.querySelector('button[type="submit"]');
-            
-            if (form && submitButton) {
-                submitButton.addEventListener('click', function() {
-                    // Asegurar que el paso actual sea 3 antes de enviar
-                    const currentStepInput = document.querySelector('input[name="current_step"]');
-                    if (currentStepInput) {
-                        currentStepInput.value = 3;
-                    }
-                    
-                    // Enviar el formulario
-                    form.submit();
-                });
             }
         });
         
