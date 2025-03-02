@@ -277,7 +277,7 @@
 
                 <div class="mt-4">
                     <x-input-label for="telefono" :value="__('Teléfono Personal')" />
-                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono')" required placeholder="Ej: +34 612345678" />
+                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono')" required placeholder="099999999" />
                     <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
                 </div>
 
@@ -403,7 +403,7 @@
 
                 <div class="mt-4">
                     <x-input-label for="telefono_empleado" :value="__('Teléfono')" />
-                    <x-text-input id="telefono_empleado" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono')" required placeholder="Ej: +34 612345678" />
+                    <x-text-input id="telefono_empleado" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono')" required placeholder="0999999999" />
                     <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
                 </div>
 

@@ -20,12 +20,14 @@ class TipoMembresia extends Model
         'precio',
         'duracion_dias',
         'tipo',
+        'numero_visitas',
         'estado'
     ];
 
     protected $casts = [
         'precio' => 'decimal:2',
         'duracion_dias' => 'integer',
+        'numero_visitas' => 'integer',
         'estado' => 'boolean'
     ];
 

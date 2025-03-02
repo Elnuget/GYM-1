@@ -30,8 +30,9 @@ class TipoMembresiaController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
-            'duracion_dias' => 'required|integer|min:1',
-            'tipo' => 'required|in:basica,estandar,premium',
+            'duracion_dias' => 'nullable|integer|min:1',
+            'tipo' => 'required|in:mensual,anual,visitas',
+            'numero_visitas' => 'nullable|integer|min:1|required_if:tipo,visitas',
         ]);
 
         TipoMembresia::create($request->all());
@@ -50,8 +51,9 @@ class TipoMembresiaController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio' => 'required|numeric|min:0',
-            'duracion_dias' => 'required|integer|min:1',
-            'tipo' => 'required|in:basica,estandar,premium',
+            'duracion_dias' => 'nullable|integer|min:1',
+            'tipo' => 'required|in:mensual,anual,visitas',
+            'numero_visitas' => 'nullable|integer|min:1|required_if:tipo,visitas',
         ]);
 
         $tiposMembresia->update($request->all());

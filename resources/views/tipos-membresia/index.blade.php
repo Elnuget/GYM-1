@@ -3,8 +3,13 @@
         isModalOpen: false,
         isEditModalOpen: false,
         currentTipoMembresia: null,
+        showNumeroVisitas: false,
+        editShowNumeroVisitas: false,
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
+            if(this.isModalOpen) {
+                this.showNumeroVisitas = false;
+            }
         },
         toggleEditModal(tipoMembresia = null) {
             this.isEditModalOpen = !this.isEditModalOpen;
@@ -15,10 +20,18 @@
                     document.getElementById('edit_nombre').value = tipoMembresia.nombre;
                     document.getElementById('edit_descripcion').value = tipoMembresia.descripcion || '';
                     document.getElementById('edit_precio').value = tipoMembresia.precio;
-                    document.getElementById('edit_duracion_dias').value = tipoMembresia.duracion_dias;
+                    document.getElementById('edit_duracion_dias').value = tipoMembresia.duracion_dias || '';
                     document.getElementById('edit_tipo').value = tipoMembresia.tipo;
+                    document.getElementById('edit_numero_visitas').value = tipoMembresia.numero_visitas || '';
+                    this.editShowNumeroVisitas = tipoMembresia.tipo === 'visitas';
                 });
             }
+        },
+        checkTipoChange() {
+            this.showNumeroVisitas = document.getElementById('tipo').value === 'visitas';
+        },
+        checkEditTipoChange() {
+            this.editShowNumeroVisitas = document.getElementById('edit_tipo').value === 'visitas';
         }
     }">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
@@ -46,7 +59,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Nombre</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Precio</th>
-                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Duración (días)</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Duración/Visitas</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
@@ -57,12 +70,18 @@
                                     <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $tipoMembresia->gimnasio->nombre }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $tipoMembresia->nombre }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($tipoMembresia->precio, 2) }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $tipoMembresia->duracion_dias }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($tipoMembresia->precio, 2) }} $</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            @if($tipoMembresia->tipo === 'visitas')
+                                                {{ $tipoMembresia->numero_visitas }} visitas
+                                            @else
+                                                {{ $tipoMembresia->duracion_dias }} días
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                                {{ $tipoMembresia->tipo === 'basica' ? 'bg-blue-100 text-blue-800' : 
-                                                   ($tipoMembresia->tipo === 'estandar' ? 'bg-emerald-100 text-emerald-800' : 
+                                                {{ $tipoMembresia->tipo === 'mensual' ? 'bg-blue-100 text-blue-800' : 
+                                                   ($tipoMembresia->tipo === 'anual' ? 'bg-emerald-100 text-emerald-800' : 
                                                    'bg-purple-100 text-purple-800') }}">
                                                 {{ ucfirst($tipoMembresia->tipo) }}
                                             </span>
@@ -151,19 +170,25 @@
                                     </div>
 
                                     <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                                        <select id="tipo" name="tipo" @change="checkTipoChange()"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="mensual">Mensual</option>
+                                            <option value="anual">Anual</option>
+                                            <option value="visitas">Por Visitas</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4" x-show="!showNumeroVisitas">
                                         <label class="block text-sm font-medium text-gray-700">Duración (días)</label>
-                                        <input type="number" name="duracion_dias" min="1" required
+                                        <input type="number" name="duracion_dias" min="1"
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                                        <select name="tipo" 
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            <option value="basica">Básica</option>
-                                            <option value="estandar">Estándar</option>
-                                            <option value="premium">Premium</option>
-                                        </select>
+                                    <div class="mb-4" x-show="showNumeroVisitas">
+                                        <label class="block text-sm font-medium text-gray-700">Número de Visitas</label>
+                                        <input type="number" name="numero_visitas" min="1"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
                                     <div class="mt-6 flex justify-end space-x-3">
@@ -241,19 +266,25 @@
                                         </div>
 
                                         <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Tipo</label>
+                                            <select id="edit_tipo" name="tipo" @change="checkEditTipoChange()"
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="mensual">Mensual</option>
+                                                <option value="anual">Anual</option>
+                                                <option value="visitas">Por Visitas</option>
+                                            </select>
+                                        </div>
+
+                                        <div x-show="!editShowNumeroVisitas">
                                             <label class="block text-sm font-medium text-emerald-700">Duración (días)</label>
-                                            <input type="number" id="edit_duracion_dias" name="duracion_dias" min="1" required
+                                            <input type="number" id="edit_duracion_dias" name="duracion_dias" min="1"
                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                         </div>
 
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Tipo</label>
-                                            <select id="edit_tipo" name="tipo" 
-                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                <option value="basica">Básica</option>
-                                                <option value="estandar">Estándar</option>
-                                                <option value="premium">Premium</option>
-                                            </select>
+                                        <div x-show="editShowNumeroVisitas">
+                                            <label class="block text-sm font-medium text-emerald-700">Número de Visitas</label>
+                                            <input type="number" id="edit_numero_visitas" name="numero_visitas" min="1"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                         </div>
                                     </div>
 

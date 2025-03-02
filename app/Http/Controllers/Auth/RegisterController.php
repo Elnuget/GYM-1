@@ -423,8 +423,9 @@ class RegisterController extends Controller
             $validator = Validator::make($request->all(), [
                 'membresia_nombre' => 'required|string|max:255',
                 'membresia_precio' => 'required|numeric|min:0',
-                'membresia_duracion' => 'required|integer|min:1',
-                'membresia_tipo' => 'required|string|in:basica,estandar,premium',
+                'membresia_tipo' => 'required|string|in:mensual,anual,visitas',
+                'membresia_duracion' => 'nullable|integer|min:1',
+                'membresia_visitas' => 'required_if:membresia_tipo,visitas|nullable|integer|min:1',
                 'membresia_descripcion' => 'nullable|string|max:1000',
                 'configuracion_completa' => 'required|boolean'
             ], [
@@ -433,11 +434,11 @@ class RegisterController extends Controller
                 'membresia_precio.required' => 'El precio de la membresía es obligatorio.',
                 'membresia_precio.numeric' => 'El precio debe ser un número válido.',
                 'membresia_precio.min' => 'El precio no puede ser negativo.',
-                'membresia_duracion.required' => 'La duración de la membresía es obligatoria.',
-                'membresia_duracion.integer' => 'La duración debe ser un número entero.',
-                'membresia_duracion.min' => 'La duración debe ser al menos 1 día.',
+                'membresia_visitas.required_if' => 'El número de visitas es obligatorio para el tipo visitas.',
+                'membresia_visitas.integer' => 'El número de visitas debe ser un número entero.',
+                'membresia_visitas.min' => 'El número de visitas debe ser al menos 1.',
                 'membresia_tipo.required' => 'El tipo de membresía es obligatorio.',
-                'membresia_tipo.in' => 'El tipo de membresía debe ser básica, estándar o premium.',
+                'membresia_tipo.in' => 'El tipo de membresía debe ser mensual, anual o visitas.',
                 'membresia_descripcion.max' => 'La descripción no puede tener más de 1000 caracteres.',
                 'configuracion_completa.required' => 'El campo de configuración completa es requerido.',
                 'configuracion_completa.boolean' => 'El campo de configuración completa debe ser verdadero o falso.'
@@ -504,10 +505,21 @@ class RegisterController extends Controller
                 $tipoMembresia->gimnasio_id = $gimnasio->id_gimnasio;
                 $tipoMembresia->nombre = $request->membresia_nombre;
                 $tipoMembresia->precio = $request->membresia_precio;
-                $tipoMembresia->duracion_dias = $request->membresia_duracion;
                 $tipoMembresia->tipo = $request->membresia_tipo;
                 $tipoMembresia->descripcion = $request->membresia_descripcion;
                 $tipoMembresia->estado = true;
+
+                // Asignar duración o número de visitas según el tipo
+                if ($request->membresia_tipo === 'visitas') {
+                    $tipoMembresia->numero_visitas = $request->membresia_visitas;
+                    $tipoMembresia->duracion_dias = null;
+                } else if ($request->membresia_tipo === 'mensual') {
+                    $tipoMembresia->duracion_dias = 30; // Fijo 30 días para mensual
+                    $tipoMembresia->numero_visitas = null;
+                } else if ($request->membresia_tipo === 'anual') {
+                    $tipoMembresia->duracion_dias = 365; // Fijo 365 días para anual
+                    $tipoMembresia->numero_visitas = null;
+                }
 
                 if (!$tipoMembresia->save()) {
                     \Log::error('Error al guardar el tipo de membresía para el gimnasio ID: ' . $gimnasio->id_gimnasio);
@@ -532,13 +544,30 @@ class RegisterController extends Controller
                 DB::commit();
 
                 // Preparar mensaje de éxito detallado
-                $mensajeExito = sprintf(
-                    '¡Registro completado con éxito! Se ha creado el tipo de membresía "%s" de tipo %s con un precio de €%.2f por %d días. Ya puedes comenzar a administrar tu gimnasio.',
-                    $request->membresia_nombre,
-                    ucfirst($request->membresia_tipo),
-                    $request->membresia_precio,
-                    $request->membresia_duracion
-                );
+                $mensajeExito = '';
+                if ($request->membresia_tipo === 'visitas') {
+                    $mensajeExito = sprintf(
+                        '¡Registro completado con éxito! Se ha creado el tipo de membresía "%s" de tipo %s con un precio de $%.2f para %d visitas. Ya puedes comenzar a administrar tu gimnasio.',
+                        $request->membresia_nombre,
+                        ucfirst($request->membresia_tipo),
+                        $request->membresia_precio,
+                        $request->membresia_visitas
+                    );
+                } else if ($request->membresia_tipo === 'mensual') {
+                    $mensajeExito = sprintf(
+                        '¡Registro completado con éxito! Se ha creado el tipo de membresía "%s" de tipo %s con un precio de $%.2f por 30 días. Ya puedes comenzar a administrar tu gimnasio.',
+                        $request->membresia_nombre,
+                        ucfirst($request->membresia_tipo),
+                        $request->membresia_precio
+                    );
+                } else if ($request->membresia_tipo === 'anual') {
+                    $mensajeExito = sprintf(
+                        '¡Registro completado con éxito! Se ha creado el tipo de membresía "%s" de tipo %s con un precio de $%.2f por 365 días. Ya puedes comenzar a administrar tu gimnasio.',
+                        $request->membresia_nombre,
+                        ucfirst($request->membresia_tipo),
+                        $request->membresia_precio
+                    );
+                }
 
                 return response()->json([
                     'success' => true,

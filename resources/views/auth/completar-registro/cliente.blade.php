@@ -42,7 +42,7 @@
                                 <!-- Teléfono -->
                                 <div>
                                     <x-input-label for="telefono" :value="__('Teléfono')" />
-                                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono', $user->telefono ?? '')" required placeholder="+34 612345678" />
+                                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono', $user->telefono ?? '')" required placeholder="0999999999" />
                                     <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
                                 </div>
                                 

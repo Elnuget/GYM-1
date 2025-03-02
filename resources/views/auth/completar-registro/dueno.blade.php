@@ -238,8 +238,11 @@
                         if (step === 3) {
                             if (!$event.target.membresia_nombre.value.trim()) camposFaltantes.push('Nombre de la Membresía');
                             if (!$event.target.membresia_precio.value.trim()) camposFaltantes.push('Precio');
-                            if (!$event.target.membresia_duracion.value) camposFaltantes.push('Duración');
                             if (!$event.target.membresia_tipo.value) camposFaltantes.push('Tipo de Membresía');
+                            // Solo validar visitas cuando el tipo es 'visitas'
+                            if ($event.target.membresia_tipo.value === 'visitas' && !$event.target.membresia_visitas.value) {
+                                camposFaltantes.push('Número de Visitas');
+                            }
                         }
                         
                         if (camposFaltantes.length > 0) {
@@ -306,7 +309,7 @@
                                 <!-- Teléfono Personal -->
                                 <div>
                                     <x-input-label for="telefono_personal" :value="__('Teléfono Personal *')" />
-                                    <x-text-input id="telefono_personal" class="block mt-1 w-full" type="text" name="telefono_personal" :value="old('telefono_personal', $user->telefono ?? '')" required placeholder="+34 612345678" />
+                                    <x-text-input id="telefono_personal" class="block mt-1 w-full" type="text" name="telefono_personal" :value="old('telefono_personal', $user->telefono ?? '')" required placeholder="0999999999" />
                                     <x-input-error :messages="$errors->get('telefono_personal')" class="mt-2" />
                                 </div>
                                 
@@ -363,7 +366,7 @@
                                             }
                                         }
                                     @endphp
-                                    <x-text-input id="telefono_gimnasio" class="block mt-1 w-full" type="text" name="telefono_gimnasio" :value="$telefonoGimnasio" required placeholder="+34 912345678" />
+                                    <x-text-input id="telefono_gimnasio" class="block mt-1 w-full" type="text" name="telefono_gimnasio" :value="$telefonoGimnasio" required placeholder="0999999999" />
                                     <x-input-error :messages="$errors->get('telefono_gimnasio')" class="mt-2" />
                                 </div>
                                 
@@ -497,49 +500,26 @@
                                 
                                 <!-- Precio -->
                                 <div>
-                                    <x-input-label for="membresia_precio" :value="__('Precio (€) *')" />
+                                    <x-input-label for="membresia_precio" :value="__('Precio ($) *')" />
                                     <x-text-input id="membresia_precio" class="block mt-1 w-full" type="number" step="0.01" 
                                         name="membresia_precio" :value="old('membresia_precio', $ultimaMembresia ? $ultimaMembresia->precio : '')" 
                                         required placeholder="Ej: 29.99" />
                                     <x-input-error :messages="$errors->get('membresia_precio')" class="mt-2" />
                                 </div>
                                 
-                                <!-- Duración -->
-                                <div>
-                                    <x-input-label for="membresia_duracion" :value="__('Duración *')" />
-                                    <select id="membresia_duracion" name="membresia_duracion" 
-                                        class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                        <option value="" selected disabled>Selecciona la duración</option>
-                                        @php
-                                            $duraciones = [
-                                                7 => '1 semana',
-                                                30 => '1 mes',
-                                                90 => '3 meses',
-                                                180 => '6 meses',
-                                                365 => '1 año'
-                                            ];
-                                            $duracionSeleccionada = old('membresia_duracion', $ultimaMembresia ? $ultimaMembresia->duracion_dias : '');
-                                        @endphp
-                                        @foreach($duraciones as $valor => $texto)
-                                            <option value="{{ $valor }}" {{ $duracionSeleccionada == $valor ? 'selected' : '' }}>
-                                                {{ $texto }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <x-input-error :messages="$errors->get('membresia_duracion')" class="mt-2" />
-                                </div>
-                                
                                 <!-- Tipo de Membresía -->
                                 <div>
                                     <x-input-label for="membresia_tipo" :value="__('Tipo de Membresía *')" />
                                     <select id="membresia_tipo" name="membresia_tipo" 
-                                        class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                        class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                                        required
+                                        onchange="cambiarTipoMembresia(this.value)">
                                         <option value="" selected disabled>Selecciona el tipo</option>
                                         @php
                                             $tipos = [
-                                                'basica' => 'Básica',
-                                                'estandar' => 'Estándar',
-                                                'premium' => 'Premium'
+                                                'mensual' => 'Mensual (30 días)',
+                                                'anual' => 'Anual (365 días)',
+                                                'visitas' => 'Por Visitas'
                                             ];
                                             $tipoSeleccionado = old('membresia_tipo', $ultimaMembresia ? $ultimaMembresia->tipo : '');
                                         @endphp
@@ -550,6 +530,23 @@
                                         @endforeach
                                     </select>
                                     <x-input-error :messages="$errors->get('membresia_tipo')" class="mt-2" />
+                                </div>
+                                
+                                <!-- Campo oculto de duración - se rellenará automáticamente por JavaScript -->
+                                <input type="hidden" id="membresia_duracion" name="membresia_duracion" value="{{ $tipoSeleccionado === 'mensual' ? '30' : ($tipoSeleccionado === 'anual' ? '365' : '') }}">
+                                
+                                <!-- Duración (días) - No se mostrará pero conservamos para compatibilidad -->
+                                <div id="container_duracion" style="display:none">
+                                </div>
+                                
+                                <!-- Número de Visitas - Solo visible para tipo visitas -->
+                                <div id="container_visitas" style="{{ $tipoSeleccionado === 'visitas' ? '' : 'display:none' }}">
+                                    <x-input-label for="membresia_visitas" :value="__('Número de Visitas *')" />
+                                    <x-text-input id="membresia_visitas" class="block mt-1 w-full" type="number" 
+                                        name="membresia_visitas" 
+                                        :value="old('membresia_visitas', $ultimaMembresia && $ultimaMembresia->tipo === 'visitas' ? $ultimaMembresia->numero_visitas : '5')" 
+                                        min="1" placeholder="Ej: 10" />
+                                    <x-input-error :messages="$errors->get('membresia_visitas')" class="mt-2" />
                                 </div>
                                 
                                 <!-- Descripción de la Membresía -->
@@ -582,7 +579,6 @@
     
     @push('scripts')
     <script>
-        // Detectar si el dispositivo es móvil para ajustes adicionales
         document.addEventListener('DOMContentLoaded', function() {
             const isMobile = window.innerWidth < 640;
             
@@ -602,12 +598,21 @@
                 });
             }
             
-            // Resto del código existente...
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('formData', () => ({
-                    step: {{ session('current_step', 1) }}
-                }));
-            });
+            // Inicializar el tipo de membresía al cargar la página
+            const tipoSelect = document.getElementById('membresia_tipo');
+            if (tipoSelect && tipoSelect.value) {
+                cambiarTipoMembresia(tipoSelect.value);
+            }
+            
+            // Si no hay un tipo seleccionado y hay uno preseleccionado en el HTML
+            if (tipoSelect && !tipoSelect.value && tipoSelect.options.length > 0) {
+                for (let i = 0; i < tipoSelect.options.length; i++) {
+                    if (tipoSelect.options[i].selected) {
+                        cambiarTipoMembresia(tipoSelect.options[i].value);
+                        break;
+                    }
+                }
+            }
             
             // Verificar si hay mensajes de error en el formulario
             const hasErrors = {{ $errors->any() ? 'true' : 'false' }};
@@ -620,6 +625,30 @@
                 }
             }
         });
+        
+        // Función para cambiar entre tipos de membresía
+        function cambiarTipoMembresia(tipoSeleccionado) {
+            const duracionInput = document.getElementById('membresia_duracion');
+            
+            if (tipoSeleccionado === 'visitas') {
+                document.getElementById('container_duracion').style.display = 'none';
+                document.getElementById('container_visitas').style.display = 'block';
+                // Limpiar valor de duración cuando se elige visitas
+                if (duracionInput) duracionInput.value = '';
+            } else {
+                document.getElementById('container_duracion').style.display = 'none';
+                document.getElementById('container_visitas').style.display = 'none';
+                
+                // Establecer valores predeterminados según el tipo seleccionado
+                if (duracionInput) {
+                    if (tipoSeleccionado === 'mensual') {
+                        duracionInput.value = '30'; // 30 días para mensual
+                    } else if (tipoSeleccionado === 'anual') {
+                        duracionInput.value = '365'; // 365 días para anual
+                    }
+                }
+            }
+        }
         
         function previewUserImage(input) {
             if (input.files && input.files[0]) {

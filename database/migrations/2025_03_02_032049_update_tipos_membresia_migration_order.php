@@ -21,12 +21,25 @@ return new class extends Migration
             $table->string('nombre');
             $table->text('descripcion')->nullable();
             $table->decimal('precio', 10, 2);
-            $table->integer('duracion_dias');
-            $table->enum('tipo', ['basica', 'estandar', 'premium']);
+
+            // Dependiendo de tu lógica de negocio, podrías continuar usando duracion_dias
+            // para los planes mensual o anual (por ejemplo, 30 días para mensual y 365 para anual).
+            // O bien podrías eliminar este campo si vas a manejarlo de otra manera.
+            $table->integer('duracion_dias')->nullable();
+
+            // Cambiamos el tipo a enum con opciones 'mensual', 'anual' y 'visitas'
+            $table->enum('tipo', ['mensual', 'anual', 'visitas']);
+
+            // Nuevo campo para almacenar el número de visitas en caso de plan por visitas
+            $table->integer('numero_visitas')->nullable();
+
             $table->boolean('estado')->default(true);
             $table->timestamps();
-            
-            $table->foreign('gimnasio_id')->references('id_gimnasio')->on('gimnasios')->onDelete('cascade');
+
+            $table->foreign('gimnasio_id')
+                  ->references('id_gimnasio')
+                  ->on('gimnasios')
+                  ->onDelete('cascade');
         });
     }
 
