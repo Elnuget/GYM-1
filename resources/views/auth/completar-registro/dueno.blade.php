@@ -218,7 +218,7 @@
                                                 
                                                 // Verificar si hay un logo en la sesión
                                                 if (session()->has('dueno_paso2.logo_gimnasio')) {
-                                                    $logoUrl = str_replace('public/', 'storage/', session('dueno_paso2.logo_gimnasio'));
+                                                    $logoUrl = 'storage/' . session('dueno_paso2.logo_gimnasio');
                                                 } 
                                                 // Si no hay en sesión, verificar si hay en la base de datos
                                                 elseif ($duenoGimnasio && $duenoGimnasio->logo) {
@@ -226,8 +226,14 @@
                                                 }
                                                 
                                                 // Verificar si la imagen existe físicamente
-                                                if ($logoUrl && !file_exists(public_path($logoUrl))) {
-                                                    $logoUrl = null;
+                                                if ($logoUrl) {
+                                                    try {
+                                                        if (!file_exists(public_path($logoUrl))) {
+                                                            $logoUrl = null;
+                                                        }
+                                                    } catch (\Exception $e) {
+                                                        $logoUrl = null;
+                                                    }
                                                 }
                                             @endphp
                                             <img id="preview-logo" src="{{ $logoUrl ? asset($logoUrl) : asset('images/default-gym-logo.png') }}" alt="Vista previa del logo" class="w-full h-full object-contain">

@@ -461,10 +461,10 @@ class RegisterController extends Controller
                     $gimnasio->dueno_id = $duenoGimnasio->id;
                     
                     if (isset($paso2['logo_gimnasio'])) {
-                        $gimnasio->logo = str_replace('public/', 'storage/', $paso2['logo_gimnasio']);
+                        $gimnasio->logo = 'storage/' . $paso2['logo_gimnasio'];
                     } elseif ($request->hasFile('logo_gimnasio')) {
-                        $path = $request->file('logo_gimnasio')->store('public/gimnasios/logos');
-                        $gimnasio->logo = str_replace('public/', 'storage/', $path);
+                        $path = $request->file('logo_gimnasio')->store('gimlogo', 'public');
+                        $gimnasio->logo = 'storage/' . $path;
                     }
                     
                     $gimnasio->save();
@@ -552,7 +552,7 @@ class RegisterController extends Controller
                     
                     // Procesar foto de perfil si existe
                     if ($request->hasFile('foto_perfil')) {
-                        $path = $request->file('foto_perfil')->store('public/usuarios/fotos');
+                        $path = $request->file('foto_perfil')->store('userphoto', 'public');
                         session(['dueno_paso1.foto_perfil' => $path]);
                     }
                     
@@ -563,7 +563,7 @@ class RegisterController extends Controller
                     
                     // Guardar foto de perfil si existe
                     if ($request->hasFile('foto_perfil')) {
-                        $user->foto_perfil = str_replace('public/', 'storage/', $path);
+                        $user->foto_perfil = 'storage/' . $path;
                     }
                     
                     $user->save();
@@ -610,7 +610,7 @@ class RegisterController extends Controller
                     
                     // Procesar logo del gimnasio si existe
                     if ($request->hasFile('logo_gimnasio')) {
-                        $path = $request->file('logo_gimnasio')->store('public/gimnasios/logos');
+                        $path = $request->file('logo_gimnasio')->store('gimlogo', 'public');
                         session(['dueno_paso2.logo_gimnasio' => $path]);
                     }
                     
@@ -627,7 +627,7 @@ class RegisterController extends Controller
                         // Guardar el logo solo si se ha subido un nuevo archivo
                         if ($request->hasFile('logo_gimnasio')) {
                             // Ya hemos almacenado el archivo arriba, solo necesitamos actualizar la ruta
-                            $duenoGimnasio->logo = str_replace('public/', 'storage/', $path);
+                            $duenoGimnasio->logo = 'storage/' . $path;
                         }
                         
                         $duenoGimnasio->save();

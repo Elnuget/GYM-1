@@ -26,3 +26,5 @@ para pagina principal php artisan storage:link
 INSTALAR DOMPDF y EXCEL:
 composer require barryvdh/laravel-dompdf 
 composer require maatwebsite/excel
+
+para imagenes en laravel 11 cambiar el env de local a public
