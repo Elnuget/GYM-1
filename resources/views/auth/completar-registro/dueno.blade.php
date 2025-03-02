@@ -386,12 +386,11 @@
                         
                         <!-- Paso 3: Membresía Inicial -->
                         <div x-show="step === 3" x-cloak>
+                            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Membresía Inicial</h2>
+                            
                             <input type="hidden" name="configuracion_completa" value="1">
-                            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Configura tu Membresía Inicial</h2>
                             
-                            <p class="mb-6 text-gray-600">Configura al menos una membresía para tu gimnasio. Podrás añadir más opciones después desde el panel de administración.</p>
-                            
-                            <div class="bg-blue-50 p-4 mb-6 rounded-lg">
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
                                 <div class="flex">
                                     <div class="flex-shrink-0">
                                         <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
