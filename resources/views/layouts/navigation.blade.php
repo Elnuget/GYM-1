@@ -34,7 +34,7 @@
     <!-- Logo Section -->
     <div class="sticky top-0 z-10 border-b border-teal-600/50 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800">
         <a href="{{ route('dashboard') }}" class="flex items-center p-4">
-            <x-application-logo class="block h-8 w-auto fill-current text-emerald-300" />
+            <img src="{{ asset('favicon.png') }}" alt="Logo" class="block h-8 w-auto"/>
             <span class="ml-3 text-xl font-bold text-emerald-100">GymFlow</span>
         </a>
     </div>
@@ -177,8 +177,12 @@
             <!-- Perfil de Usuario y Cerrar Sesión -->
             <div class="mt-6 pt-6 border-t border-emerald-600/30">
                 <div class="flex items-center p-3 rounded-lg bg-emerald-700/50">
-                    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
-                        <span class="text-sm font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center overflow-hidden">
+                        @if(Auth::user()->foto_perfil && file_exists(public_path(Auth::user()->foto_perfil)))
+                            <img src="{{ asset(Auth::user()->foto_perfil) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                        @else
+                            <span class="text-sm font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                        @endif
                     </div>
                     <div class="ml-3">
                         <div class="text-sm font-medium text-emerald-100">{{ Auth::user()->name }}</div>
@@ -212,7 +216,7 @@
     <!-- Logo Section -->
     <div class="sticky top-0 z-10 border-b border-teal-600/50 bg-gradient-to-br from-cyan-600 via-teal-700 to-emerald-800">
         <a href="{{ route('dashboard') }}" class="flex items-center justify-center p-4">
-            <x-application-logo class="block h-8 w-auto fill-current text-emerald-300" />
+            <img src="{{ asset('favicon.png') }}" alt="Logo" class="block h-8 w-auto"/>
             <span x-cloak x-show="isExpanded" class="ml-3 text-xl font-bold tracking-wider text-emerald-100">GymFlow</span>
         </a>
     </div>
@@ -485,8 +489,12 @@
             <div class="flex items-center p-2 rounded-lg bg-emerald-700/50 backdrop-blur-sm" 
                  :class="{'justify-center': !isExpanded}">
                 <div class="flex-shrink-0">
-                    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
-                        <span class="text-sm font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center overflow-hidden">
+                        @if(Auth::user()->foto_perfil && file_exists(public_path(Auth::user()->foto_perfil)))
+                            <img src="{{ asset(Auth::user()->foto_perfil) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                        @else
+                            <span class="text-sm font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                        @endif
                     </div>
                 </div>
                 <div x-cloak x-show="isExpanded" 
