@@ -226,16 +226,16 @@
             $rutaCompletarPerfil = '';
             $mensajeAlerta = '';
             
-            if (Auth::check()) {
-                if ($user->hasRole('cliente') && !$user->cliente) {
+            if (Auth::check() && !$user->configuracion_completa) {
+                if ($user->hasRole('cliente')) {
                     $perfilIncompleto = true;
                     $rutaCompletarPerfil = route('completar.registro.cliente.form');
                     $mensajeAlerta = 'Para acceder a todas las funcionalidades, completa tu perfil personal.';
-                } elseif ($user->hasRole('dueño') && (!$user->duenoGimnasio || !$user->duenoGimnasio->gimnasio)) {
+                } elseif ($user->hasRole('dueño')) {
                     $perfilIncompleto = true;
                     $rutaCompletarPerfil = route('completar.registro.dueno.form');
                     $mensajeAlerta = 'Para acceder a todas las funcionalidades, registra tu gimnasio.';
-                } elseif (($user->hasRole('entrenador') || $user->hasRole('empleado')) && !$user->empleado) {
+                } elseif ($user->hasRole('entrenador') || $user->hasRole('empleado')) {
                     $perfilIncompleto = true;
                     $rutaCompletarPerfil = route('completar.registro.empleado.form');
                     $mensajeAlerta = 'Para acceder a todas las funcionalidades, completa tu perfil profesional.';

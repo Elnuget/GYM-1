@@ -426,10 +426,26 @@ class RegisterController extends Controller
                 'membresia_duracion' => 'required|integer|min:1',
                 'membresia_tipo' => 'required|string|in:basica,estandar,premium',
                 'membresia_descripcion' => 'nullable|string|max:1000',
+            ], [
+                'membresia_nombre.required' => 'El nombre de la membresía es obligatorio.',
+                'membresia_nombre.max' => 'El nombre de la membresía no puede tener más de 255 caracteres.',
+                'membresia_precio.required' => 'El precio de la membresía es obligatorio.',
+                'membresia_precio.numeric' => 'El precio debe ser un número válido.',
+                'membresia_precio.min' => 'El precio no puede ser negativo.',
+                'membresia_duracion.required' => 'La duración de la membresía es obligatoria.',
+                'membresia_duracion.integer' => 'La duración debe ser un número entero.',
+                'membresia_duracion.min' => 'La duración debe ser al menos 1 día.',
+                'membresia_tipo.required' => 'El tipo de membresía es obligatorio.',
+                'membresia_tipo.in' => 'El tipo de membresía debe ser básica, estándar o premium.',
+                'membresia_descripcion.max' => 'La descripción no puede tener más de 1000 caracteres.',
             ]);
 
             if ($validator->fails()) {
-                return back()->withErrors($validator)->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Por favor, verifica los datos de la membresía e intenta nuevamente.',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             // Obtener datos de los pasos anteriores desde la sesión
@@ -442,48 +458,47 @@ class RegisterController extends Controller
             try {
                 // Obtener el usuario actual (dueño)
                 $user = auth()->user();
+                
+                // Verificar si existe el registro de dueño de gimnasio
                 $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
 
                 if (!$duenoGimnasio) {
-                    throw new \Exception('No se encontró el registro del dueño del gimnasio');
+                    throw new \Exception('No se encontró el registro del dueño del gimnasio. Por favor, completa los pasos anteriores.');
+                }
+
+                // Asegurarnos de que el dueño tenga un ID válido
+                if (!$duenoGimnasio->id_dueno) {
+                    throw new \Exception('Error: El ID del dueño no es válido. Por favor, contacta al soporte técnico.');
                 }
 
                 // Crear el gimnasio si no existe
-                $gimnasio = Gimnasio::where('dueno_id', $duenoGimnasio->id)->first();
+                $gimnasio = Gimnasio::where('dueno_id', $duenoGimnasio->id_dueno)->first();
                 
                 if (!$gimnasio) {
-                    $gimnasio = new Gimnasio();
-                    $gimnasio->nombre = $paso2['nombre_comercial'] ?? $request->nombre_comercial;
-                    $gimnasio->telefono = $paso2['telefono_gimnasio'] ?? $request->telefono_gimnasio;
-                    $gimnasio->direccion = $paso2['direccion_gimnasio'] ?? $request->direccion_gimnasio;
-                    // La descripción se guarda en la tabla gimnasios, no en duenos_gimnasios
-                    $gimnasio->descripcion = $paso2['descripcion'] ?? $request->descripcion;
-                    $gimnasio->dueno_id = $duenoGimnasio->id;
-                    
-                    if (isset($paso2['logo_gimnasio'])) {
-                        $gimnasio->logo = 'storage/' . $paso2['logo_gimnasio'];
-                    } elseif ($request->hasFile('logo_gimnasio')) {
-                        $path = $request->file('logo_gimnasio')->store('gimlogo', 'public');
-                        $gimnasio->logo = 'storage/' . $path;
-                    }
-                    
-                    $gimnasio->save();
+                    throw new \Exception('No se encontró el registro del gimnasio. Por favor, completa el paso 2 del registro.');
                 }
 
-                // Crear la membresía inicial
-                $membresia = new \App\Models\Membresia();
-                $membresia->gimnasio_id = $gimnasio->id_gimnasio;
-                $membresia->nombre = $request->membresia_nombre;
-                $membresia->precio = $request->membresia_precio;
-                $membresia->duracion_dias = $request->membresia_duracion;
-                $membresia->tipo = $request->membresia_tipo;
-                $membresia->descripcion = $request->membresia_descripcion;
-                $membresia->activa = true;
-                $membresia->save();
+                // Crear la membresía inicial en la tabla tipos_membresia
+                $tipoMembresia = new \App\Models\TipoMembresia();
+                $tipoMembresia->gimnasio_id = $gimnasio->id_gimnasio;
+                $tipoMembresia->nombre = $request->membresia_nombre;
+                $tipoMembresia->precio = $request->membresia_precio;
+                $tipoMembresia->duracion_dias = $request->membresia_duracion;
+                $tipoMembresia->tipo = $request->membresia_tipo;
+                $tipoMembresia->descripcion = $request->membresia_descripcion;
+                $tipoMembresia->estado = true;
+                
+                try {
+                    $tipoMembresia->save();
+                } catch (\Exception $e) {
+                    throw new \Exception('Error al guardar la membresía: ' . $e->getMessage());
+                }
 
                 // Marcar al usuario como configurado
                 $user->configuracion_completa = true;
                 $user->save();
+
+                \Log::info('Usuario marcado como configurado: ' . $user->id);
 
                 // Limpiar datos de sesión
                 session()->forget(['dueno_paso1', 'dueno_paso2', 'current_step']);
@@ -491,15 +506,46 @@ class RegisterController extends Controller
                 // Confirmar transacción
                 DB::commit();
 
-                // Redirigir al dashboard con mensaje de éxito
-                return redirect()->route('dashboard')->with('success', '¡Registro completado con éxito! Ya puedes comenzar a administrar tu gimnasio.');
+                // Preparar mensaje de éxito detallado
+                $mensajeExito = sprintf(
+                    '¡Registro completado con éxito! Se ha creado la membresía "%s" de tipo %s con un precio de €%.2f por %d días. Ya puedes comenzar a administrar tu gimnasio.',
+                    $request->membresia_nombre,
+                    ucfirst($request->membresia_tipo),
+                    $request->membresia_precio,
+                    $request->membresia_duracion
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $mensajeExito,
+                    'redirect' => route('dashboard')
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Error al completar el registro: ' . $e->getMessage()])->withInput();
+                \Log::error('Error al completar registro de dueño: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+                
+                // Determinar un mensaje de error más amigable
+                $mensajeError = 'Hubo un problema al completar el registro. ';
+                if (str_contains($e->getMessage(), 'No se encontró el registro del dueño')) {
+                    $mensajeError .= 'Por favor, asegúrate de completar todos los pasos en orden.';
+                } elseif (str_contains($e->getMessage(), 'Error al guardar la membresía')) {
+                    $mensajeError .= 'No se pudo guardar la información de la membresía. Verifica los datos e intenta nuevamente.';
+                } else {
+                    $mensajeError .= 'Por favor, verifica la información e intenta nuevamente.';
+                }
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => $mensajeError
+                ], 500);
             }
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Error en el servidor: ' . $e->getMessage()])->withInput();
+            \Log::error('Error en el servidor al completar registro de dueño: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor. Por favor, intenta nuevamente más tarde o contacta al soporte técnico.'
+            ], 500);
         }
     }
 
@@ -573,7 +619,15 @@ class RegisterController extends Controller
                     if (!$duenoGimnasio) {
                         $duenoGimnasio = new DuenoGimnasio();
                         $duenoGimnasio->user_id = $user->id;
+                        // Asegurarnos de guardar los datos del paso 1 como valores temporales
+                        // para evitar problemas de integridad en pasos posteriores
+                        $duenoGimnasio->nombre_comercial = 'Gimnasio Temporal'; // Valor temporal
+                        $duenoGimnasio->telefono_gimnasio = $request->telefono_personal; // Temporalmente usamos el teléfono personal
+                        $duenoGimnasio->direccion_gimnasio = $request->direccion_personal; // Temporalmente usamos la dirección personal
                         $duenoGimnasio->save();
+                        
+                        // Registrar en el log que se creó el dueño en el paso 1
+                        \Log::info('Registro de dueño de gimnasio creado en el paso 1 para el usuario ID: ' . $user->id);
                     }
                     
                     return response()->json([

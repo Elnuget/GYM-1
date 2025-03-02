@@ -25,7 +25,8 @@ class User extends Authenticatable
         'rol',
         'telefono',
         'direccion',
-        'foto_perfil'
+        'foto_perfil',
+        'configuracion_completa',
     ];
 
     /**
@@ -43,11 +44,9 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'configuracion_completa' => 'boolean',
+    ];
 }

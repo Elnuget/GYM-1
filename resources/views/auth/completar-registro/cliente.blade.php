@@ -18,10 +18,16 @@
                                 <div class="md:col-span-2">
                                     <x-input-label for="foto_perfil" :value="__('Foto de Perfil')" />
                                     <div class="mt-2 flex items-center">
-                                        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                            <img id="preview-image" src="{{ $user->foto_perfil ? asset($user->foto_perfil) : asset('images/default-avatar.png') }}" alt="Vista previa" class="w-full h-full object-cover">
+                                        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden" id="foto-perfil-container">
+                                            @if($user->foto_perfil && file_exists(public_path($user->foto_perfil)))
+                                                <img id="preview-image" src="{{ asset($user->foto_perfil) }}" alt="Vista previa" class="w-full h-full object-cover">
+                                            @else
+                                                <svg id="default-user-icon" class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                            @endif
                                         </div>
-                                        <input type="file" id="foto_perfil" name="foto_perfil" class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*" onchange="document.getElementById('preview-image').src = window.URL.createObjectURL(this.files[0])">
+                                        <input type="file" id="foto_perfil" name="foto_perfil" class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*" onchange="previewUserImage(this)">
                                     </div>
                                     <x-input-error :messages="$errors->get('foto_perfil')" class="mt-2" />
                                 </div>
@@ -134,4 +140,41 @@
             </div>
         </div>
     </div>
-</x-app-layout> 
+</x-app-layout>
+
+@push('scripts')
+<script>
+    function previewUserImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                var container = document.getElementById('foto-perfil-container');
+                var defaultIcon = document.getElementById('default-user-icon');
+                
+                // Eliminar el icono SVG si existe
+                if (defaultIcon) {
+                    defaultIcon.remove();
+                }
+                
+                // Buscar si ya existe una imagen de vista previa
+                var previewImg = document.getElementById('preview-image');
+                
+                if (!previewImg) {
+                    // Si no existe, crear una nueva imagen
+                    previewImg = document.createElement('img');
+                    previewImg.id = 'preview-image';
+                    previewImg.className = 'w-full h-full object-cover';
+                    previewImg.alt = 'Vista previa';
+                    container.appendChild(previewImg);
+                }
+                
+                // Actualizar la fuente de la imagen
+                previewImg.src = e.target.result;
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+@endpush 
