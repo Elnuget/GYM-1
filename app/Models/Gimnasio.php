@@ -18,7 +18,8 @@ class Gimnasio extends Model
         'telefono',
         'descripcion',
         'dueno_id',
-        'logo'
+        'logo',
+        'estado'
     ];
 
     public function dueno()

@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GimnasioController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PagoGimnasioController;
+use App\Http\Controllers\TipoMembresiaController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Cliente\BienvenidaController;
 use App\Http\Controllers\Cliente\OnboardingController;
@@ -39,6 +40,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('membresias', MembresiaController::class);
     Route::post('membresias/{membresia}/registrar-visita', [MembresiaController::class, 'registrarVisita'])
         ->name('membresias.registrar-visita');
+    
+    // Rutas para tipos de membresía
+    Route::resource('tipos-membresia', TipoMembresiaController::class);
+    Route::patch('tipos-membresia/{tiposMembresia}/cambiar-estado', [TipoMembresiaController::class, 'cambiarEstado'])
+        ->name('tipos-membresia.cambiar-estado');
+    
     Route::resource('pagos', PagoController::class);
     Route::resource('metodos-pago', MetodoPagoController::class, [
         'parameters' => ['metodos-pago' => 'metodoPago']

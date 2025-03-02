@@ -64,6 +64,18 @@
                 <span>{{ __('Membresías') }}</span>
             </x-nav-link>
 
+            <!-- Tipos de Membresía -->
+            @role('dueño')
+            <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')" 
+                class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>{{ __('Tipos de Membresía') }}</span>
+            </x-nav-link>
+            @endrole
+
             <!-- Sección Entrenamiento -->
             <div class="mt-6 mb-2">
                 <span class="px-3 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Entrenamiento</span>
@@ -189,6 +201,18 @@
                         <div class="text-xs text-emerald-300">{{ Auth::user()->email }}</div>
                     </div>
                 </div>
+
+                <!-- Configuración de Perfil (Móvil) -->
+                <a href="{{ route('profile.edit') }}" 
+                   class="mt-2 w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>{{ __('Configuración de Perfil') }}</span>
+                </a>
 
                 <form method="POST" action="{{ route('logout') }}" class="mt-2">
                     @csrf
@@ -344,7 +368,7 @@
 
         <!-- Menú Dueño de Gimnasio -->
         @role('dueño')
-        <div x-data="{ open: {{ request()->routeIs('gimnasios.*') || request()->routeIs('clientes.*') || request()->routeIs('membresias.*') ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ request()->routeIs('gimnasios.*') || request()->routeIs('clientes.*') || request()->routeIs('membresias.*') || request()->routeIs('tipos-membresia.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" 
                     class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                     :class="{'bg-emerald-600/30': open}">
@@ -372,6 +396,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                     </svg>
                     <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Membresías') }}</span>
+                </x-nav-link>
+                <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')" 
+                    class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Tipos de Membresía') }}</span>
                 </x-nav-link>
                 <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')" 
                     class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
@@ -503,6 +534,19 @@
                     <div class="text-xs text-emerald-300 truncate uppercase font-semibold">{{ Auth::user()->rol }}</div>
                 </div>
             </div>
+            
+            <!-- Configuración de Perfil (Escritorio) -->
+            <a href="{{ route('profile.edit') }}" 
+               class="mt-2 w-full flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                <svg class="w-5 h-5" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span x-cloak x-show="isExpanded">{{ __('Configuración de Perfil') }}</span>
+            </a>
+            
             <!-- Botón de Cerrar Sesión -->
             <form method="POST" action="{{ route('logout') }}" class="mt-2">
                 @csrf

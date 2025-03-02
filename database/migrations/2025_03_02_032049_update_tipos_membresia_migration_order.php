@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Primero eliminamos la tabla si existe
+        Schema::dropIfExists('tipos_membresia');
+        
+        // Luego la recreamos con la estructura correcta
         Schema::create('tipos_membresia', function (Blueprint $table) {
             $table->id('id_tipo_membresia');
             $table->unsignedBigInteger('gimnasio_id');
@@ -33,4 +37,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('tipos_membresia');
     }
-}; 
+};

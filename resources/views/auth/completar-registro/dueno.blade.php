@@ -14,6 +14,24 @@
                     const formElement = this.$refs.form;
                     const formData = new FormData(formElement);
                     
+                    // Validar campos requeridos antes de enviar
+                    let camposFaltantes = [];
+                    
+                    if (currentStep === 1) {
+                        if (!formElement.telefono_personal.value.trim()) camposFaltantes.push('Teléfono Personal');
+                        if (!formElement.direccion_personal.value.trim()) camposFaltantes.push('Dirección Personal');
+                    } else if (currentStep === 2) {
+                        if (!formElement.nombre_comercial.value.trim()) camposFaltantes.push('Nombre Comercial del Gimnasio');
+                        if (!formElement.telefono_gimnasio.value.trim()) camposFaltantes.push('Teléfono del Gimnasio');
+                        if (!formElement.direccion_gimnasio.value.trim()) camposFaltantes.push('Dirección del Gimnasio');
+                    }
+                    
+                    if (camposFaltantes.length > 0) {
+                        this.errorMessage = `Por favor, complete los siguientes campos obligatorios: ${camposFaltantes.join(', ')}`;
+                        this.showErrorModal = true;
+                        return;
+                    }
+                    
                     // Guardar datos del paso actual mediante AJAX
                     fetch('{{ route('guardar.paso.dueno') }}', {
                         method: 'POST',
@@ -75,6 +93,9 @@
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
+                        <div class="mt-2 font-semibold">
+                            Por favor, complete todos los campos obligatorios marcados con * para poder continuar.
+                        </div>
                     </div>
                     @endif
                     
@@ -175,6 +196,23 @@
                     
                     <form method="POST" action="{{ route('completar.registro.dueno') }}" enctype="multipart/form-data" x-ref="form" @submit.prevent="
                         const formData = new FormData($event.target);
+                        
+                        // Validar campos requeridos antes de enviar
+                        let camposFaltantes = [];
+                        
+                        if (step === 3) {
+                            if (!$event.target.membresia_nombre.value.trim()) camposFaltantes.push('Nombre de la Membresía');
+                            if (!$event.target.membresia_precio.value.trim()) camposFaltantes.push('Precio');
+                            if (!$event.target.membresia_duracion.value) camposFaltantes.push('Duración');
+                            if (!$event.target.membresia_tipo.value) camposFaltantes.push('Tipo de Membresía');
+                        }
+                        
+                        if (camposFaltantes.length > 0) {
+                            errorMessage = `Por favor, complete los siguientes campos obligatorios: ${camposFaltantes.join(', ')}`;
+                            showErrorModal = true;
+                            return;
+                        }
+                        
                         fetch($event.target.action, {
                             method: 'POST',
                             body: formData,
@@ -232,14 +270,14 @@
                                 
                                 <!-- Teléfono Personal -->
                                 <div>
-                                    <x-input-label for="telefono_personal" :value="__('Teléfono Personal')" />
+                                    <x-input-label for="telefono_personal" :value="__('Teléfono Personal *')" />
                                     <x-text-input id="telefono_personal" class="block mt-1 w-full" type="text" name="telefono_personal" :value="old('telefono_personal', $user->telefono ?? '')" required placeholder="+34 612345678" />
                                     <x-input-error :messages="$errors->get('telefono_personal')" class="mt-2" />
                                 </div>
                                 
                                 <!-- Dirección Personal -->
                                 <div>
-                                    <x-input-label for="direccion_personal" :value="__('Dirección Personal')" />
+                                    <x-input-label for="direccion_personal" :value="__('Dirección Personal *')" />
                                     <x-text-input id="direccion_personal" class="block mt-1 w-full" type="text" name="direccion_personal" :value="old('direccion_personal', $user->direccion ?? '')" required />
                                     <x-input-error :messages="$errors->get('direccion_personal')" class="mt-2" />
                                 </div>
@@ -261,7 +299,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Nombre Comercial -->
                                 <div>
-                                    <x-input-label for="nombre_comercial" :value="__('Nombre Comercial del Gimnasio')" />
+                                    <x-input-label for="nombre_comercial" :value="__('Nombre Comercial del Gimnasio *')" />
                                     @php
                                         $duenoGimnasio = \App\Models\DuenoGimnasio::where('user_id', auth()->id())->first();
                                         $nombreComercial = old('nombre_comercial');
@@ -279,7 +317,7 @@
                                 
                                 <!-- Teléfono del Gimnasio -->
                                 <div>
-                                    <x-input-label for="telefono_gimnasio" :value="__('Teléfono del Gimnasio')" />
+                                    <x-input-label for="telefono_gimnasio" :value="__('Teléfono del Gimnasio *')" />
                                     @php
                                         $telefonoGimnasio = old('telefono_gimnasio');
                                         if (!$telefonoGimnasio) {
@@ -296,7 +334,7 @@
                                 
                                 <!-- Dirección del Gimnasio -->
                                 <div class="md:col-span-2">
-                                    <x-input-label for="direccion_gimnasio" :value="__('Dirección del Gimnasio')" />
+                                    <x-input-label for="direccion_gimnasio" :value="__('Dirección del Gimnasio *')" />
                                     @php
                                         $direccionGimnasio = old('direccion_gimnasio');
                                         if (!$direccionGimnasio) {
@@ -408,7 +446,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Nombre de la Membresía -->
                                 <div>
-                                    <x-input-label for="membresia_nombre" :value="__('Nombre de la Membresía')" />
+                                    <x-input-label for="membresia_nombre" :value="__('Nombre de la Membresía *')" />
                                     @php
                                         $duenoGimnasio = \App\Models\DuenoGimnasio::where('user_id', auth()->id())->first();
                                         $gimnasio = $duenoGimnasio ? \App\Models\Gimnasio::where('dueno_id', $duenoGimnasio->id_dueno)->first() : null;
@@ -424,7 +462,7 @@
                                 
                                 <!-- Precio -->
                                 <div>
-                                    <x-input-label for="membresia_precio" :value="__('Precio (€)')" />
+                                    <x-input-label for="membresia_precio" :value="__('Precio (€) *')" />
                                     <x-text-input id="membresia_precio" class="block mt-1 w-full" type="number" step="0.01" 
                                         name="membresia_precio" :value="old('membresia_precio', $ultimaMembresia ? $ultimaMembresia->precio : '')" 
                                         required placeholder="Ej: 29.99" />
@@ -433,7 +471,7 @@
                                 
                                 <!-- Duración -->
                                 <div>
-                                    <x-input-label for="membresia_duracion" :value="__('Duración')" />
+                                    <x-input-label for="membresia_duracion" :value="__('Duración *')" />
                                     <select id="membresia_duracion" name="membresia_duracion" 
                                         class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                         <option value="" selected disabled>Selecciona la duración</option>
@@ -458,7 +496,7 @@
                                 
                                 <!-- Tipo de Membresía -->
                                 <div>
-                                    <x-input-label for="membresia_tipo" :value="__('Tipo de Membresía')" />
+                                    <x-input-label for="membresia_tipo" :value="__('Tipo de Membresía *')" />
                                     <select id="membresia_tipo" name="membresia_tipo" 
                                         class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                         <option value="" selected disabled>Selecciona el tipo</option>
