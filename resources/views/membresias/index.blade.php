@@ -152,32 +152,38 @@
                                                 @change="toggleVisitasFields()"
                                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                             @foreach($tiposMembresia as $tipo)
-                                                <option value="{{ $tipo->id_tipo_membresia }}">{{ $tipo->nombre }}</option>
+                                                <option value="{{ $tipo->id_tipo_membresia }}" 
+                                                        data-precio="{{ $tipo->precio }}"
+                                                        data-duracion="{{ $tipo->duracion_dias }}"
+                                                        data-tipo="{{ $tipo->tipo }}">
+                                                    {{ $tipo->nombre }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Fecha de Compra</label>
-                                        <input type="date" name="fecha_compra" value="{{ date('Y-m-d') }}" 
+                                        <input type="date" name="fecha_compra" id="fecha_compra" value="{{ date('Y-m-d') }}" 
+                                               @change="calcularVencimiento()"
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                                        <input type="date" name="fecha_vencimiento" 
+                                        <input type="date" name="fecha_vencimiento" id="fecha_vencimiento"
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Precio Total</label>
-                                        <input type="number" step="0.01" name="precio_total" required
+                                        <input type="number" step="0.01" name="precio_total" id="precio_total" required readonly
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Saldo Pendiente</label>
-                                        <input type="number" step="0.01" name="saldo_pendiente" required
+                                        <input type="number" step="0.01" name="saldo_pendiente" id="saldo_pendiente" required readonly
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
@@ -189,7 +195,7 @@
 
                                     <div class="mb-4">
                                         <label class="flex items-center">
-                                            <input type="checkbox" name="renovacion" value="1" 
+                                            <input type="checkbox" name="renovacion" value="1" checked
                                                    class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                             <span class="ml-2 text-sm text-gray-600">¿Es Renovable?</span>
                                         </label>
@@ -326,10 +332,40 @@
         document.addEventListener('DOMContentLoaded', function() {
             const tipoMembresia = document.getElementById('tipo_membresia');
             const visitasFields = document.querySelector('.visitas-fields');
+            const fechaVencimiento = document.getElementById('fecha_vencimiento');
+            const precioTotal = document.getElementById('precio_total');
+            const saldoPendiente = document.getElementById('saldo_pendiente');
+
+            function calcularVencimiento() {
+                const fechaCompra = new Date(document.getElementById('fecha_compra').value);
+                const tipoSeleccionado = tipoMembresia.options[tipoMembresia.selectedIndex];
+                const duracion = parseInt(tipoSeleccionado.dataset.duracion);
+                const precio = parseFloat(tipoSeleccionado.dataset.precio);
+                const tipo = tipoSeleccionado.dataset.tipo;
+
+                // Calcular precio y saldo pendiente
+                precioTotal.value = precio;
+                saldoPendiente.value = precio;
+
+                // Calcular fecha de vencimiento solo si no es por visitas
+                if (tipo !== 'por_visitas') {
+                    const fechaVenc = new Date(fechaCompra);
+                    fechaVenc.setDate(fechaVenc.getDate() + duracion);
+                    fechaVencimiento.value = fechaVenc.toISOString().split('T')[0];
+                    fechaVencimiento.disabled = false;
+                } else {
+                    fechaVencimiento.value = '';
+                    fechaVencimiento.disabled = true;
+                }
+            }
 
             tipoMembresia.addEventListener('change', function() {
-                visitasFields.style.display = this.value === 'por_visitas' ? 'block' : 'none';
+                visitasFields.style.display = this.options[this.selectedIndex].dataset.tipo === 'por_visitas' ? 'block' : 'none';
+                calcularVencimiento();
             });
+
+            // Calcular valores iniciales
+            calcularVencimiento();
         });
     </script>
 </x-app-layout> 
