@@ -4,35 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\Membresia;
 use App\Models\User;
+use App\Models\TipoMembresia;
 use Illuminate\Http\Request;
 
 class MembresiaController extends Controller
 {
     public function index()
     {
-        $membresias = Membresia::with('usuario')->paginate(10);
+        $membresias = Membresia::with(['usuario', 'tipoMembresia'])->paginate(10);
         $usuarios = User::all();
-        return view('membresias.index', compact('membresias', 'usuarios'));
+        $tiposMembresia = TipoMembresia::all();
+        return view('membresias.index', compact('membresias', 'usuarios', 'tiposMembresia'));
     }
 
     public function create()
     {
         $usuarios = User::all();
-        return view('membresias.create', compact('usuarios'));
+        $tiposMembresia = TipoMembresia::all();
+        return view('membresias.create', compact('usuarios', 'tiposMembresia'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'id_usuario' => 'required|exists:users,id',
-            'tipo_membresia' => 'required|in:anual,mensual,por_visitas',
+            'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
+            'precio_total' => 'required|numeric|min:0',
+            'saldo_pendiente' => 'required|numeric|min:0',
             'fecha_compra' => 'required|date',
             'fecha_vencimiento' => 'required|date|after:fecha_compra',
-            'visitas_permitidas' => 'required_if:tipo_membresia,por_visitas|nullable|integer',
+            'visitas_permitidas' => 'nullable|integer',
             'renovacion' => 'boolean'
         ]);
 
-        if ($validated['tipo_membresia'] === 'por_visitas') {
+        if ($validated['visitas_permitidas']) {
             $validated['visitas_restantes'] = $validated['visitas_permitidas'];
         }
 
@@ -53,12 +58,18 @@ class MembresiaController extends Controller
     {
         $validated = $request->validate([
             'id_usuario' => 'required|exists:users,id',
-            'tipo_membresia' => 'required|in:anual,mensual,por_visitas',
+            'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
+            'precio_total' => 'required|numeric|min:0',
+            'saldo_pendiente' => 'required|numeric|min:0',
             'fecha_compra' => 'required|date',
             'fecha_vencimiento' => 'required|date|after:fecha_compra',
-            'visitas_permitidas' => 'required_if:tipo_membresia,por_visitas|nullable|integer',
+            'visitas_permitidas' => 'nullable|integer',
             'renovacion' => 'boolean'
         ]);
+
+        if ($validated['visitas_permitidas']) {
+            $validated['visitas_restantes'] = $validated['visitas_permitidas'];
+        }
 
         $membresia->update($validated);
 

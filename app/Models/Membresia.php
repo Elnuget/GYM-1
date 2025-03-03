@@ -15,7 +15,9 @@ class Membresia extends Model
     
     protected $fillable = [
         'id_usuario',
-        'tipo_membresia',
+        'id_tipo_membresia',
+        'precio_total',
+        'saldo_pendiente',
         'fecha_compra',
         'fecha_vencimiento',
         'visitas_permitidas',
@@ -26,7 +28,9 @@ class Membresia extends Model
     protected $casts = [
         'fecha_compra' => 'date',
         'fecha_vencimiento' => 'date',
-        'renovacion' => 'boolean'
+        'renovacion' => 'boolean',
+        'precio_total' => 'decimal:2',
+        'saldo_pendiente' => 'decimal:2'
     ];
 
     public function usuario(): BelongsTo
@@ -34,9 +38,14 @@ class Membresia extends Model
         return $this->belongsTo(User::class, 'id_usuario');
     }
 
+    public function tipoMembresia(): BelongsTo
+    {
+        return $this->belongsTo(TipoMembresia::class, 'id_tipo_membresia');
+    }
+
     public function registrarVisita()
     {
-        if ($this->tipo_membresia === 'por_visitas' && $this->visitas_restantes > 0) {
+        if ($this->visitas_restantes > 0) {
             $this->visitas_restantes--;
             $this->save();
         }

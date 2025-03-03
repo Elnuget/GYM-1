@@ -14,6 +14,8 @@
                 this.$nextTick(() => {
                     document.getElementById('edit_id_usuario').value = membresia.id_usuario;
                     document.getElementById('edit_tipo_membresia').value = membresia.tipo_membresia;
+                    document.getElementById('edit_precio_total').value = membresia.precio_total;
+                    document.getElementById('edit_saldo_pendiente').value = membresia.saldo_pendiente;
                     document.getElementById('edit_fecha_compra').value = membresia.fecha_compra;
                     document.getElementById('edit_fecha_vencimiento').value = membresia.fecha_vencimiento;
                     document.getElementById('edit_visitas_permitidas').value = membresia.visitas_permitidas;
@@ -56,6 +58,8 @@
                                 <tr>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Precio</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Saldo Pendiente</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Vencimiento</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Visitas</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
@@ -65,10 +69,16 @@
                                 @foreach ($membresias as $membresia)
                                     <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->usuario->name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ucfirst($membresia->tipo_membresia) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->nombre }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($membresia->precio_total, 2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $membresia->saldo_pendiente > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                ${{ number_format($membresia->saldo_pendiente, 2) }}
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->fecha_vencimiento->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            @if($membresia->tipo_membresia === 'por_visitas')
+                                            @if($membresia->visitas_permitidas)
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                                                     {{ $membresia->visitas_restantes }}/{{ $membresia->visitas_permitidas }}
                                                 </span>
@@ -137,13 +147,13 @@
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Tipo de Membresía</label>
-                                        <select name="tipo_membresia" 
+                                        <select name="id_tipo_membresia" 
                                                 id="tipo_membresia" 
                                                 @change="toggleVisitasFields()"
                                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            <option value="mensual">Mensual</option>
-                                            <option value="anual">Anual</option>
-                                            <option value="por_visitas">Por Visitas</option>
+                                            @foreach($tiposMembresia as $tipo)
+                                                <option value="{{ $tipo->id_tipo_membresia }}">{{ $tipo->nombre }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
 
@@ -156,6 +166,18 @@
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
                                         <input type="date" name="fecha_vencimiento" 
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Precio Total</label>
+                                        <input type="number" step="0.01" name="precio_total" required
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Saldo Pendiente</label>
+                                        <input type="number" step="0.01" name="saldo_pendiente" required
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
@@ -232,12 +254,12 @@
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Tipo de Membresía</label>
                                             <select id="edit_tipo_membresia" 
-                                                    name="tipo_membresia" 
+                                                    name="id_tipo_membresia" 
                                                     @change="toggleEditVisitasFields($event.target.value)"
                                                     class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                <option value="mensual">Mensual</option>
-                                                <option value="anual">Anual</option>
-                                                <option value="por_visitas">Por Visitas</option>
+                                                @foreach($tiposMembresia as $tipo)
+                                                    <option value="{{ $tipo->id_tipo_membresia }}">{{ $tipo->nombre }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
 
@@ -250,6 +272,18 @@
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Fecha de Vencimiento</label>
                                             <input type="date" id="edit_fecha_vencimiento" name="fecha_vencimiento"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Precio Total</label>
+                                            <input type="number" step="0.01" id="edit_precio_total" name="precio_total"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Saldo Pendiente</label>
+                                            <input type="number" step="0.01" id="edit_saldo_pendiente" name="saldo_pendiente"
                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                         </div>
 
