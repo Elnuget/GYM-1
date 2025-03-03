@@ -22,6 +22,7 @@ use App\Http\Controllers\Cliente\DashboardController;
 use App\Http\Controllers\Cliente\PerfilController;
 use App\Http\Controllers\Cliente\RutinaController;
 use App\Http\Controllers\Cliente\ReporteController;
+use App\Http\Controllers\TipoMembresiaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -68,6 +69,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('gimnasios', GimnasioController::class);
     Route::resource('clientes', ClienteController::class);
     Route::resource('pagos-gimnasios', PagoGimnasioController::class);
+    Route::resource('tipos-membresia', TipoMembresiaController::class);
+    
+    // Ruta adicional para cambiar estado
+    Route::patch('tipos-membresia/{tiposMembresia}/estado', [TipoMembresiaController::class, 'cambiarEstado'])
+        ->name('tipos-membresia.cambiar-estado');
 
     // Rutas para roles y usuarios (protegidas con middleware de admin)
     Route::middleware(['role:admin'])->group(function () {
