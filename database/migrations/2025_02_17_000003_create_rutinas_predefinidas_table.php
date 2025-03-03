@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('rutinas_predefinidas', function (Blueprint $table) {
             $table->id('id_rutina');
-            $table->unsignedBigInteger('id_entrenador');
+            $table->unsignedBigInteger('user_id');
             $table->string('nombre_rutina');
             $table->text('descripcion');
             $table->enum('objetivo', [
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->date('fecha_creacion');
             $table->timestamps();
 
-            $table->foreign('id_entrenador')
+            $table->foreign('user_id')
                   ->references('id')
                   ->on('users')
                   ->onDelete('cascade');

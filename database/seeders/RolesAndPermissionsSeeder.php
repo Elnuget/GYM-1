@@ -58,7 +58,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver nutricion',
             'crear nutricion',
             'editar nutricion',
-            'eliminar nutricion'
+            'eliminar nutricion',
+            
+            // Permisos para rutinas predefinidas
+            'ver rutinas-predefinidas',
+            'crear rutinas-predefinidas',
+            'editar rutinas-predefinidas',
+            'eliminar rutinas-predefinidas'
         ];
 
         foreach ($permissions as $permission) {
@@ -80,7 +86,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'registrar asistencias',
             'ver nutricion',
             'crear nutricion',
-            'editar nutricion'
+            'editar nutricion',
+            'ver rutinas-predefinidas',
+            'crear rutinas-predefinidas',
+            'editar rutinas-predefinidas',
+            'eliminar rutinas-predefinidas'
         ]);
 
         $duenoRole = Role::create(['name' => 'dueño']);
@@ -102,7 +112,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver nutricion',
             'crear nutricion',
             'editar nutricion',
-            'eliminar nutricion'
+            'eliminar nutricion',
+            'ver rutinas-predefinidas',
+            'crear rutinas-predefinidas',
+            'editar rutinas-predefinidas',
+            'eliminar rutinas-predefinidas'
         ]);
 
         $clienteRole = Role::create(['name' => 'cliente']);

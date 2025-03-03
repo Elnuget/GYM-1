@@ -20,7 +20,10 @@ class RutinaPredefinida extends Model
         'objetivo',
         'nivel',
         'duracion',
-        'activo'
+        'activo',
+        'gimnasio_id',
+        'descripcion',
+        'fecha_creacion'
     ];
 
     protected $casts = [
@@ -54,5 +57,10 @@ class RutinaPredefinida extends Model
     public function getRouteKeyName()
     {
         return 'id_rutina';
+    }
+
+    public function gimnasio(): BelongsTo
+    {
+        return $this->belongsTo(Gimnasio::class, 'gimnasio_id', 'id_gimnasio');
     }
 } 

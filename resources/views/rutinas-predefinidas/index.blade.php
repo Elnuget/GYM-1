@@ -15,6 +15,7 @@
                     document.getElementById('edit_descripcion').value = rutina.descripcion;
                     document.getElementById('edit_objetivo').value = rutina.objetivo;
                     document.getElementById('edit_estado').value = rutina.estado;
+                    document.getElementById('edit_gimnasio_id').value = rutina.gimnasio_id;
                 });
             }
         }
@@ -26,7 +27,7 @@
                     <h2 class="text-2xl font-semibold text-white">
                         Rutinas Predefinidas
                     </h2>
-                    @if(auth()->check() && in_array(auth()->user()->rol, ['admin', 'entrenador']))
+                    @if(auth()->check() && in_array(auth()->user()->rol, ['admin', 'entrenador', 'dueño']))
                         <button @click="toggleModal()" 
                                 class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,7 +68,7 @@
                             <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
                                 <tr>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Nombre</th>
-                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Entrenador</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Objetivo</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
@@ -77,7 +78,7 @@
                                 @foreach ($rutinas as $rutina)
                                     <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $rutina->nombre_rutina }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $rutina->entrenador->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $rutina->gimnasio->nombre }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ [
                                                 'fuerza' => 'Fuerza',
@@ -157,6 +158,17 @@
                                         </div>
 
                                         <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Gimnasio</label>
+                                            <select name="gimnasio_id" required
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="">Seleccione un gimnasio</option>
+                                                @foreach($gimnasios ?? [] as $gimnasio)
+                                                    <option value="{{ $gimnasio->id_gimnasio }}">{{ $gimnasio->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div>
                                             <label class="block text-sm font-medium text-emerald-700">Objetivo</label>
                                             <select name="objetivo" required
                                                     class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
@@ -227,6 +239,16 @@
                                         </div>
 
                                         <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Gimnasio</label>
+                                            <select id="edit_gimnasio_id" name="gimnasio_id" required
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                @foreach($gimnasios ?? [] as $gimnasio)
+                                                    <option value="{{ $gimnasio->id_gimnasio }}">{{ $gimnasio->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div>
                                             <label class="block text-sm font-medium text-emerald-700">Objetivo</label>
                                             <select id="edit_objetivo" name="objetivo" required
                                                     class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
@@ -289,6 +311,7 @@
                         document.getElementById('edit_descripcion').value = rutina.descripcion;
                         document.getElementById('edit_objetivo').value = rutina.objetivo;
                         document.getElementById('edit_estado').value = rutina.estado;
+                        document.getElementById('edit_gimnasio_id').value = rutina.gimnasio_id;
                     });
                 }
             }
