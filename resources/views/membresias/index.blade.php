@@ -76,7 +76,7 @@
                                                 ${{ number_format($membresia->saldo_pendiente, 2) }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->fecha_vencimiento->format('d/m/Y') }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->fecha_vencimiento ? $membresia->fecha_vencimiento->format('d/m/Y') : 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             @if($membresia->visitas_permitidas)
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">

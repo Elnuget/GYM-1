@@ -44,14 +44,4 @@ class Pago extends Model
     {
         return $this->belongsTo(MetodoPago::class, 'id_metodo_pago', 'id_metodo_pago');
     }
-
-    protected static function booted()
-    {
-        static::saved(function ($pago) {
-            if ($pago->estado === 'pagado') {
-                // Actualizar estado de la membresía
-                $pago->membresia->update(['estado' => 'activa']);
-            }
-        });
-    }
 } 

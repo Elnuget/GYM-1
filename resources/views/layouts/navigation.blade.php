@@ -202,6 +202,19 @@
                             </svg>
                             <span>{{ __('Rutinas') }}</span>
                         </x-nav-link>
+                        <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')"
+                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+
+                            <!-- Ícono de tarjeta de pago (Heroicon: credit-card) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-3">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 7.5h19.5M2.25 7.5A2.25 2.25 0 0 1 4.5 5.25h15A2.25 2.25 0 0 1 21.75 7.5m-19.5 0v9A2.25 2.25 0 0 0 4.5 18.75h15a2.25 2.25 0 0 0 2.25-2.25v-9M6.75 15h.008v.008H6.75v-.008zm3 0h.008v.008H9.75v-.008z" />
+                            </svg>
+
+                            <span>{{ __('Pagos') }}</span>
+                        </x-nav-link>
+
                     </div>
                 </div>
                 @endrole
@@ -548,6 +561,20 @@
                     </svg>
                     <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Rutinas') }}</span>
                 </x-nav-link>
+                <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')"
+                    class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+
+                    <!-- Ícono de tarjeta (similar a un pago) -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 7.5h19.5M2.25 7.5A2.25 2.25 0 0 1 4.5 5.25h15A2.25 2.25 0 0 1 21.75 7.5m-19.5 0v9A2.25 2.25 0 0 0 4.5 18.75h15a2.25 2.25 0 0 0 2.25-2.25v-9M6.75 15h.008v.008H6.75v-.008zm3 0h.008v.008H9.75v-.008z" />
+                    </svg>
+
+                    <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">
+                        {{ __('Pagos') }}
+                    </span>
+                </x-nav-link>
+
             </div>
         </div>
         @endrole
