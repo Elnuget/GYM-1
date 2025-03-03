@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
 class Asistencia extends Model
@@ -24,39 +23,63 @@ class Asistencia extends Model
         'notas'
     ];
 
-    protected $casts = [
-        'fecha' => 'date',
-        'hora_entrada' => 'datetime',
-        'hora_salida' => 'datetime',
-        'duracion_minutos' => 'integer'
+    protected $attributes = [
+        'estado' => 'activa',
     ];
 
-    public function cliente(): BelongsTo
+    protected $dates = [
+        'fecha',
+        'created_at',
+        'updated_at'
+    ];
+
+    // Convertir hora de entrada a la zona horaria América/Guayaquil cuando se acceda a ella
+    public function getHoraEntradaAttribute($value)
+    {
+        if (!$value) return null;
+        return Carbon::parse($value)->setTimezone('America/Guayaquil')->format('H:i:s');
+    }
+
+    // Convertir hora de salida a la zona horaria América/Guayaquil cuando se acceda a ella
+    public function getHoraSalidaAttribute($value)
+    {
+        if (!$value) return null;
+        return Carbon::parse($value)->setTimezone('America/Guayaquil')->format('H:i:s');
+    }
+
+    // Convertir fecha a la zona horaria América/Guayaquil cuando se acceda a ella
+    public function getFechaAttribute($value)
+    {
+        if (!$value) return null;
+        return Carbon::parse($value)->setTimezone('America/Guayaquil')->toDateString();
+    }
+
+    // Relación con el modelo Cliente
+    public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id', 'id_cliente');
     }
 
+    // Método para calcular la duración en minutos entre hora_entrada y hora_salida
     public function calcularDuracion()
     {
-        if ($this->hora_entrada && $this->hora_salida) {
-            $entrada = Carbon::parse($this->hora_entrada);
-            $salida = Carbon::parse($this->hora_salida);
-            return $salida->diffInMinutes($entrada);
+        if (!$this->getRawOriginal('hora_salida') || !$this->getRawOriginal('hora_entrada')) {
+            return null;
         }
-        return 0;
+
+        $entrada = Carbon::parse($this->getRawOriginal('hora_entrada'));
+        $salida = Carbon::parse($this->getRawOriginal('hora_salida'));
+        
+        return $salida->diffInMinutes($entrada);
     }
 
-    public function getDuracionFormateadaAttribute()
+    // Método para registrar la salida
+    public function registrarSalida($hora_salida = null)
     {
-        if ($this->duracion_minutos) {
-            $horas = floor($this->duracion_minutos / 60);
-            $minutos = $this->duracion_minutos % 60;
-            
-            if ($horas > 0) {
-                return sprintf('%dh %dm', $horas, $minutos);
-            }
-            return sprintf('%dm', $minutos);
-        }
-        return '-';
+        $this->hora_salida = $hora_salida ?? Carbon::now('America/Guayaquil')->format('H:i:s');
+        $this->duracion_minutos = $this->calcularDuracion();
+        $this->save();
+
+        return $this;
     }
-} 
+}

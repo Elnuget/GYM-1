@@ -59,8 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('asistencias', AsistenciaController::class);
     Route::post('asistencias/entrada', [AsistenciaController::class, 'registrarEntrada'])
         ->name('asistencias.entrada');
-    Route::post('asistencias/{asistencia}/salida', [AsistenciaController::class, 'registrarSalida'])
-        ->name('asistencias.salida');
+    Route::post('asistencias/{asistencia}/registrar-salida', [AsistenciaController::class, 'registrarSalida'])
+        ->name('asistencias.registrar-salida');
     Route::resource('nutricion', NutricionController::class);
     Route::resource('implementos', ImplementoController::class);
     Route::resource('duenos-gimnasio', DuenoGimnasioController::class)
