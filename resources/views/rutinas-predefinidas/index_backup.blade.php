@@ -14,7 +14,7 @@
                     document.getElementById('edit_nombre_rutina').value = rutina.nombre_rutina;
                     document.getElementById('edit_descripcion').value = rutina.descripcion;
                     document.getElementById('edit_objetivo').value = rutina.objetivo;
-                    document.getElementById('edit_activo').checked = rutina.activo;
+                    document.getElementById('edit_estado').value = rutina.estado;
                     document.getElementById('edit_gimnasio_id').value = rutina.gimnasio_id;
                 });
             }
@@ -93,13 +93,13 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                                {{ $rutina->activo ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ $rutina->activo ? 'Activo' : 'Inactivo' }}
+                                                {{ $rutina->estado === 'activo' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ ucfirst($rutina->estado) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <div class="flex space-x-3">
-                                                @if(auth()->user()->rol === 'admin' || auth()->user()->rol === 'dueño' || auth()->user()->rol === 'entrenador')
+                                                @if(auth()->user()->rol === 'admin' || auth()->id() === $rutina->id_usuario)
                                                     <button @click="toggleEditModal({{ $rutina }})" 
                                                             class="text-teal-600 hover:text-teal-900 font-medium">
                                                         Editar
@@ -186,11 +186,11 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Estado</label>
-                                            <div class="mt-1 flex items-center">
-                                                <input type="checkbox" name="activo" value="1" checked
-                                                       class="h-4 w-4 text-emerald-600 border-emerald-300 rounded focus:ring-emerald-500">
-                                                <span class="ml-2 text-sm text-emerald-700">Activo</span>
-                                            </div>
+                                            <select name="estado" required
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="activo">Activo</option>
+                                                <option value="inactivo">Inactivo</option>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -265,11 +265,11 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Estado</label>
-                                            <div class="mt-1 flex items-center">
-                                                <input type="checkbox" id="edit_activo" name="activo" value="1"
-                                                       class="h-4 w-4 text-emerald-600 border-emerald-300 rounded focus:ring-emerald-500">
-                                                <span class="ml-2 text-sm text-emerald-700">Activo</span>
-                                            </div>
+                                            <select id="edit_estado" name="estado" required
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="activo">Activo</option>
+                                                <option value="inactivo">Inactivo</option>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -310,7 +310,7 @@
                         document.getElementById('edit_nombre_rutina').value = rutina.nombre_rutina;
                         document.getElementById('edit_descripcion').value = rutina.descripcion;
                         document.getElementById('edit_objetivo').value = rutina.objetivo;
-                        document.getElementById('edit_activo').checked = rutina.activo;
+                        document.getElementById('edit_estado').value = rutina.estado;
                         document.getElementById('edit_gimnasio_id').value = rutina.gimnasio_id;
                     });
                 }

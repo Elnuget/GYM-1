@@ -27,8 +27,8 @@ class RutinaPredefinida extends Model
     ];
 
     protected $casts = [
-        'activo' => 'boolean',
-        'duracion' => 'integer'
+        'duracion' => 'integer',
+        'activo' => 'boolean'
     ];
 
     public function entrenador(): BelongsTo
