@@ -7,21 +7,30 @@ use Illuminate\Http\Request;
 use App\Models\Asistencia;
 use App\Models\Cliente;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AsistenciaController extends Controller
 {
     public function index()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
-        
+        $user = Auth::user();
+        $cliente = Cliente::where('user_id', $user->id)->first();
+
+        // Verificar si el cliente existe
+        if (!$cliente) {
+            // Redirigir al usuario para completar su registro como cliente
+            return redirect()->route('completar.registro.cliente.form')
+                ->with('error', 'Por favor, completa tu registro como cliente para acceder a esta sección.');
+        }
+
         $asistenciaActual = Asistencia::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'activa')
             ->whereDate('fecha', Carbon::today())
+            ->whereNull('hora_salida')
             ->first();
 
         $asistencias = Asistencia::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'completada')
-            ->latest('fecha')
+            ->orderBy('fecha', 'desc')
+            ->orderBy('hora_entrada', 'desc')
             ->paginate(10);
 
         return view('cliente.asistencias.index', compact('asistenciaActual', 'asistencias'));
@@ -29,49 +38,67 @@ class AsistenciaController extends Controller
 
     public function registrarEntrada()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        try {
+            $user = Auth::user();
+            $cliente = Cliente::where('user_id', $user->id)->first();
 
-        // Verificar si ya existe una asistencia activa
-        $asistenciaActiva = Asistencia::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'activa')
-            ->first();
+            // Verificar si el cliente existe
+            if (!$cliente) {
+                return redirect()->route('completar.registro.cliente.form')
+                    ->with('error', 'Por favor, completa tu registro como cliente para registrar asistencias.');
+            }
 
-        if ($asistenciaActiva) {
-            return back()->with('error', 'Ya tienes una asistencia activa');
+            // Verificar si ya existe una entrada sin salida
+            $asistenciaActiva = Asistencia::where('cliente_id', $cliente->id_cliente)
+                ->whereDate('fecha', Carbon::today())
+                ->whereNull('hora_salida')
+                ->first();
+
+            if ($asistenciaActiva) {
+                return back()->with('error', 'Ya tienes una asistencia activa el día de hoy.');
+            }
+
+            // Crear nueva asistencia
+            Asistencia::create([
+                'cliente_id' => $cliente->id_cliente,
+                'fecha' => Carbon::today(),
+                'hora_entrada' => Carbon::now(),
+            ]);
+
+            return back()->with('success', 'Entrada registrada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al registrar la entrada: ' . $e->getMessage());
         }
-
-        // Crear nueva asistencia
-        Asistencia::create([
-            'cliente_id' => $cliente->id_cliente,
-            'fecha' => Carbon::today(),
-            'hora_entrada' => Carbon::now(),
-            'estado' => 'activa'
-        ]);
-
-        return back()->with('success', 'Entrada registrada correctamente');
     }
 
     public function registrarSalida(Asistencia $asistencia)
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        try {
+            $user = Auth::user();
+            $cliente = Cliente::where('user_id', $user->id)->first();
 
-        if ($asistencia->cliente_id !== $cliente->id_cliente) {
-            abort(403);
+            // Verificar si el cliente existe
+            if (!$cliente) {
+                return redirect()->route('completar.registro.cliente.form')
+                    ->with('error', 'Por favor, completa tu registro como cliente para registrar asistencias.');
+            }
+
+            // Verificar que la asistencia pertenezca al cliente
+            if ($asistencia->cliente_id != $cliente->id_cliente) {
+                return back()->with('error', 'No tienes permiso para registrar esta salida.');
+            }
+
+            if ($asistencia->hora_salida) {
+                return back()->with('error', 'Esta asistencia ya tiene registrada la salida.');
+            }
+
+            $asistencia->update([
+                'hora_salida' => Carbon::now()
+            ]);
+
+            return back()->with('success', 'Salida registrada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al registrar la salida: ' . $e->getMessage());
         }
-
-        if ($asistencia->estado !== 'activa') {
-            return back()->with('error', 'Esta asistencia ya fue completada');
-        }
-
-        $hora_salida = Carbon::now();
-        $duracion = Carbon::parse($asistencia->hora_entrada)->diffInMinutes($hora_salida);
-
-        $asistencia->update([
-            'hora_salida' => $hora_salida,
-            'duracion_minutos' => $duracion,
-            'estado' => 'completada'
-        ]);
-
-        return back()->with('success', 'Salida registrada correctamente');
     }
 } 

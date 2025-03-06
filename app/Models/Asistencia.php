@@ -29,6 +29,8 @@ class Asistencia extends Model
 
     protected $dates = [
         'fecha',
+        'hora_entrada',
+        'hora_salida',
         'created_at',
         'updated_at'
     ];
@@ -50,8 +52,27 @@ class Asistencia extends Model
     // Convertir fecha a la zona horaria América/Guayaquil cuando se acceda a ella
     public function getFechaAttribute($value)
     {
-        if (!$value) return null;
-        return Carbon::parse($value)->setTimezone('America/Guayaquil')->toDateString();
+        return $value ? Carbon::parse($value) : null;
+    }
+
+    public function getDuracionFormateadaAttribute()
+    {
+        if (!$this->hora_salida) {
+            return 'En curso';
+        }
+
+        $entrada = Carbon::parse($this->hora_entrada);
+        $salida = Carbon::parse($this->hora_salida);
+        
+        $duracionMinutos = $entrada->diffInMinutes($salida);
+        $horas = floor($duracionMinutos / 60);
+        $minutos = $duracionMinutos % 60;
+        
+        if ($horas > 0) {
+            return $horas . 'h ' . $minutos . 'min';
+        } else {
+            return $minutos . ' min';
+        }
     }
 
     // Relación con el modelo Cliente

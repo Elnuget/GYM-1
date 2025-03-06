@@ -36,5 +36,23 @@ use Carbon\Carbon;
             {{ session('success') }}
         </div>
     @endif
+
+    <!-- Script para redirigir el enlace Panel a /cliente/dashboard -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Buscar todos los enlaces que contienen "Panel"
+            const panelLinks = Array.from(document.querySelectorAll('a')).filter(
+                link => link.textContent.trim() === 'Panel'
+            );
+            
+            // Cambiar la URL de destino de esos enlaces
+            panelLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = "{{ route('cliente.dashboard') }}";
+                });
+            });
+        });
+    </script>
 </body>
 </html> 

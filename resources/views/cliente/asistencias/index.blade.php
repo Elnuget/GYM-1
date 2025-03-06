@@ -85,7 +85,7 @@
                                     @forelse($asistencias as $asistencia)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $asistencia->fecha->format('d/m/Y') }}
+                                                {{ \Carbon\Carbon::parse($asistencia->fecha)->format('d/m/Y') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {{ \Carbon\Carbon::parse($asistencia->hora_entrada)->format('H:i') }}

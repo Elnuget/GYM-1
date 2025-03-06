@@ -23,6 +23,8 @@ use App\Http\Controllers\Cliente\PerfilController;
 use App\Http\Controllers\Cliente\RutinaController;
 use App\Http\Controllers\Cliente\ReporteController;
 use App\Http\Controllers\TipoMembresiaController;
+use App\Http\Controllers\Cliente\AsistenciaController as ClienteAsistenciaController;
+use App\Http\Controllers\Cliente\PagoController as ClientePagoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,6 +34,69 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'role:cliente'])->group(function () {
+    Route::get('/cliente/dashboard', [DashboardController::class, 'index'])
+        ->name('cliente.dashboard');
+
+    Route::prefix('cliente/asistencias')->group(function () {
+        Route::get('/', [ClienteAsistenciaController::class, 'index'])
+            ->name('cliente.asistencias.index');
+        Route::get('/', [ClienteAsistenciaController::class, 'index'])
+            ->name('cliente.asistencias');
+        Route::post('/entrada', [ClienteAsistenciaController::class, 'registrarEntrada'])
+            ->name('cliente.asistencias.entrada');
+        Route::post('/salida/{asistencia}', [ClienteAsistenciaController::class, 'registrarSalida'])
+            ->name('cliente.asistencias.salida');
+    });
+
+    Route::prefix('cliente/rutinas')->group(function () {
+        Route::get('/actual', [RutinaController::class, 'actual'])
+            ->name('cliente.rutinas.actual');
+        Route::get('/historial', [RutinaController::class, 'historial'])
+            ->name('cliente.rutinas.historial');
+        Route::get('/ejercicios', [RutinaController::class, 'ejercicios'])
+            ->name('cliente.rutinas.ejercicios');
+        Route::get('/ejercicios/{id}', [RutinaController::class, 'ejercicioDetalles'])
+            ->name('cliente.rutinas.ejercicio');
+        Route::put('/{rutina}/progreso', [RutinaController::class, 'actualizarProgreso'])
+            ->name('cliente.rutinas.progreso');
+        Route::post('/{rutina}/solicitar-cambio', [RutinaController::class, 'solicitarCambio'])
+            ->name('cliente.rutinas.solicitar-cambio');
+    });
+
+    Route::prefix('cliente/nutricion')->group(function () {
+        Route::get('/', [App\Http\Controllers\Cliente\NutricionController::class, 'actual'])
+            ->name('cliente.nutricion');
+        Route::get('/historial', [App\Http\Controllers\Cliente\NutricionController::class, 'historial'])
+            ->name('cliente.nutricion.historial');
+        Route::get('/{nutricion}', [App\Http\Controllers\Cliente\NutricionController::class, 'show'])
+            ->name('cliente.nutricion.show');
+    });
+
+    Route::get('/cliente/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
+        ->name('cliente.membresia');
+
+    Route::get('/cliente/perfil/objetivos', [PerfilController::class, 'objetivos'])
+        ->name('cliente.perfil.objetivos');
+
+    Route::prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('/perfil', [OnboardingController::class, 'perfil'])->name('perfil');
+        Route::post('/perfil', [OnboardingController::class, 'storePerfil'])->name('perfil.store');
+        Route::get('/medidas', [OnboardingController::class, 'medidas'])->name('medidas');
+        Route::post('/medidas', [OnboardingController::class, 'storeMedidas'])->name('medidas.store');
+        Route::get('/objetivos', [OnboardingController::class, 'objetivos'])->name('objetivos');
+        Route::post('/objetivos', [OnboardingController::class, 'storeObjetivos'])->name('objetivos.store');
+        Route::get('/tour', [OnboardingController::class, 'tour'])->name('tour');
+        Route::post('/tour/complete', [OnboardingController::class, 'completeTour'])->name('tour.complete');
+    });
+
+    Route::prefix('cliente/pagos')->group(function () {
+        Route::get('/', [ClientePagoController::class, 'index'])->name('cliente.pagos.index');
+        Route::post('/', [ClientePagoController::class, 'store'])->name('cliente.pagos.store');
+        Route::get('/{pago}', [ClientePagoController::class, 'show'])->name('cliente.pagos.show');
+    });
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -71,154 +136,35 @@ Route::middleware('auth')->group(function () {
     Route::resource('pagos-gimnasios', PagoGimnasioController::class);
     Route::resource('tipos-membresia', TipoMembresiaController::class);
     
-    // Ruta adicional para cambiar estado
     Route::patch('tipos-membresia/{tiposMembresia}/estado', [TipoMembresiaController::class, 'cambiarEstado'])
         ->name('tipos-membresia.cambiar-estado');
 
-    // Rutas para roles y usuarios (protegidas con middleware de admin)
     Route::middleware(['role:admin'])->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
     });
 
-    // Rutas para completar registro (accesible a todos los roles)
     Route::get('/completar-registro', [RegisterController::class, 'completarRegistro'])->name('completar.registro');
     Route::get('/completar-registro/cliente', [RegisterController::class, 'mostrarFormularioCliente'])->name('completar.registro.cliente.form');
     Route::get('/completar-registro/empleado', [RegisterController::class, 'mostrarFormularioEmpleado'])->name('completar.registro.empleado.form');
     Route::get('/completar-registro/dueno', [RegisterController::class, 'mostrarFormularioDueno'])->name('completar.registro.dueno.form');
 
-    // Cambiamos el nombre de esta ruta para evitar el conflicto
     Route::post('/completar-registro/cliente', [RegisterController::class, 'completarRegistroCliente'])->name('completar.registro.cliente.submit');
 
     Route::post('/completar-registro/empleado', [RegisterController::class, 'completarRegistroEmpleado'])->name('completar.registro.empleado');
     Route::post('/completar-registro/dueno', [RegisterController::class, 'completarRegistroDueno'])->name('completar.registro.dueno');
     Route::post('/completar-registro/dueno/guardar-paso', [RegisterController::class, 'guardarPasoDueno'])->name('guardar.paso.dueno');
 
-    // Rutas para el registro por pasos del cliente
     Route::post('/cliente/completar-registro', [App\Http\Controllers\Auth\ClienteRegistroController::class, 'completarRegistro'])->name('completar.registro.cliente');
     Route::post('/cliente/completar-registro/guardar-paso', [App\Http\Controllers\Auth\ClienteRegistroController::class, 'guardarPaso'])->name('guardar.paso.cliente');
-
-    // Grupo de rutas para clientes
-    Route::middleware(['auth', 'role:cliente'])
-        ->prefix('cliente')
-        ->name('cliente.')
-        ->group(function () {
-            // Dashboard
-            Route::get('/dashboard', [DashboardController::class, 'index'])
-                ->name('dashboard');
-            
-            // Perfil
-            Route::prefix('perfil')->group(function () {
-                Route::get('/informacion', [PerfilController::class, 'informacion'])->name('perfil.informacion');
-                Route::get('/medidas', [PerfilController::class, 'medidas'])->name('perfil.medidas');
-                Route::get('/objetivos', [PerfilController::class, 'objetivos'])->name('perfil.objetivos');
-                Route::put('/actualizar', [PerfilController::class, 'actualizar'])->name('perfil.actualizar');
-                Route::post('/medidas', [PerfilController::class, 'storeMedidas'])->name('perfil.medidas.store');
-                Route::post('/objetivos', [PerfilController::class, 'storeObjetivo'])->name('perfil.objetivos.store');
-            });
-
-            // Rutinas
-            Route::prefix('rutinas')->group(function () {
-                Route::get('/actual', [RutinaController::class, 'actual'])->name('rutinas.actual');
-                Route::get('/historial', [RutinaController::class, 'historial'])->name('rutinas.historial');
-                Route::get('/ejercicios', [RutinaController::class, 'ejercicios'])->name('rutinas.ejercicios');
-                Route::get('ejercicios/{id}', [RutinaController::class, 'ejercicioDetalles'])->name('rutinas.ejercicio');
-                Route::put('{rutina}/progreso', [RutinaController::class, 'actualizarProgreso'])->name('rutinas.progreso');
-                Route::post('{rutina}/solicitar-cambio', [RutinaController::class, 'solicitarCambio'])->name('rutinas.solicitar-cambio');
-            });
-
-            // Nutrición
-            Route::prefix('nutricion')->group(function () {
-                Route::get('/', [App\Http\Controllers\Cliente\NutricionController::class, 'actual'])->name('nutricion');
-                Route::get('/historial', [App\Http\Controllers\Cliente\NutricionController::class, 'historial'])->name('nutricion.historial');
-                Route::get('/{nutricion}', [App\Http\Controllers\Cliente\NutricionController::class, 'show'])->name('nutricion.show');
-                Route::post('/{nutricion}/registrar', [App\Http\Controllers\Cliente\NutricionController::class, 'registrarComida'])->name('nutricion.registrar');
-                Route::post('/{nutricion}/solicitar-cambio', [App\Http\Controllers\Cliente\NutricionController::class, 'solicitarCambio'])->name('nutricion.solicitar-cambio');
-            });
-
-            // Asistencias
-            Route::prefix('asistencias')->group(function () {
-                Route::get('/', [App\Http\Controllers\Cliente\AsistenciaController::class, 'index'])
-                    ->name('asistencias');
-                Route::post('/entrada', [App\Http\Controllers\Cliente\AsistenciaController::class, 'registrarEntrada'])
-                    ->name('asistencias.entrada');
-                Route::post('/{asistencia}/salida', [App\Http\Controllers\Cliente\AsistenciaController::class, 'registrarSalida'])
-                    ->name('asistencias.salida');
-            });
-            
-            // Membresía
-            Route::get('/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
-                ->name('membresia');
-
-            // Comunicación
-            Route::prefix('comunicacion')->group(function () {
-                Route::get('/', [App\Http\Controllers\Cliente\ComunicacionController::class, 'index'])
-                    ->name('comunicacion');
-                Route::post('/mensajes', [App\Http\Controllers\Cliente\ComunicacionController::class, 'enviarMensaje'])
-                    ->name('comunicacion.enviar-mensaje');
-                Route::post('/notificaciones/{notificacion}/marcar-leida', [App\Http\Controllers\Cliente\ComunicacionController::class, 'marcarNotificacionLeida'])
-                    ->name('comunicacion.marcar-notificacion-leida');
-                Route::post('/mensajes/{mensaje}/marcar-leido', [App\Http\Controllers\Cliente\ComunicacionController::class, 'marcarMensajeLeido'])
-                    ->name('comunicacion.marcar-mensaje-leido');
-            });
-
-            // Reportes
-            Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes');
-            Route::get('/reportes/pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.pdf');
-            Route::get('/reportes/excel', [ReporteController::class, 'exportarExcel'])->name('reportes.excel');
-
-            // Pagos en Línea
-            Route::prefix('pagos')->group(function () {
-                Route::get('/', [App\Http\Controllers\Cliente\PagoController::class, 'index'])->name('pagos.index');
-                Route::post('/', [App\Http\Controllers\Cliente\PagoController::class, 'store'])->name('pagos.store');
-                Route::get('/{pago}', [App\Http\Controllers\Cliente\PagoController::class, 'show'])->name('pagos.show');
-            });
-        });
-
-    // Rutas de onboarding
-    Route::middleware(['auth', 'role:cliente'])
-        ->prefix('onboarding')
-        ->name('onboarding.')
-        ->group(function () {
-            Route::get('/perfil', [OnboardingController::class, 'perfil'])->name('perfil');
-            Route::post('/perfil', [OnboardingController::class, 'storePerfil'])->name('perfil.store');
-            Route::get('/medidas', [OnboardingController::class, 'medidas'])->name('medidas');
-            Route::post('/medidas', [OnboardingController::class, 'storeMedidas'])->name('medidas.store');
-            Route::get('/objetivos', [OnboardingController::class, 'objetivos'])->name('objetivos');
-            Route::post('/objetivos', [OnboardingController::class, 'storeObjetivos'])->name('objetivos.store');
-            Route::get('/tour', [OnboardingController::class, 'tour'])->name('tour');
-            Route::post('/tour/complete', [OnboardingController::class, 'completeTour'])->name('tour.complete');
-        });
-
-    Route::get('/cliente/perfil/objetivos', [PerfilController::class, 'objetivos'])
-        ->name('cliente.perfil.objetivos');
-
-    // Dashboard del cliente con menú lateral
-    Route::get('/cliente/dashboard', [App\Http\Controllers\Cliente\DashboardController::class, 'index'])
-        ->name('cliente.dashboard');
 });
 
-// Rutas de registro personalizadas
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register/cliente', [RegisterController::class, 'registerCliente'])->name('register.cliente');
     Route::post('/register/dueno', [RegisterController::class, 'registerDueno'])->name('register.dueno');
     Route::post('/register/gimnasio', [RegisterController::class, 'registerGimnasio'])->name('register.gimnasio');
     Route::post('/register/empleado', [RegisterController::class, 'registerEmpleado'])->name('register.empleado');
-});
-
-// Comentar o eliminar las rutas que usan el layout de cliente antiguo
-// Route::view('/cliente/dashboard', 'cliente.dashboard')->name('cliente.dashboard');
-// ... otras rutas que usan el layout de cliente ...
-
-// Las rutas del cliente ahora usarán el layout principal
-Route::middleware(['auth', 'role:cliente'])->group(function () {
-    Route::get('/cliente/rutinas/actual', [RutinaController::class, 'actual'])->name('cliente.rutinas.actual');
-    Route::get('/cliente/asistencias', [AsistenciaController::class, 'index'])->name('cliente.asistencias');
-    Route::get('/cliente/membresia', [MembresiaController::class, 'show'])->name('cliente.membresia');
-    Route::get('/cliente/nutricion', [NutricionController::class, 'index'])->name('cliente.nutricion');
-    Route::get('/cliente/pagos', [PagoController::class, 'index'])->name('cliente.pagos.index');
-    // ... otras rutas de cliente ...
 });
 
 require __DIR__.'/auth.php';
