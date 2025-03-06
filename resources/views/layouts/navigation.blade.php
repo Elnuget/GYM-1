@@ -1,3 +1,8 @@
+@php
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+@endphp
+
 <!-- Mobile Menu Button (visible solo en móvil) -->
 <div class="fixed top-0 left-0 m-4 z-50 lg:hidden">
     <button @click="mobileMenuOpen = !mobileMenuOpen"

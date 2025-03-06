@@ -192,6 +192,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/cliente/perfil/objetivos', [PerfilController::class, 'objetivos'])
         ->name('cliente.perfil.objetivos');
+
+    // Dashboard del cliente con menú lateral
+    Route::get('/cliente/dashboard', [App\Http\Controllers\Cliente\DashboardController::class, 'index'])
+        ->name('cliente.dashboard');
 });
 
 // Rutas de registro personalizadas

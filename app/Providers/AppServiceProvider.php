@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Observers\ClienteObserver;
 use Illuminate\Support\Facades\View;
 use App\Models\Notificacion;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +35,8 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('notificacionesNoLeidas', $notificacionesNoLeidas);
             }
         });
+
+        // Registrar el componente ClienteLayout
+        Blade::component('cliente-layout', \App\View\Components\ClienteLayout::class);
     }
 }

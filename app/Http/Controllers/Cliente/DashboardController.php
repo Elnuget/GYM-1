@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Cliente;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Cliente;
-use App\Models\OnboardingProgress;
-use App\Models\Asistencia;
-use App\Models\Membresia;
-use App\Models\MedidaCorporal;
-use App\Models\ObjetivoCliente;
-use App\Models\RutinaCliente;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Asistencia;
+use App\Models\Cliente;
+use App\Models\AsignacionRutina;
+use App\Models\Nutricion;
+use App\Models\Membresia;
 
 class DashboardController extends Controller
 {
@@ -22,44 +21,56 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
-
-        // Obtener membresía activa - ajustado a la estructura actual de la BD
-        $membresia = Membresia::where('id_usuario', auth()->id())
-            ->where('fecha_vencimiento', '>=', Carbon::now())
+        $user = Auth::user();
+        $cliente = Cliente::where('user_id', $user->id)->first();
+        
+        // Verificar si el cliente existe
+        if (!$cliente) {
+            return redirect()->route('completar.registro.cliente.form')
+                ->with('error', 'Por favor, completa tu registro como cliente.');
+        }
+        
+        // Obtener asistencia actual (si hay una entrada sin salida)
+        $asistenciaActual = Asistencia::where('cliente_id', $cliente->id_cliente)
+            ->whereDate('fecha', Carbon::today())
+            ->whereNull('hora_salida')
             ->first();
-
-        // Obtener estadísticas de asistencia
+            
+        // Contar asistencias del mes
         $asistenciasMes = Asistencia::where('cliente_id', $cliente->id_cliente)
             ->whereMonth('fecha', Carbon::now()->month)
-            ->where('estado', 'completada')
+            ->whereYear('fecha', Carbon::now()->year)
             ->count();
-
+            
         // Obtener última asistencia
         $ultimaAsistencia = Asistencia::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'completada')
-            ->latest('fecha')
+            ->orderBy('fecha', 'desc')
+            ->orderBy('hora_entrada', 'desc')
             ->first();
-
-        // Obtener asistencia actual si existe
-        $asistenciaActual = Asistencia::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'activa')
-            ->whereDate('fecha', Carbon::today())
-            ->first();
-
+            
         // Obtener rutina actual
-        $rutinaActual = RutinaCliente::where('cliente_id', $cliente->id_cliente)
-            ->where('estado', 'activa')
+        $rutinaActual = AsignacionRutina::where('user_id', $user->id)
+            ->orderBy('fecha_asignacion', 'desc')
             ->with('rutina')
             ->first();
-
-        // Obtener plan nutricional activo (cuando esté implementado)
-        $planNutricional = null; // Por ahora es null hasta que se implemente
-
+            
+        // Obtener plan nutricional
+        $planNutricional = Nutricion::where('cliente_id', $cliente->id_cliente)
+            ->where('estado', 'activo')
+            ->latest('fecha_asignacion')
+            ->first();
+            
+        // Obtener membresía actual (corregido para usar id_usuario en lugar de cliente_id)
+        // y para no usar la columna estado que no existe
+        $membresia = Membresia::where('id_usuario', $user->id)
+            ->where('fecha_vencimiento', '>=', Carbon::now())
+            ->orderBy('fecha_vencimiento', 'desc')
+            ->first();
+            
         return view('cliente.dashboard.index', compact(
+            'asistenciaActual',
             'asistenciasMes',
             'ultimaAsistencia',
-            'asistenciaActual',
             'rutinaActual',
             'planNutricional',
             'membresia'

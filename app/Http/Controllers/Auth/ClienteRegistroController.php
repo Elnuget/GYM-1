@@ -238,17 +238,17 @@ class ClienteRegistroController extends Controller
             $user->configuracion_completa = true;
             $user->save();
             
-            // Cambiar la redirección al dashboard principal
+            // Cambiar la redirección al dashboard del cliente
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => '¡Registro completado con éxito! Redirigiendo...',
-                    'redirect' => route('dashboard')  // Cambiado de 'cliente.dashboard' a 'dashboard'
+                    'message' => '¡Registro completado con éxito!',
+                    'redirect' => route('cliente.dashboard')
                 ]);
             }
             
-            // Redirección normal al dashboard principal
-            return redirect()->route('dashboard')
+            // Redirección normal al dashboard del cliente
+            return redirect()->route('cliente.dashboard')
                 ->with('success', '¡Registro completado con éxito! Bienvenido a GymFlow.');
                 
         } catch (\Exception $e) {
