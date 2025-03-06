@@ -26,7 +26,8 @@ class Cliente extends Model
         'altura',
         'objetivo_fitness',
         'condiciones_medicas',
-        'nivel_actividad'
+        'nivel_actividad',
+        'foto_perfil',
     ];
 
     protected $casts = [

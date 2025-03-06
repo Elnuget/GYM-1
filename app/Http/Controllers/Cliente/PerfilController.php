@@ -49,15 +49,17 @@ class PerfilController extends Controller
         $request->validate([
             'fecha_nacimiento' => 'required|date',
             'telefono' => 'required|string|max:20',
-            'genero' => 'required|in:M,F,O',
+            'genero' => 'required|string|max:20',
             'ocupacion' => 'required|string|max:100',
+            'direccion' => 'required|string|max:255',
         ]);
 
         $cliente->update($request->only([
             'fecha_nacimiento',
             'telefono',
             'genero',
-            'ocupacion'
+            'ocupacion',
+            'direccion'
         ]));
 
         return redirect()

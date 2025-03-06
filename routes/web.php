@@ -86,10 +86,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/completar-registro/cliente', [RegisterController::class, 'mostrarFormularioCliente'])->name('completar.registro.cliente.form');
     Route::get('/completar-registro/empleado', [RegisterController::class, 'mostrarFormularioEmpleado'])->name('completar.registro.empleado.form');
     Route::get('/completar-registro/dueno', [RegisterController::class, 'mostrarFormularioDueno'])->name('completar.registro.dueno.form');
-    Route::post('/completar-registro/cliente', [RegisterController::class, 'completarRegistroCliente'])->name('completar.registro.cliente');
+
+    // Cambiamos el nombre de esta ruta para evitar el conflicto
+    Route::post('/completar-registro/cliente', [RegisterController::class, 'completarRegistroCliente'])->name('completar.registro.cliente.submit');
+
     Route::post('/completar-registro/empleado', [RegisterController::class, 'completarRegistroEmpleado'])->name('completar.registro.empleado');
     Route::post('/completar-registro/dueno', [RegisterController::class, 'completarRegistroDueno'])->name('completar.registro.dueno');
     Route::post('/completar-registro/dueno/guardar-paso', [RegisterController::class, 'guardarPasoDueno'])->name('guardar.paso.dueno');
+
+    // Rutas para el registro por pasos del cliente
+    Route::post('/cliente/completar-registro', [App\Http\Controllers\Auth\ClienteRegistroController::class, 'completarRegistro'])->name('completar.registro.cliente');
+    Route::post('/cliente/completar-registro/guardar-paso', [App\Http\Controllers\Auth\ClienteRegistroController::class, 'guardarPaso'])->name('guardar.paso.cliente');
 
     // Grupo de rutas para clientes
     Route::middleware(['auth', 'role:cliente'])

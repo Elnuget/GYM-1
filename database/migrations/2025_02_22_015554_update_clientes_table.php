@@ -9,8 +9,7 @@ class UpdateClientesTable extends Migration
     public function up()
     {
         Schema::table('clientes', function (Blueprint $table) {
-            // Ya no necesitamos eliminar estas columnas porque no existen
-            // $table->dropColumn(['nombre', 'email', 'telefono']);
+        
             
             // Agregar columna user_id si no existe
             if (!Schema::hasColumn('clientes', 'user_id')) {
@@ -28,10 +27,7 @@ class UpdateClientesTable extends Migration
                 $table->dropColumn('user_id');
             }
             
-            // Ya no necesitamos agregar estas columnas en el rollback
-            // $table->string('nombre');
-            // $table->string('email')->unique();
-            // $table->string('telefono')->nullable();
+           
         });
     }
 } 
