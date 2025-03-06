@@ -40,7 +40,30 @@ class Membresia extends Model
 
     public function tipoMembresia(): BelongsTo
     {
-        return $this->belongsTo(TipoMembresia::class, 'id_tipo_membresia');
+        return $this->belongsTo(TipoMembresia::class, 'id_tipo_membresia', 'id_tipo_membresia');
+    }
+
+    public function gimnasio()
+    {
+        if ($this->tipoMembresia && $this->tipoMembresia->gimnasio) {
+            return $this->tipoMembresia->gimnasio;
+        }
+
+        return $this->belongsTo(Gimnasio::class, 'gimnasio_id', 'id_gimnasio')
+            ->withDefault([
+                'nombre' => 'Gimnasio no asignado',
+                'direccion' => 'Dirección no disponible'
+            ]);
+    }
+
+    public function getGimnasioNombreAttribute()
+    {
+        return $this->tipoMembresia->gimnasio->nombre ?? 'Gimnasio no asignado';
+    }
+
+    public function getGimnasioDireccionAttribute()
+    {
+        return $this->tipoMembresia->gimnasio->direccion ?? 'Dirección no disponible';
     }
 
     public function registrarVisita()
@@ -49,5 +72,26 @@ class Membresia extends Model
             $this->visitas_restantes--;
             $this->save();
         }
+    }
+
+    public function getDuracionAttribute()
+    {
+        if (!$this->tipoMembresia) {
+            return 'No definida';
+        }
+        return $this->tipoMembresia->duracion_dias . ' días';
+    }
+
+    public function getEstadoFormateadoAttribute()
+    {
+        if ($this->fecha_vencimiento->isPast()) {
+            return 'Vencida';
+        }
+        return 'Activa';
+    }
+
+    public function getDiasRestantesAttribute()
+    {
+        return (int)abs(now()->diffInDays($this->fecha_vencimiento));
     }
 } 
