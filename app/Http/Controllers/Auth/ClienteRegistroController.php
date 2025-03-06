@@ -47,26 +47,11 @@ class ClienteRegistroController extends Controller
                             'foto_perfil' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
                         ]);
                         
-                        // Eliminar la foto anterior si existe
-                        if ($user->foto_perfil && file_exists(public_path($user->foto_perfil))) {
-                            @unlink(public_path($user->foto_perfil));
-                        }
+                        // Guardar la foto usando store() como en RegisterController
+                        $path = $request->file('foto_perfil')->store('userphoto', 'public');
                         
-                        // Guardar la nueva foto en la carpeta pública (como lo hace el dueño)
-                        $file = $request->file('foto_perfil');
-                        $fileName = time() . '_' . $file->getClientOriginalName();
-                        $path = 'images/profiles/' . $fileName;
-                        
-                        // Asegurarse de que el directorio existe
-                        if (!file_exists(public_path('images/profiles'))) {
-                            mkdir(public_path('images/profiles'), 0755, true);
-                        }
-                        
-                        // Mover el archivo al directorio público
-                        $file->move(public_path('images/profiles'), $fileName);
-                        
-                        // Guardar la ruta relativa en la base de datos
-                        $user->foto_perfil = $path;
+                        // Guardar la ruta en la base de datos con el prefijo 'storage/'
+                        $user->foto_perfil = 'storage/' . $path;
                         $user->save();
                         
                         \Log::info('Foto guardada en: ' . $path);
@@ -190,31 +175,18 @@ class ClienteRegistroController extends Controller
             
             // Procesar la foto de perfil
             if ($request->hasFile('foto_perfil')) {
-                // Eliminar la foto anterior si existe
-                if ($user->foto_perfil && file_exists(public_path($user->foto_perfil))) {
-                    @unlink(public_path($user->foto_perfil));
-                }
+                $request->validate([
+                    'foto_perfil' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+                ]);
                 
-                // Guardar la nueva foto en la carpeta pública
-                $file = $request->file('foto_perfil');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $path = 'images/profiles/' . $fileName;
+                // Guardar la foto usando store() como en RegisterController
+                $path = $request->file('foto_perfil')->store('userphoto', 'public');
                 
-                // Asegurarse de que el directorio existe
-                if (!file_exists(public_path('images/profiles'))) {
-                    mkdir(public_path('images/profiles'), 0755, true);
-                }
-                
-                // Mover el archivo al directorio público
-                $file->move(public_path('images/profiles'), $fileName);
-                
-                // Guardar la ruta relativa en la base de datos
-                $user->foto_perfil = $path;
+                // Guardar la ruta en la base de datos con el prefijo 'storage/'
+                $user->foto_perfil = 'storage/' . $path;
                 $user->save();
                 
                 \Log::info('Completar Registro - Foto guardada en: ' . $path);
-                \Log::info('Completar Registro - Ruta completa: ' . public_path($path));
-                \Log::info('Completar Registro - ¿Archivo existe? ' . (file_exists(public_path($path)) ? 'Sí' : 'No'));
             }
             
             // Buscar o crear el cliente
