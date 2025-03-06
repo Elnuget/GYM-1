@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Auth;
 
 class AsistenciaController extends Controller
 {
+    public function __construct()
+    {
+        // Configurar zona horaria para todas las instancias de Carbon en este controlador
+        Carbon::setLocale('es');
+        date_default_timezone_set('America/Guayaquil');
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -55,14 +62,15 @@ class AsistenciaController extends Controller
                 ->first();
 
             if ($asistenciaActiva) {
-                return back()->with('error', 'Ya tienes una asistencia activa el día de hoy.');
+                return back()->with('error', 'Ya tienes una asistencia activa hoy.');
             }
 
-            // Crear nueva asistencia
+            // Crear nueva asistencia usando la zona horaria correcta
             Asistencia::create([
                 'cliente_id' => $cliente->id_cliente,
-                'fecha' => Carbon::today(),
-                'hora_entrada' => Carbon::now(),
+                'fecha' => Carbon::now(),
+                'hora_entrada' => Carbon::now()->format('H:i:s'),
+                'estado' => 'activa'
             ]);
 
             return back()->with('success', 'Entrada registrada correctamente.');
@@ -92,9 +100,11 @@ class AsistenciaController extends Controller
                 return back()->with('error', 'Esta asistencia ya tiene registrada la salida.');
             }
 
-            $asistencia->update([
-                'hora_salida' => Carbon::now()
-            ]);
+            // Registrar la salida usando la zona horaria correcta
+            $asistencia->hora_salida = Carbon::now()->format('H:i:s');
+            $asistencia->duracion_minutos = $asistencia->calcularDuracion();
+            $asistencia->estado = 'completada';
+            $asistencia->save();
 
             return back()->with('success', 'Salida registrada correctamente.');
         } catch (\Exception $e) {

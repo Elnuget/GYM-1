@@ -25,10 +25,27 @@ class AsistenciaController extends Controller
      */
     public function index()
     {
+        // Obtener todas las asistencias para el dueño del gimnasio
         $asistencias = Asistencia::with('cliente')
             ->orderBy('fecha', 'desc')
             ->orderBy('hora_entrada', 'desc')
             ->paginate(10);
+        
+        // Asegurarnos de que la duración y el estado se calculen correctamente
+        foreach ($asistencias as $asistencia) {
+            if ($asistencia->hora_salida && $asistencia->hora_entrada) {
+                // Calcular la duración en minutos
+                $entrada = Carbon::parse($asistencia->getRawOriginal('hora_entrada'));
+                $salida = Carbon::parse($asistencia->getRawOriginal('hora_salida'));
+                $asistencia->duracion_minutos = $salida->diffInMinutes($entrada);
+                
+                // Actualizar el estado si es necesario
+                if ($entrada <= $salida && $asistencia->estado !== 'completada') {
+                    $asistencia->estado = 'completada';
+                    $asistencia->save();
+                }
+            }
+        }
         
         $clientes = Cliente::all();
         
@@ -52,13 +69,23 @@ class AsistenciaController extends Controller
         ]);
 
         try {
+            // Determinar el estado inicial
+            $estado = 'activa';
+            if ($request->hora_salida) {
+                $entrada = Carbon::parse($request->fecha . ' ' . $request->hora_entrada);
+                $salida = Carbon::parse($request->fecha . ' ' . $request->hora_salida);
+                if ($entrada <= $salida) {
+                    $estado = 'completada';
+                }
+            }
+
             $asistencia = Asistencia::create([
                 'cliente_id' => $request->cliente_id,
                 'fecha' => $request->fecha,
                 'hora_entrada' => $request->hora_entrada,
                 'hora_salida' => $request->hora_salida,
                 'notas' => $request->notas,
-                'estado' => 'activa',
+                'estado' => $estado,
             ]);
 
             Log::info('Asistencia creada: ', $asistencia->toArray());
@@ -95,13 +122,16 @@ class AsistenciaController extends Controller
             'hora_entrada' => 'required',
         ]);
 
+        // Determinar el estado basado en la presencia de hora_salida
+        $estado = $request->hora_salida ? 'completada' : 'activa';
+
         $asistencia->update([
             'cliente_id' => $request->cliente_id,
             'fecha' => $request->fecha,
             'hora_entrada' => $request->hora_entrada,
             'hora_salida' => $request->hora_salida,
             'notas' => $request->notas,
-            'estado' => $request->estado ?? 'activa',
+            'estado' => $estado,
         ]);
 
         // Recalculamos la duración si hay hora de entrada y salida
@@ -130,15 +160,56 @@ class AsistenciaController extends Controller
 
     /**
      * Registrar la salida de una asistencia
-     *
-     * @param  \App\Models\Asistencia  $asistencia
-     * @return \Illuminate\Http\Response
      */
     public function registrarSalida(Asistencia $asistencia)
     {
-        $asistencia->registrarSalida(Carbon::now('America/Guayaquil')->format('H:i:s'));
+        try {
+            if ($asistencia->hora_salida) {
+                return back()->with('error', 'Esta asistencia ya tiene registrada la salida.');
+            }
 
-        return redirect()->route('asistencias.index')
-            ->with('success', 'Salida registrada correctamente.');
+            // Registrar la salida
+            $asistencia->hora_salida = Carbon::now()->format('H:i:s');
+            $asistencia->duracion_minutos = $asistencia->calcularDuracion();
+            $asistencia->estado = 'completada';
+            $asistencia->save();
+
+            // Refrescar el modelo para asegurar que los datos estén actualizados
+            $asistencia->refresh();
+
+            return back()->with('success', 'Salida registrada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al registrar la salida: ' . $e->getMessage());
+        }
+    }
+
+    // Método común para registrar entrada
+    public function registrarEntrada(Request $request)
+    {
+        try {
+            $cliente_id = $request->cliente_id;
+            
+            // Verificar si ya existe una entrada sin salida
+            $asistenciaActiva = Asistencia::where('cliente_id', $cliente_id)
+                ->whereDate('fecha', Carbon::today())
+                ->whereNull('hora_salida')
+                ->first();
+
+            if ($asistenciaActiva) {
+                return back()->with('error', 'Ya existe una asistencia activa para este cliente hoy.');
+            }
+
+            // Crear nueva asistencia
+            Asistencia::create([
+                'cliente_id' => $cliente_id,
+                'fecha' => Carbon::today(),
+                'hora_entrada' => Carbon::now(),
+                'estado' => 'activa'
+            ]);
+
+            return back()->with('success', 'Entrada registrada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al registrar la entrada: ' . $e->getMessage());
+        }
     }
 }

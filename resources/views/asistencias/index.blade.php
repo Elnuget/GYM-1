@@ -46,7 +46,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Hora Entrada</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Hora Salida</th>
-                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Duración (min)</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Duración</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
                                 </tr>
@@ -67,12 +67,10 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            @if($asistencia->duracion_minutos)
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                                                    {{ $asistencia->duracion_minutos }}
-                                                </span>
+                                            @if($asistencia->hora_salida)
+                                                {{ $asistencia->duracion_formateada }}
                                             @else
-                                                <span class="text-gray-500">-</span>
+                                                En curso
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
