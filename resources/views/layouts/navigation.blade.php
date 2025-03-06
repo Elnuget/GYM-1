@@ -755,3 +755,12 @@
         {{ $slot }}
     </main>
 </div>
+
+<!-- Sección de diagnóstico (quitar en producción) -->
+@if(config('app.debug') && Auth::user()->foto_perfil)
+    <div class="p-2 text-xs bg-gray-100 text-gray-700">
+        <p>Ruta de foto: {{ Auth::user()->foto_perfil }}</p>
+        <p>¿Archivo existe? {{ file_exists(public_path(Auth::user()->foto_perfil)) ? 'Sí' : 'No' }}</p>
+        <p>Ruta completa: {{ public_path(Auth::user()->foto_perfil) }}</p>
+    </div>
+@endif

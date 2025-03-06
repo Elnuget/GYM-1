@@ -203,4 +203,18 @@ Route::middleware('guest')->group(function () {
     Route::post('/register/empleado', [RegisterController::class, 'registerEmpleado'])->name('register.empleado');
 });
 
+// Comentar o eliminar las rutas que usan el layout de cliente antiguo
+// Route::view('/cliente/dashboard', 'cliente.dashboard')->name('cliente.dashboard');
+// ... otras rutas que usan el layout de cliente ...
+
+// Las rutas del cliente ahora usarán el layout principal
+Route::middleware(['auth', 'role:cliente'])->group(function () {
+    Route::get('/cliente/rutinas/actual', [RutinaController::class, 'actual'])->name('cliente.rutinas.actual');
+    Route::get('/cliente/asistencias', [AsistenciaController::class, 'index'])->name('cliente.asistencias');
+    Route::get('/cliente/membresia', [MembresiaController::class, 'show'])->name('cliente.membresia');
+    Route::get('/cliente/nutricion', [NutricionController::class, 'index'])->name('cliente.nutricion');
+    Route::get('/cliente/pagos', [PagoController::class, 'index'])->name('cliente.pagos.index');
+    // ... otras rutas de cliente ...
+});
+
 require __DIR__.'/auth.php';

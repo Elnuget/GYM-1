@@ -44,18 +44,32 @@ class ClienteRegistroController extends Controller
                     // Procesar foto de perfil si se ha subido
                     if ($request->hasFile('foto_perfil')) {
                         $request->validate([
-                            'foto_perfil' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                            'foto_perfil' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
                         ]);
                         
-                        // Eliminar foto anterior si existe
-                        if ($user->foto_perfil && Storage::exists('public/' . $user->foto_perfil)) {
-                            Storage::delete('public/' . $user->foto_perfil);
+                        // Eliminar la foto anterior si existe
+                        if ($user->foto_perfil && file_exists(public_path($user->foto_perfil))) {
+                            @unlink(public_path($user->foto_perfil));
                         }
                         
-                        // Guardar nueva foto
-                        $path = $request->file('foto_perfil')->store('fotos_perfil', 'public');
+                        // Guardar la nueva foto en la carpeta pública (como lo hace el dueño)
+                        $file = $request->file('foto_perfil');
+                        $fileName = time() . '_' . $file->getClientOriginalName();
+                        $path = 'images/profiles/' . $fileName;
+                        
+                        // Asegurarse de que el directorio existe
+                        if (!file_exists(public_path('images/profiles'))) {
+                            mkdir(public_path('images/profiles'), 0755, true);
+                        }
+                        
+                        // Mover el archivo al directorio público
+                        $file->move(public_path('images/profiles'), $fileName);
+                        
+                        // Guardar la ruta relativa en la base de datos
                         $user->foto_perfil = $path;
                         $user->save();
+                        
+                        \Log::info('Foto guardada en: ' . $path);
                     }
                     
                     // Actualizar datos del cliente
@@ -121,15 +135,10 @@ class ClienteRegistroController extends Controller
                         'activo' => true
                     ]);
                     
-                    // En lugar de marcar registro_completo, podemos:
-                    // 1. Guardar esta información en la sesión
-                    session(['cliente_registro_completo' => true]);
-                    
-                    // 2. O usar la tabla onboarding_progress si existe
-                    // OnboardingProgress::updateOrCreate(
-                    //    ['user_id' => $user->id],
-                    //    ['completed' => true, 'completed_at' => now()]
-                    // );
+                    // Marcar el registro como completo cuando se complete el último paso
+                    $user = Auth::user();
+                    $user->configuracion_completa = true;
+                    $user->save();
                     
                     $message = "Objetivos fitness guardados correctamente";
                     break;
@@ -141,7 +150,8 @@ class ClienteRegistroController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'next_step' => $paso < 3 ? $paso + 1 : null
+                'next_step' => $paso < 3 ? $paso + 1 : null,
+                'redirect' => $paso === 3 ? route('dashboard') : null  // Añadir redirección al dashboard principal
             ]);
             
         } catch (\Exception $e) {
@@ -180,14 +190,31 @@ class ClienteRegistroController extends Controller
             
             // Procesar la foto de perfil
             if ($request->hasFile('foto_perfil')) {
-                // Eliminar foto anterior si existe
-                if ($user->foto_perfil && Storage::exists('public/' . $user->foto_perfil)) {
-                    Storage::delete('public/' . $user->foto_perfil);
+                // Eliminar la foto anterior si existe
+                if ($user->foto_perfil && file_exists(public_path($user->foto_perfil))) {
+                    @unlink(public_path($user->foto_perfil));
                 }
                 
-                $path = $request->file('foto_perfil')->store('fotos_perfil', 'public');
+                // Guardar la nueva foto en la carpeta pública
+                $file = $request->file('foto_perfil');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $path = 'images/profiles/' . $fileName;
+                
+                // Asegurarse de que el directorio existe
+                if (!file_exists(public_path('images/profiles'))) {
+                    mkdir(public_path('images/profiles'), 0755, true);
+                }
+                
+                // Mover el archivo al directorio público
+                $file->move(public_path('images/profiles'), $fileName);
+                
+                // Guardar la ruta relativa en la base de datos
                 $user->foto_perfil = $path;
                 $user->save();
+                
+                \Log::info('Completar Registro - Foto guardada en: ' . $path);
+                \Log::info('Completar Registro - Ruta completa: ' . public_path($path));
+                \Log::info('Completar Registro - ¿Archivo existe? ' . (file_exists(public_path($path)) ? 'Sí' : 'No'));
             }
             
             // Buscar o crear el cliente
@@ -235,20 +262,21 @@ class ClienteRegistroController extends Controller
                 'activo' => true
             ]);
             
-            // Marcar registro como completo
-            session(['cliente_registro_completo' => true]);
+            // Marcar el registro como completo
+            $user->configuracion_completa = true;
+            $user->save();
             
-            // Respuesta para AJAX
+            // Cambiar la redirección al dashboard principal
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => '¡Registro completado con éxito! Redirigiendo...',
-                    'redirect' => route('cliente.dashboard')
+                    'redirect' => route('dashboard')  // Cambiado de 'cliente.dashboard' a 'dashboard'
                 ]);
             }
             
-            // Respuesta para formulario normal
-            return redirect()->route('cliente.dashboard')
+            // Redirección normal al dashboard principal
+            return redirect()->route('dashboard')
                 ->with('success', '¡Registro completado con éxito! Bienvenido a GymFlow.');
                 
         } catch (\Exception $e) {
