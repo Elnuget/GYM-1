@@ -234,7 +234,7 @@ use Carbon\Carbon;
 
                 <!-- Menú Cliente -->
                 @role('cliente')
-                <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                         class="w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                         :class="{'bg-emerald-600/30': open}">
@@ -289,6 +289,14 @@ use Carbon\Carbon;
                             </svg>
                             <span>{{ __('Mis Pagos') }}</span>
                         </x-nav-link>
+                        <x-nav-link :href="route('cliente.comunicacion.index')" :active="request()->routeIs('cliente.comunicacion.*')"
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                            <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Comunicación') }}</span>
+                        </x-nav-link>
                     </div>
                 </div>
                 @endrole
@@ -329,8 +337,7 @@ use Carbon\Carbon;
                         <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                             </svg>
                             <span>{{ __('Nutrición') }}</span>
                         </x-nav-link>
@@ -603,7 +610,7 @@ use Carbon\Carbon;
 
         <!-- Menú Cliente -->
         @role('cliente')
-        <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                 class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                 :class="{'bg-emerald-600/30': open}">
@@ -655,6 +662,14 @@ use Carbon\Carbon;
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Mis Pagos') }}</span>
+                </x-nav-link>
+                <x-nav-link :href="route('cliente.comunicacion.index')" :active="request()->routeIs('cliente.comunicacion.*')"
+                    class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                    </svg>
+                    <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Comunicación') }}</span>
                 </x-nav-link>
             </div>
         </div>

@@ -25,6 +25,7 @@ use App\Http\Controllers\Cliente\ReporteController;
 use App\Http\Controllers\TipoMembresiaController;
 use App\Http\Controllers\Cliente\AsistenciaController as ClienteAsistenciaController;
 use App\Http\Controllers\Cliente\PagoController as ClientePagoController;
+use App\Http\Controllers\Cliente\ComunicacionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -95,6 +96,16 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
         Route::get('/', [ClientePagoController::class, 'index'])->name('cliente.pagos.index');
         Route::post('/', [ClientePagoController::class, 'store'])->name('cliente.pagos.store');
         Route::get('/{pago}', [ClientePagoController::class, 'show'])->name('cliente.pagos.show');
+    });
+
+    Route::prefix('cliente/comunicacion')->group(function () {
+        Route::get('/', [ComunicacionController::class, 'index'])
+            ->name('cliente.comunicacion.index')
+            ->name('cliente.comunicacion');
+        Route::post('/enviar-mensaje', [ComunicacionController::class, 'enviarMensaje'])
+            ->name('cliente.comunicacion.enviar-mensaje');
+        Route::post('/notificaciones/{id}/marcar-leida', [ComunicacionController::class, 'marcarNotificacionLeida'])
+            ->name('cliente.comunicacion.marcar-leida');
     });
 });
 
