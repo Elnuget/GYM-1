@@ -239,7 +239,7 @@
                 <div class="mt-6 flex justify-end">
                     <button type="button" 
                             class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors mr-3"
-                            x-on:click="$dispatch('close')">
+                            x-on:click="$dispatch('close-modal', 'nuevo-pago')">
                         Cancelar
                     </button>
 
