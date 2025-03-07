@@ -21,6 +21,7 @@ class PagoController extends Controller
         
         $membresias = Membresia::where('id_usuario', auth()->id())
             ->where('fecha_vencimiento', '>', now())
+            ->with('tipoMembresia')
             ->get();
 
         $metodosPago = MetodoPago::where('activo', true)->get();
