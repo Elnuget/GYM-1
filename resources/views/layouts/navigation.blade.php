@@ -610,8 +610,8 @@ use Carbon\Carbon;
 
         <!-- Menú Cliente -->
         @role('cliente')
-        <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
-            <button @click="open = !open"
+        <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
+        <button @click="open = !open"
                 class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                 :class="{'bg-emerald-600/30': open}">
                 <div class="flex items-center" :class="{'justify-center w-full': !isExpanded}">
@@ -776,11 +776,6 @@ use Carbon\Carbon;
     </main>
 </div>
 
-<!-- Sección de diagnóstico (quitar en producción) -->
-@if(config('app.debug') && Auth::user()->foto_perfil)
-    <div class="p-2 text-xs bg-gray-100 text-gray-700">
-        <p>Ruta de foto: {{ Auth::user()->foto_perfil }}</p>
-        <p>¿Archivo existe? {{ file_exists(public_path(Auth::user()->foto_perfil)) ? 'Sí' : 'No' }}</p>
-        <p>Ruta completa: {{ public_path(Auth::user()->foto_perfil) }}</p>
-    </div>
-@endif
+
+
+</div>

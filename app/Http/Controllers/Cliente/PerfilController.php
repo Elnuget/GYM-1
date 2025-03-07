@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Cliente;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
-use App\Models\MedidaCorporal;
-use App\Models\ObjetivoCliente;
+use App\Models\Medida;
+use App\Models\Objetivo;
+use Illuminate\Support\Facades\Auth;
 
 class PerfilController extends Controller
 {
@@ -17,59 +18,47 @@ class PerfilController extends Controller
 
     public function informacion()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
-        
+        $cliente = Cliente::where('user_id', Auth::id())->first();
         return view('cliente.perfil.informacion', compact('cliente'));
     }
 
     public function medidas()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
-        $medidas = MedidaCorporal::where('cliente_id', $cliente->id_cliente)
+        $cliente = Cliente::where('user_id', Auth::id())->first();
+        $medidas = Medida::where('cliente_id', $cliente->id_cliente)
             ->orderBy('fecha_medicion', 'desc')
             ->get();
-
         return view('cliente.perfil.medidas', compact('medidas'));
     }
 
     public function objetivos()
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
-        $objetivos = ObjetivoCliente::where('cliente_id', $cliente->id_cliente)
-            ->where('activo', true)
+        $cliente = Cliente::where('user_id', Auth::id())->first();
+        $objetivos = Objetivo::where('cliente_id', $cliente->id_cliente)
+            ->orderBy('created_at', 'desc')
             ->get();
-
         return view('cliente.perfil.objetivos', compact('objetivos'));
     }
 
     public function actualizar(Request $request)
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        $cliente = Cliente::where('user_id', Auth::id())->first();
         
         $request->validate([
-            'fecha_nacimiento' => 'required|date',
-            'telefono' => 'required|string|max:20',
-            'genero' => 'required|string|max:20',
-            'ocupacion' => 'required|string|max:100',
-            'direccion' => 'required|string|max:255',
+            'fecha_nacimiento' => 'nullable|date',
+            'telefono' => 'nullable|string|max:20',
+            'genero' => 'nullable|in:M,F,O',
+            'ocupacion' => 'nullable|string|max:100',
         ]);
 
-        $cliente->update($request->only([
-            'fecha_nacimiento',
-            'telefono',
-            'genero',
-            'ocupacion',
-            'direccion'
-        ]));
+        $cliente->update($request->all());
 
-        return redirect()
-            ->route('cliente.perfil.informacion')
-            ->with('success', 'Información actualizada correctamente');
+        return back()->with('success', 'Información actualizada correctamente');
     }
 
-    public function storeMedidas(Request $request)
+    public function guardarMedidas(Request $request)
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        $cliente = Cliente::where('user_id', Auth::id())->first();
         
         $request->validate([
             'fecha_medicion' => 'required|date',
@@ -82,7 +71,7 @@ class PerfilController extends Controller
             'pantorrillas' => 'required|numeric|min:0',
         ]);
 
-        MedidaCorporal::create([
+        Medida::create([
             'cliente_id' => $cliente->id_cliente,
             'fecha_medicion' => $request->fecha_medicion,
             'peso' => $request->peso,
@@ -94,37 +83,29 @@ class PerfilController extends Controller
             'pantorrillas' => $request->pantorrillas,
         ]);
 
-        return redirect()->route('cliente.perfil.medidas')
-            ->with('success', 'Medidas registradas correctamente');
+        return back()->with('success', 'Medidas guardadas correctamente');
     }
 
-    public function storeObjetivo(Request $request)
+    public function guardarObjetivos(Request $request)
     {
-        $cliente = Cliente::where('user_id', auth()->id())->firstOrFail();
+        $cliente = Cliente::where('user_id', Auth::id())->first();
         
         $request->validate([
             'objetivo_principal' => 'required|string',
-            'nivel_experiencia' => 'required|in:principiante,intermedio,avanzado',
+            'nivel_experiencia' => 'required|string',
             'dias_entrenamiento' => 'required|integer|min:1|max:7',
             'condiciones_medicas' => 'nullable|string',
         ]);
 
-        // Desactivar objetivos anteriores
-        ObjetivoCliente::where('cliente_id', $cliente->id_cliente)
-            ->where('activo', true)
-            ->update(['activo' => false]);
-
-        // Crear nuevo objetivo
-        ObjetivoCliente::create([
+        Objetivo::create([
             'cliente_id' => $cliente->id_cliente,
             'objetivo_principal' => $request->objetivo_principal,
             'nivel_experiencia' => $request->nivel_experiencia,
             'dias_entrenamiento' => $request->dias_entrenamiento,
             'condiciones_medicas' => $request->condiciones_medicas,
-            'activo' => true
+            'activo' => true,
         ]);
 
-        return redirect()->route('cliente.perfil.objetivos')
-            ->with('success', 'Objetivo registrado correctamente');
+        return back()->with('success', 'Objetivo guardado correctamente');
     }
 } 

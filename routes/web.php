@@ -78,8 +78,15 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
     Route::get('/cliente/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
         ->name('cliente.membresia');
 
-    Route::get('/cliente/perfil/objetivos', [PerfilController::class, 'objetivos'])
-        ->name('cliente.perfil.objetivos');
+    Route::prefix('cliente/perfil')->name('cliente.perfil.')->group(function () {
+        Route::get('/informacion', [PerfilController::class, 'informacion'])->name('informacion');
+        Route::get('/medidas', [PerfilController::class, 'medidas'])->name('medidas');
+        Route::get('/objetivos', [PerfilController::class, 'objetivos'])->name('objetivos');
+        
+        Route::put('/actualizar', [PerfilController::class, 'actualizar'])->name('actualizar');
+        Route::post('/medidas', [PerfilController::class, 'guardarMedidas'])->name('medidas.store');
+        Route::post('/objetivos', [PerfilController::class, 'guardarObjetivos'])->name('objetivos.store');
+    });
 
     Route::prefix('onboarding')->name('onboarding.')->group(function () {
         Route::get('/perfil', [OnboardingController::class, 'perfil'])->name('perfil');
@@ -100,8 +107,7 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
 
     Route::prefix('cliente/comunicacion')->group(function () {
         Route::get('/', [ComunicacionController::class, 'index'])
-            ->name('cliente.comunicacion.index')
-            ->name('cliente.comunicacion');
+            ->name('cliente.comunicacion.index');
         Route::post('/enviar-mensaje', [ComunicacionController::class, 'enviarMensaje'])
             ->name('cliente.comunicacion.enviar-mensaje');
         Route::post('/notificaciones/{id}/marcar-leida', [ComunicacionController::class, 'marcarNotificacionLeida'])
