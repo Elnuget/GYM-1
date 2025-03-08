@@ -220,12 +220,13 @@ use Carbon\Carbon;
                         </x-nav-link>
                         <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 2a5 5 0 00-5 5c0 3 2 5 5 5s5-2 5-5a5 5 0 00-5-5zm0 10v10m-4-10H5m14 0h-3" />
+                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                             </svg>
                             <span>{{ __('Nutrición') }}</span>
                         </x-nav-link>
+
 
 
                     </div>
@@ -547,9 +548,9 @@ use Carbon\Carbon;
                 </x-nav-link>
                 <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
                     class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7c0-3-2-5-5-5s-5 2-5 5c0 2.5 1.5 4.5 3.5 5.5M12 22s4-2 4-6m-4 6s-4-2-4-6M8 8H4m4 4H4m4 4H4" />
+                            d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                     </svg>
                     <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Nutrición') }}</span>
                 </x-nav-link>
