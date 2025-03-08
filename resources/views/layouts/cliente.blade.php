@@ -12,30 +12,33 @@ use Carbon\Carbon;
     <title>{{ config('app.name', 'Laravel') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="font-sans antialiased" x-data="{ mobileMenuOpen: false, isExpanded: false }">
+<body class="font-sans antialiased" x-data="{ mobileMenuOpen: false, isExpanded: localStorage.getItem('sidebarExpanded') === 'true' }" 
+      x-init="$watch('isExpanded', value => localStorage.setItem('sidebarExpanded', value))">
     <div class="min-h-screen bg-gray-50">
-        <!-- Incluir el menú de navigation.blade.php -->
-        @include('layouts.navigation')
+        <!-- Barra lateral de navegación -->
+        <div x-data="{ mobileMenuOpen: false }">
+            <div class="min-h-screen">
+                @include('layouts.navigation')
+                <!-- NO INCLUIR SLOT AQUÍ -->
+            </div>
+        </div>
 
-        <!-- Main Content -->
-        <div :class="{'lg:ml-16': !isExpanded, 'lg:ml-64': isExpanded}"
-             class="transition-all duration-300">
-            <main class="p-6">
-                {{ $slot }}
-            </main>
-        </div>
+        <!-- NO INCLUIR navigation.blade.php DE NUEVO -->
+        
+        @if (session('success'))
+            <div x-data="{ show: true }"
+                x-show="show"
+                x-transition
+                x-init="setTimeout(() => show = false, 3000)"
+                class="fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                {{ session('success') }}
+            </div>
+        @endif
     </div>
-    
-    @if (session('success'))
-        <div x-data="{ show: true }"
-             x-show="show"
-             x-transition
-             x-init="setTimeout(() => show = false, 3000)"
-             class="fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg">
-            {{ session('success') }}
-        </div>
-    @endif
 
     <!-- Script para redirigir el enlace Panel a /cliente/dashboard -->
     <script>
