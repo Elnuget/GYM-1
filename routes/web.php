@@ -26,6 +26,8 @@ use App\Http\Controllers\TipoMembresiaController;
 use App\Http\Controllers\Cliente\AsistenciaController as ClienteAsistenciaController;
 use App\Http\Controllers\Cliente\PagoController as ClientePagoController;
 use App\Http\Controllers\Cliente\ComunicacionController;
+use App\Http\Controllers\Cliente\MedidaController;
+use App\Http\Controllers\Cliente\ObjetivoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -78,14 +80,13 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
     Route::get('/cliente/membresia', [App\Http\Controllers\Cliente\MembresiaController::class, 'index'])
         ->name('cliente.membresia');
 
-    Route::prefix('cliente/perfil')->name('cliente.perfil.')->group(function () {
-        Route::get('/informacion', [PerfilController::class, 'informacion'])->name('informacion');
-        Route::get('/medidas', [PerfilController::class, 'medidas'])->name('medidas');
-        Route::get('/objetivos', [PerfilController::class, 'objetivos'])->name('objetivos');
-        
-        Route::put('/actualizar', [PerfilController::class, 'actualizar'])->name('actualizar');
-        Route::post('/medidas', [PerfilController::class, 'guardarMedidas'])->name('medidas.store');
-        Route::post('/objetivos', [PerfilController::class, 'guardarObjetivos'])->name('objetivos.store');
+    Route::middleware(['auth', 'role:cliente'])->prefix('cliente/perfil')->name('cliente.perfil.')->group(function () {
+        Route::get('/informacion', [App\Http\Controllers\Cliente\PerfilController::class, 'informacion'])->name('informacion');
+        Route::get('/medidas', [App\Http\Controllers\Cliente\MedidaController::class, 'index'])->name('medidas');
+        Route::post('/medidas', [App\Http\Controllers\Cliente\MedidaController::class, 'store'])->name('medidas.store');
+        Route::get('/objetivos', [App\Http\Controllers\Cliente\ObjetivoController::class, 'index'])->name('objetivos');
+        Route::post('/objetivos', [App\Http\Controllers\Cliente\ObjetivoController::class, 'store'])->name('objetivos.store');
+        Route::put('/actualizar', [App\Http\Controllers\Cliente\PerfilController::class, 'actualizar'])->name('actualizar');
     });
 
     Route::prefix('onboarding')->name('onboarding.')->group(function () {

@@ -23,7 +23,7 @@ class ObjetivoCliente extends Model
     ];
 
     protected $casts = [
-        'activo' => 'boolean'
+        'activo' => 'boolean',
     ];
 
     public function cliente(): BelongsTo

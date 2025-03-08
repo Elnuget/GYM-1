@@ -189,8 +189,7 @@ use Carbon\Carbon;
                         <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <span>{{ __('Gimnasios') }}</span>
                         </x-nav-link>
@@ -247,7 +246,7 @@ use Carbon\Carbon;
                 @role('cliente')
                 <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
-                        class="w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
+                        class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                         :class="{'bg-emerald-600/30': open}">
                         <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -261,7 +260,7 @@ use Carbon\Carbon;
                     </button>
                     <div x-show="open" class="pl-4 mt-1 space-y-1">
                         <x-nav-link :href="route('cliente.rutinas.actual')" :active="request()->routeIs('cliente.rutinas.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -269,7 +268,7 @@ use Carbon\Carbon;
                             <span>{{ __('Mi Rutina') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('cliente.asistencias')" :active="request()->routeIs('cliente.asistencias')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -277,7 +276,7 @@ use Carbon\Carbon;
                             <span>{{ __('Mis Asistencias') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('cliente.membresia')" :active="request()->routeIs('cliente.membresia')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -285,7 +284,7 @@ use Carbon\Carbon;
                             <span>{{ __('Mi Membresía') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('cliente.nutricion')" :active="request()->routeIs('cliente.nutricion')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
@@ -293,10 +292,9 @@ use Carbon\Carbon;
                             <span>{{ __('Mi Plan Nutricional') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('cliente.pagos.index')" :active="request()->routeIs('cliente.pagos.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <span>{{ __('Mis Pagos') }}</span>
                         </x-nav-link>
@@ -316,7 +314,7 @@ use Carbon\Carbon;
                 @role('entrenador')
                 <div x-data="{ open: {{ request()->routeIs('rutinas-predefinidas.*') || request()->routeIs('clientes.*') || request()->routeIs('nutricion.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
-                        class="w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
+                        class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                         :class="{'bg-emerald-600/30': open}">
                         <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -330,24 +328,22 @@ use Carbon\Carbon;
                     </button>
                     <div x-show="open" class="pl-4 mt-1 space-y-1">
                         <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             <span>{{ __('Rutinas') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('clientes.index')" :active="request()->routeIs('clientes.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <span>{{ __('Clientes') }}</span>
                         </x-nav-link>
                         <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                             </svg>
                             <span>{{ __('Nutrición') }}</span>
@@ -772,6 +768,50 @@ use Carbon\Carbon;
                 </svg>
                 <span x-cloak x-show="isExpanded">{{ __('Configuración de Perfil') }}</span>
             </a>
+
+            <!-- Menú de Perfil (Solo para clientes) -->
+            @role('cliente')
+            <div x-data="{ open: {{ request()->routeIs('cliente.perfil.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open"
+                    class="mt-2 w-full flex items-center justify-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
+                    :class="{'bg-emerald-600/30': open}">
+                    <svg class="w-5 h-5" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span x-cloak x-show="isExpanded">{{ __('Mi Perfil') }}</span>
+                    <svg x-cloak x-show="isExpanded" class="w-4 h-4 ml-auto" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-4 mt-1 space-y-1">
+                    <a href="{{ route('cliente.perfil.informacion') }}" 
+                       class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200 {{ request()->routeIs('cliente.perfil.informacion') ? 'bg-emerald-600/30' : '' }}">
+                        <svg class="w-4 h-4" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded">{{ __('Información Personal') }}</span>
+                    </a>
+                    <a href="{{ route('cliente.perfil.medidas') }}" 
+                       class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200 {{ request()->routeIs('cliente.perfil.medidas') ? 'bg-emerald-600/30' : '' }}">
+                        <svg class="w-4 h-4" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded">{{ __('Mis Medidas') }}</span>
+                    </a>
+                    <a href="{{ route('cliente.perfil.objetivos') }}" 
+                       class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200 {{ request()->routeIs('cliente.perfil.objetivos') ? 'bg-emerald-600/30' : '' }}">
+                        <svg class="w-4 h-4" :class="{'mr-3': isExpanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded">{{ __('Mis Objetivos') }}</span>
+                    </a>
+                </div>
+            </div>
+            @endrole
 
             <!-- Botón de Cerrar Sesión -->
             <form method="POST" action="{{ route('logout') }}" class="mt-2">

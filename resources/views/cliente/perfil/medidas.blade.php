@@ -89,7 +89,7 @@
                                             pecho: '{{ $medida->pecho }}',
                                             biceps: '{{ $medida->biceps }}',
                                             muslos: '{{ $medida->muslos }}',
-                                            pantorrillas: '{{ $medida->pantorrillas }}'
+                                            pantorrillas: '{{ $medida->pantorrillas ?? '' }}'
                                         }"
                                                 class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-medium transition-colors duration-200">
                                             Ver más
