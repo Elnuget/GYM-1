@@ -88,6 +88,16 @@ use Carbon\Carbon;
                 @endif
 
                 <!-- Panel para todos los roles -->
+                @role('cliente')
+                <x-nav-link :href="route('cliente.dashboard')" :active="request()->routeIs('cliente.dashboard')"
+                    class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Panel') }}</span>
+                </x-nav-link>
+                @else
                 <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')"
                     class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,6 +106,7 @@ use Carbon\Carbon;
                     </svg>
                     <span>{{ __('Panel') }}</span>
                 </x-nav-link>
+                @endrole
 
                 <!-- Menú Administrador -->
                 @role('admin')
@@ -235,7 +246,7 @@ use Carbon\Carbon;
                 <!-- Menú Cliente -->
                 @role('cliente')
                 <div x-data="{ open: {{ request()->routeIs('cliente.rutinas.*') || request()->routeIs('cliente.asistencias') || request()->routeIs('cliente.membresia') || request()->routeIs('cliente.nutricion.*') || request()->routeIs('cliente.pagos.*') || request()->routeIs('cliente.comunicacion.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open"
+                <button @click="open = !open"
                         class="w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                         :class="{'bg-emerald-600/30': open}">
                         <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,6 +482,16 @@ use Carbon\Carbon;
         @endif
 
         <!-- Panel para todos los roles -->
+        @role('cliente')
+        <x-nav-link :href="route('cliente.dashboard')" :active="request()->routeIs('cliente.dashboard')"
+            class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Panel') }}</span>
+        </x-nav-link>
+        @else
         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')"
             class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -479,6 +500,7 @@ use Carbon\Carbon;
             </svg>
             <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Panel') }}</span>
         </x-nav-link>
+        @endrole
 
         <!-- Menú Administrador -->
         @role('admin')
