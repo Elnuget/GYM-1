@@ -64,7 +64,30 @@ class PagoController extends Controller
 
     public function show(Pago $pago)
     {
-        $this->authorize('view', $pago);
+        // Verificar que el pago pertenezca al usuario autenticado
+        if ($pago->id_usuario != auth()->id()) {
+            abort(403, 'No tienes permiso para ver este pago.');
+        }
+        
         return view('cliente.pagos.show', compact('pago'));
+    }
+
+    /**
+     * Obtiene la información de un pago específico en formato JSON.
+     *
+     * @param  \App\Models\Pago  $pago
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function info(Pago $pago)
+    {
+        // Verificar que el pago pertenezca al usuario autenticado
+        if ($pago->id_usuario != auth()->id()) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+        
+        // Cargar relaciones necesarias
+        $pago->load(['membresia.tipoMembresia', 'metodoPago']);
+        
+        return response()->json($pago);
     }
 } 

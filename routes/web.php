@@ -103,6 +103,9 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
         Route::get('/', [ClientePagoController::class, 'index'])->name('cliente.pagos.index');
         Route::post('/', [ClientePagoController::class, 'store'])->name('cliente.pagos.store');
         Route::get('/{pago}', [ClientePagoController::class, 'show'])->name('cliente.pagos.show');
+        Route::get('/{pago}/info', [App\Http\Controllers\Cliente\PagoController::class, 'info'])
+            ->middleware(['auth'])
+            ->name('cliente.pagos.info');
     });
 
     Route::prefix('cliente/comunicacion')->group(function () {

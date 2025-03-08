@@ -43,13 +43,45 @@
                                             {{ $pago->fecha_pago->format('d/m/Y') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $pago->membresia->nombre }}
+                                            {{ $pago->membresia->tipoMembresia->nombre ?? 'No disponible' }}
+                                            <div class="text-xs text-gray-500">
+                                                Duración: {{ $pago->membresia->duracion_dias > 0 ? $pago->membresia->duracion_dias : '30' }} días
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             ${{ number_format($pago->monto, 2) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $pago->metodoPago->nombre }}
+                                            <div class="flex items-center space-x-2">
+                                                @switch($pago->id_metodo_pago)
+                                                    @case(1)
+                                                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                                        </svg>
+                                                        <span>Tarjeta de Crédito/Débito</span>
+                                                        @break
+
+                                                    @case(2)
+                                                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                        </svg>
+                                                        <span>Efectivo</span>
+                                                        @break
+
+                                                    @case(3)
+                                                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                                                        </svg>
+                                                        <span>Transferencia Bancaria</span>
+                                                        @break
+
+                                                    @default
+                                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        <span>{{ $pago->metodoPago->nombre }}</span>
+                                                @endswitch
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -60,8 +92,11 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <a href="{{ route('cliente.pagos.show', $pago) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900">Ver detalles</a>
+                                            <button type="button" 
+                                                    onclick="cargarDetallesPago({{ $pago->id_pago }})"
+                                                    class="text-indigo-600 hover:text-indigo-900 underline bg-transparent border-none cursor-pointer p-0 text-left">
+                                                Ver detalles
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -176,9 +211,9 @@
                     <select id="id_metodo_pago" name="id_metodo_pago" required
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                         <option value="">Selecciona un método de pago</option>
-                        <option value="1">Efectivo</option>
-                        <option value="2">Transferencia Bancaria</option>
-                        <option value="3">Tarjeta de Crédito/Débito</option>
+                        <option value="2">Efectivo</option>
+                        <option value="3">Transferencia Bancaria</option>
+                        <option value="1">Tarjeta de Crédito/Débito</option>
                     </select>
                 </div>
 
@@ -252,91 +287,211 @@
         </div>
     </x-modal>
 
+    <!-- Reemplazar el modal de detalles con esta versión más simple -->
+    <div id="modal-detalles" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-medium text-gray-900">Detalles del Pago</h2>
+                    <button onclick="cerrarModalDetalles()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="loading-detalles" class="flex justify-center items-center py-10">
+                    <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-emerald-600">Cargando detalles...</span>
+                </div>
+                
+                <div id="contenido-detalles" class="hidden">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Membresía</p>
+                            <p id="detalle-membresia" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Fecha</p>
+                            <p id="detalle-fecha" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Monto</p>
+                            <p id="detalle-monto" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Estado</p>
+                            <p id="detalle-estado" class="inline-flex px-2 text-xs font-semibold rounded-full">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Método de Pago</p>
+                            <p id="detalle-metodo" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Duración</p>
+                            <p id="detalle-duracion" class="font-medium">-</p>
+                        </div>
+                    </div>
+
+                    <div id="detalle-comprobante-container" class="mb-4 hidden">
+                        <p class="text-sm text-gray-500 mb-2">Comprobante</p>
+                        <div class="bg-gray-100 p-4 rounded">
+                            <a id="detalle-comprobante-link" href="#" target="_blank" class="text-indigo-600 hover:text-indigo-900 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                Ver comprobante
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="detalle-notas-container" class="mb-4 hidden">
+                        <p class="text-sm text-gray-500 mb-1">Notas</p>
+                        <p id="detalle-notas" class="text-gray-700">-</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="button" 
+                            onclick="cerrarModalDetalles()"
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('pagoData', () => ({
-                isModalOpen: false,
-                isEditModalOpen: false,
-                currentPago: null,
-                filePreview: null,
-                fileName: '',
-                fileSize: '',
-                showPreview: false,
-
-                // Función para previsualizar archivo
-                previewFile(event) {
-                    const file = event.target.files[0];
-                    
-                    if (!file) {
-                        this.clearFilePreview();
-                        return;
+        function cargarDetallesPago(id) {
+            // Mostrar el modal
+            document.getElementById('modal-detalles').classList.remove('hidden');
+            
+            // Mostrar loading, ocultar contenido
+            document.getElementById('loading-detalles').classList.remove('hidden');
+            document.getElementById('contenido-detalles').classList.add('hidden');
+            
+            // Cargar los datos
+            fetch(`/cliente/pagos/${id}/info`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
                     }
-                    
-                    // Validar tamaño (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('El archivo es demasiado grande. Máximo 5MB permitido.');
-                        event.target.value = '';
-                        this.clearFilePreview();
-                        return;
-                    }
-                    
-                    // Validar tipo
-                    if (!file.type.match('image.*') && file.type !== 'application/pdf') {
-                        alert('Solo se permiten archivos de imagen o PDF.');
-                        event.target.value = '';
-                        this.clearFilePreview();
-                        return;
-                    }
-                    
-                    // Mostrar información del archivo
-                    this.fileName = file.name;
-                    this.fileSize = (file.size / 1024 / 1024).toFixed(2);
-                    
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.filePreview = e.target.result;
-                            this.showPreview = true;
-                        };
-                        reader.readAsDataURL(file);
-                    } else if (file.type === 'application/pdf') {
-                        this.filePreview = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgNTEyIj48cGF0aCBmaWxsPSIjZWQ0YzVjIiBkPSJNMTgxLjkgMjU2LjFjLTUtMTYtNC45LTQ2LjktMi0xNjguOUMxODIuMSA0MS44IDE4MiAzMi4xIDE4MiAzMmMwLTEzLjMtMTAuOC0yNC0yNC0yNGgtODIuM2MtMTMuMiAwLTI0IDEwLjctMjQgMjQgMCAwIC4xIDkuOCAzLjIgOTAuMSAyLjkgMTIyLjkgMyAxNTMuOC0yIDE2OC45LTEyLjYgMzcuOS0yNC45IDQ1LjQtMzUuNCA1Ny4xLTUuMiA1LjYtNS42IDE0LjYtLjkgMjAuOSA1IDYuNyAxMy44IDcuOSAyMC4zIDMuNiA2LjUtNC4zIDEyLjktOC45IDE5LjMtMTMuNSAxMy0xMC4yIDI3LjItMjAuNSA0MC45LTI3LjIgMzkuMy0xOS4xIDkzLjYtMTEuOCAxMzYuMyAxNC45IDkuOSA2LjIgMTQuOC0xLjYgMTMuNi0xMS45LS40LTMuOC0xLjgtMTYuNy0zLjgtMzIuOC0zLjEtMjYuMy03LjctNTYuOS0xNS4xLTc0LjJtMTM4LjggMTY1LjljNS41IDUuNSAxNC42IDUuNSAyMC4yIDBsNDEuOS00MS45YzUuNS01LjUgNS41LTE0LjYgMC0yMC4yTDIxNy45IDIwMy41Yy01LjUtNS41LTE0LjYtNS41LTIwLjIgMGwtNDEuOSA0MS45Yy01LjUgNS41LTUuNSAxNC42IDAgMjAuMmwxNjQuOSAxNjUuNHoiLz48L3N2Zz4=';
-                        this.showPreview = true;
-                    }
-                },
-
-                clearFilePreview() {
-                    this.filePreview = null;
-                    this.fileName = '';
-                    this.fileSize = '';
-                    this.showPreview = false;
-                    this.$refs.comprobante.value = '';
-                },
-
-                toggleModal() {
-                    this.isModalOpen = !this.isModalOpen;
-                    if (!this.isModalOpen) {
-                        this.clearFilePreview();
-                    }
-                },
-
-                toggleEditModal(pago = null) {
-                    this.isEditModalOpen = !this.isEditModalOpen;
-                    this.currentPago = pago;
-                    if (pago) {
-                        this.$nextTick(() => {
-                            document.getElementById('edit_id_membresia').value = pago.id_membresia;
-                            document.getElementById('edit_id_usuario').value = pago.id_usuario;
-                            document.getElementById('edit_monto').value = pago.monto;
-                            document.getElementById('edit_fecha_pago').value = pago.fecha_pago;
-                            document.getElementById('edit_estado').value = pago.estado;
-                            document.getElementById('edit_id_metodo_pago').value = pago.id_metodo_pago;
-                            document.getElementById('edit_notas').value = pago.notas || '';
-                        });
-                    }
-                }
-            }));
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Datos cargados:', data);
+                    mostrarDetallesPago(data);
+                })
+                .catch(error => {
+                    console.error('Error al cargar detalles:', error);
+                    alert('No se pudieron cargar los detalles del pago');
+                    cerrarModalDetalles();
+                });
+            
+            // Evitar que la página se desplace
+            return false;
+        }
+        
+        function mostrarDetallesPago(pago) {
+            // Ocultar loading, mostrar contenido
+            document.getElementById('loading-detalles').classList.add('hidden');
+            document.getElementById('contenido-detalles').classList.remove('hidden');
+            
+            // Llenar los datos
+            document.getElementById('detalle-membresia').textContent = 
+                pago.membresia?.tipoMembresia?.nombre || 'No disponible';
+            
+            document.getElementById('detalle-fecha').textContent = 
+                formatDate(pago.fecha_pago);
+            
+            document.getElementById('detalle-monto').textContent = 
+                '$' + formatNumber(pago.monto);
+            
+            const estadoElement = document.getElementById('detalle-estado');
+            estadoElement.textContent = capitalizeFirst(pago.estado);
+            estadoElement.className = 'inline-flex px-2 text-xs font-semibold rounded-full ' + 
+                getStatusClass(pago.estado);
+            
+            document.getElementById('detalle-metodo').textContent = 
+                getPaymentMethod(pago.id_metodo_pago);
+            
+            document.getElementById('detalle-duracion').textContent = 
+                getDuration(pago);
+            
+            // Comprobante
+            if (pago.comprobante_url) {
+                document.getElementById('detalle-comprobante-container').classList.remove('hidden');
+                document.getElementById('detalle-comprobante-link').href = '/storage/' + pago.comprobante_url;
+            } else {
+                document.getElementById('detalle-comprobante-container').classList.add('hidden');
+            }
+            
+            // Notas
+            if (pago.notas) {
+                document.getElementById('detalle-notas-container').classList.remove('hidden');
+                document.getElementById('detalle-notas').textContent = pago.notas;
+            } else {
+                document.getElementById('detalle-notas-container').classList.add('hidden');
+            }
+        }
+        
+        function cerrarModalDetalles() {
+            document.getElementById('modal-detalles').classList.add('hidden');
+        }
+        
+        // Funciones auxiliares
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES');
+        }
+        
+        function formatNumber(number) {
+            if (number === null || number === undefined) return '-';
+            return parseFloat(number).toFixed(2);
+        }
+        
+        function capitalizeFirst(str) {
+            if (!str) return '-';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        function getStatusClass(status) {
+            switch(status) {
+                case 'aprobado': return 'bg-green-100 text-green-800';
+                case 'rechazado': return 'bg-red-100 text-red-800';
+                default: return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+        
+        function getPaymentMethod(id) {
+            switch(parseInt(id)) {
+                case 1: return 'Tarjeta de Crédito/Débito';
+                case 2: return 'Efectivo';
+                case 3: return 'Transferencia Bancaria';
+                default: return 'Otro';
+            }
+        }
+        
+        function getDuration(payment) {
+            if (!payment?.membresia) return '-';
+            const days = payment.membresia.duracion_dias > 0 
+                ? payment.membresia.duracion_dias 
+                : '30';
+            return `${days} días`;
+        }
+        
+        // Cerrar el modal al hacer clic fuera de él
+        document.getElementById('modal-detalles').addEventListener('click', function(event) {
+            if (event.target === this) {
+                cerrarModalDetalles();
+            }
         });
     </script>
     @endpush
