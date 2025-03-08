@@ -12,7 +12,9 @@ class PagoController extends Controller
 {
     public function index()
     {
-        $pagos = Pago::with(['membresia', 'usuario', 'metodoPago'])->paginate(10);
+        $pagos = Pago::with(['membresia', 'usuario', 'metodoPago'])
+            ->orderBy('id_pago', 'desc')
+            ->paginate(10);
         $usuarios = User::all();
         $membresias = Membresia::all();
         $metodosPago = MetodoPago::where('activo', true)->get();
@@ -103,5 +105,34 @@ class PagoController extends Controller
 
         return redirect()->route('pagos.index')
             ->with('success', 'Pago eliminado exitosamente');
+    }
+
+    public function aprobar(Request $request, Pago $pago)
+    {
+        if ($pago->estado !== 'pendiente') {
+            return response()->json(['error' => 'El pago no está en estado pendiente'], 400);
+        }
+
+        try {
+            \DB::transaction(function () use ($pago) {
+                // Actualizar el estado del pago
+                $pago->update([
+                    'estado' => 'aprobado',
+                    'fecha_aprobacion' => now()
+                ]);
+
+                // Actualizar el saldo pendiente de la membresía
+                $membresia = $pago->membresia;
+                $membresia->saldo_pendiente = max(0, $membresia->saldo_pendiente - $pago->monto);
+                $membresia->save();
+            });
+
+            return response()->json([
+                'message' => 'Pago aprobado exitosamente',
+                'pago' => $pago->load(['membresia', 'usuario', 'metodoPago'])
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al aprobar el pago'], 500);
+        }
     }
 }

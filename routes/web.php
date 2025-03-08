@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::post('membresias/{membresia}/registrar-visita', [MembresiaController::class, 'registrarVisita'])
         ->name('membresias.registrar-visita');
     Route::resource('pagos', PagoController::class);
+    Route::post('pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
     Route::resource('metodos-pago', MetodoPagoController::class, [
         'parameters' => ['metodos-pago' => 'metodoPago']
     ]);
