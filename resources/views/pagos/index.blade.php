@@ -184,18 +184,23 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Monto</label>
+                                        <label class="block text-sm font-medium text-gray-700">Monto del Pago</label>
                                         <p class="mt-1 text-sm text-gray-900" x-text="'$' + (currentPago?.monto || 0)"></p>
                                     </div>
 
                                     <div>
+                                        <label class="block text-sm font-medium text-gray-700">Saldo Pendiente Membresía</label>
+                                        <p class="mt-1 text-sm text-gray-900" x-text="'$' + (currentPago?.membresia?.saldo_pendiente || 0)"></p>
+                                    </div>
+
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                                        <p class="mt-1 text-sm text-gray-900" x-text="formatMetodoPago(currentPago?.metodoPago?.nombre_metodo)"></p>
+                                        <p class="mt-1 text-sm text-gray-900" x-html="formatMetodoPago(currentPago?.metodoPago?.nombre_metodo)"></p>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Fecha de Pago</label>
-                                        <p class="mt-1 text-sm text-gray-900" x-text="currentPago?.fecha_pago || ''"></p>
+                                        <p class="mt-1 text-sm text-gray-900" x-text="formatFecha(currentPago?.fecha_pago) || ''"></p>
                                     </div>
 
                                     <div>
@@ -210,17 +215,40 @@
                                         </p>
                                     </div>
 
+                                    <div x-show="currentPago?.fecha_aprobacion">
+                                        <label class="block text-sm font-medium text-gray-700">Fecha Aprobación</label>
+                                        <p class="mt-1 text-sm text-gray-900" x-text="formatFecha(currentPago?.fecha_aprobacion) || ''"></p>
+                                    </div>
+
                                     <div class="col-span-2" x-show="currentPago?.comprobante_url">
                                         <label class="block text-sm font-medium text-gray-700">Comprobante</label>
-                                        <a :href="'/storage/' + currentPago?.comprobante_url" 
-                                           target="_blank"
-                                           class="mt-1 text-sm text-emerald-600 hover:text-emerald-900 inline-flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
-                                            Ver comprobante
-                                        </a>
+                                        <!-- Mostrar imagen directamente si es un archivo de imagen -->
+                                        <template x-if="isImage(currentPago?.comprobante_url)">
+                                            <div class="mt-2">
+                                                <img :src="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                                     class="max-w-sm rounded-lg shadow-md border border-gray-200 max-h-64 object-contain" 
+                                                     alt="Comprobante de pago">
+                                                <a :href="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                                   target="_blank"
+                                                   class="mt-1 text-sm text-emerald-600 hover:text-emerald-900 inline-flex items-center">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                    </svg>
+                                                    Ver imagen completa
+                                                </a>
+                                            </div>
+                                        </template>
+                                        <!-- Enlace para otros tipos de archivos -->
+                                        <template x-if="!isImage(currentPago?.comprobante_url)">
+                                            <a :href="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                               target="_blank"
+                                               class="mt-2 text-sm text-emerald-600 hover:text-emerald-900 inline-flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Ver documento
+                                            </a>
+                                        </template>
                                     </div>
 
                                     <div class="col-span-2" x-show="currentPago?.notas">
@@ -318,6 +346,9 @@
                                         <label class="block text-sm font-medium text-gray-700">Comprobante</label>
                                         <input type="file" name="comprobante" 
                                                class="mt-1 block w-full border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Formatos permitidos: JPG, JPEG, PNG, PDF. Tamaño máximo: 5MB.
+                                        </p>
                                     </div>
 
                                     <div class="mb-4">
@@ -468,6 +499,47 @@
                                     </div>
 
                                     <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Comprobante Actual</label>
+                                        <div x-show="currentPago?.comprobante_url" class="mt-2">
+                                            <!-- Mostrar imagen directamente si es un archivo de imagen -->
+                                            <template x-if="isImage(currentPago?.comprobante_url)">
+                                                <div class="mt-2">
+                                                    <img :src="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                                         class="max-w-xs rounded-lg shadow-md border border-gray-200 max-h-48 object-contain mb-2" 
+                                                         alt="Comprobante de pago">
+                                                    <a :href="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                                       target="_blank"
+                                                       class="mt-1 text-sm text-emerald-600 hover:text-emerald-900 inline-flex items-center">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                        </svg>
+                                                        Ver imagen completa
+                                                    </a>
+                                                </div>
+                                            </template>
+                                            <!-- Enlace para otros tipos de archivos -->
+                                            <template x-if="!isImage(currentPago?.comprobante_url)">
+                                                <a :href="'{{ asset('storage') }}/' + currentPago?.comprobante_url" 
+                                                   target="_blank"
+                                                   class="mt-2 text-sm text-emerald-600 hover:text-emerald-900 inline-flex items-center">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                    </svg>
+                                                    Ver documento
+                                                </a>
+                                            </template>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="block text-sm font-medium text-gray-700">Actualizar Comprobante</label>
+                                            <input type="file" name="comprobante" 
+                                                   class="mt-1 block w-full border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                            <p class="mt-1 text-xs text-gray-500">
+                                                Deja esto en blanco para mantener el comprobante actual.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Notas</label>
                                         <textarea name="notas" id="edit_notas" rows="3"
                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
@@ -511,17 +583,20 @@
             
             toggleModal() {
                 this.isModalOpen = !this.isModalOpen;
+                console.log('Modal estado:', this.isModalOpen);
             },
             
             toggleEditModal(pagoId = null) {
                 if (pagoId === null) {
                     // Si no se proporciona ID, solo alternamos el estado del modal
                     this.isEditModalOpen = !this.isEditModalOpen;
+                    console.log('Modal edición estado:', this.isEditModalOpen);
                     return;
                 }
                 
                 // Busca el pago en el array de pagos
                 const pago = this.pagos.find(p => p.id_pago === pagoId);
+                console.log('Pago encontrado para edición:', pago);
                 
                 if (pago) {
                     this.currentPago = pago;
@@ -558,16 +633,62 @@
                 if (pagoId === null) {
                     // Si no se proporciona ID, solo alternamos el estado del modal
                     this.isDetallesModalOpen = !this.isDetallesModalOpen;
+                    console.log('Modal detalles estado:', this.isDetallesModalOpen);
                     return;
                 }
                 
                 // Busca el pago en el array de pagos
                 const pago = this.pagos.find(p => p.id_pago === pagoId);
+                console.log('Pago encontrado para detalles:', pago);
                 
                 if (pago) {
-                    this.currentPago = pago;
+                    // Asegurarse de que tengamos todas las relaciones cargadas
+                    if (!pago._loaded) {
+                        console.log('Cargando información completa del pago...');
+                        
+                        // Crear una copia profunda del pago para no afectar el array original
+                        this.currentPago = JSON.parse(JSON.stringify(pago));
+                        
+                        // Marcar como cargado para no volver a procesar
+                        this.currentPago._loaded = true;
+                        
+                        // Asegurarnos de que los objetos relacionados estén presentes
+                        if (this.currentPago.metodoPago && typeof this.currentPago.metodoPago === 'object') {
+                            console.log('Método de pago cargado:', this.currentPago.metodoPago);
+                        } else {
+                            console.warn('Método de pago no disponible o no es un objeto');
+                        }
+                        
+                        if (this.currentPago.membresia && typeof this.currentPago.membresia === 'object') {
+                            console.log('Membresía cargada:', this.currentPago.membresia);
+                            
+                            if (this.currentPago.membresia.tipoMembresia && typeof this.currentPago.membresia.tipoMembresia === 'object') {
+                                console.log('Tipo de membresía cargado:', this.currentPago.membresia.tipoMembresia);
+                            } else {
+                                console.warn('Tipo de membresía no disponible o no es un objeto');
+                            }
+                        } else {
+                            console.warn('Membresía no disponible o no es un objeto');
+                        }
+                    } else {
+                        this.currentPago = pago;
+                    }
+                    
                     this.isDetallesModalOpen = true;
+                    
+                    // Imprimir la URL del comprobante para depuración
+                    if (this.currentPago.comprobante_url) {
+                        console.log('URL del comprobante:', this.currentPago.comprobante_url);
+                    }
                 }
+            },
+            
+            isImage(url) {
+                if (!url) return false;
+                // Verificar si la URL termina con una extensión de imagen
+                const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+                const extension = url.split('.').pop().toLowerCase();
+                return extensions.includes(extension);
             },
             
             formatMetodoPago(metodo) {
@@ -581,6 +702,23 @@
                         return 'Transferencia Bancaria';
                     default:
                         return metodo;
+                }
+            },
+            
+            formatFecha(fecha) {
+                if (!fecha) return '';
+                
+                try {
+                    // Intentar convertir a objeto Date
+                    const date = new Date(fecha);
+                    
+                    // Formatear como dd/mm/yyyy
+                    return date.getDate().toString().padStart(2, '0') + '/' + 
+                           (date.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                           date.getFullYear();
+                } catch (e) {
+                    console.error('Error al formatear fecha:', e);
+                    return fecha; // Devolver la fecha original si hay error
                 }
             }
         }));

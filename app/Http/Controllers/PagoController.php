@@ -7,16 +7,21 @@ use App\Models\Membresia;
 use App\Models\MetodoPago;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PagoController extends Controller
 {
     public function index()
     {
-        $pagos = Pago::with(['membresia', 'usuario', 'metodoPago'])
+        $pagos = Pago::with([
+            'membresia.tipoMembresia', 
+            'usuario', 
+            'metodoPago'
+        ])
             ->orderBy('id_pago', 'desc')
             ->paginate(10);
         $usuarios = User::all();
-        $membresias = Membresia::all();
+        $membresias = Membresia::with('tipoMembresia', 'usuario')->get();
         $metodosPago = MetodoPago::where('activo', true)->get();
         
         return view('pagos.index', compact('pagos', 'usuarios', 'membresias', 'metodosPago'));
@@ -38,10 +43,12 @@ class PagoController extends Controller
             'fecha_pago' => 'required|date',
             'estado' => 'required|in:pendiente,aprobado,rechazado',
             'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
-            'comprobante_url' => 'nullable|string|max:255',
+            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB máx
             'notas' => 'nullable|string',
             'fecha_aprobacion' => 'nullable|date'
         ]);
+
+        $validated['comprobante_url'] = null;
 
         if ($request->hasFile('comprobante')) {
             $file = $request->file('comprobante');
@@ -77,12 +84,17 @@ class PagoController extends Controller
             'fecha_pago' => 'required|date',
             'estado' => 'required|in:pendiente,aprobado,rechazado',
             'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
-            'comprobante_url' => 'nullable|string|max:255',
+            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB máx
             'notas' => 'nullable|string',
             'fecha_aprobacion' => 'nullable|date'
         ]);
 
         if ($request->hasFile('comprobante')) {
+            // Eliminar el archivo antiguo si existe
+            if ($pago->comprobante_url && Storage::disk('public')->exists($pago->comprobante_url)) {
+                Storage::disk('public')->delete($pago->comprobante_url);
+            }
+            
             $file = $request->file('comprobante');
             $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('comprobantes', $filename, 'public');
