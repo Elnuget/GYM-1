@@ -1,50 +1,65 @@
 <x-app-layout>
     <div x-data="{ 
         isModalOpen: false,
-        isEditModalOpen: false,
-        isPagosModalOpen: false,
-        showVisitasFields: false,
+        isPagoModalOpen: false,
         currentMembresia: null,
-        currentPagos: [],
+        showVisitasFields: false,
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
-        },
-        toggleEditModal(membresia = null) {
-            this.isEditModalOpen = !this.isEditModalOpen;
-            this.currentMembresia = membresia;
-            if(membresia) {
-                this.$nextTick(() => {
-                    document.getElementById('edit_id_usuario').value = membresia.id_usuario;
-                    document.getElementById('edit_tipo_membresia').value = membresia.tipo_membresia;
-                    document.getElementById('edit_precio_total').value = membresia.precio_total;
-                    document.getElementById('edit_saldo_pendiente').value = membresia.saldo_pendiente;
-                    document.getElementById('edit_fecha_compra').value = membresia.fecha_compra;
-                    document.getElementById('edit_fecha_vencimiento').value = membresia.fecha_vencimiento;
-                    document.getElementById('edit_visitas_permitidas').value = membresia.visitas_permitidas;
-                    document.getElementById('edit_renovacion').checked = membresia.renovacion;
-                    this.toggleEditVisitasFields(membresia.tipo_membresia);
-                });
-            }
-        },
-        togglePagosModal(membresia = null) {
-            this.isPagosModalOpen = !this.isPagosModalOpen;
-            this.currentMembresia = membresia;
-            if(membresia) {
-                // Cargar los pagos de la membresía
-                fetch(`/api/membresias/${membresia.id_membresia}/pagos`)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.currentPagos = data;
-                    });
-            }
         },
         toggleVisitasFields() {
             this.showVisitasFields = document.getElementById('tipo_membresia').value === 'por_visitas';
         },
-        toggleEditVisitasFields(value) {
-            const visitasFields = document.querySelector('.edit-visitas-fields');
-            if (visitasFields) {
-                visitasFields.style.display = value === 'por_visitas' ? 'block' : 'none';
+        togglePagoModal(membresia = null) {
+            this.isPagoModalOpen = !this.isPagoModalOpen;
+            
+            // Si estamos cerrando el modal, no necesitamos cargar datos
+            if (!this.isPagoModalOpen) {
+                return;
+            }
+            
+            // Si tenemos datos de la membresía
+            if (membresia) {
+                console.log('Membresía seleccionada:', membresia);
+                
+                // Asignamos los datos que ya tenemos primero
+                this.currentMembresia = membresia;
+                
+                // No realizamos la petición AJAX si ya tenemos el tipo de membresía
+                if (membresia.tipoMembresia && membresia.tipoMembresia.nombre) {
+                    console.log('Usando datos existentes del tipo de membresía:', membresia.tipoMembresia.nombre);
+                    return;
+                }
+                
+                // Si el ID está presente y no tenemos el tipo de membresía completo, cargar datos
+                if (membresia.id_membresia) {
+                    const url = `/api/membresias/${membresia.id_membresia}`;
+                    console.log('Cargando datos desde:', url);
+                    
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Error de servidor: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Datos cargados correctamente:', data);
+                            
+                            // Verificar si tenemos la información necesaria
+                            if (!data.tipoMembresia || !data.tipoMembresia.nombre) {
+                                console.warn('No se pudo cargar el tipo de membresía');
+                            } else {
+                                console.log('Tipo de membresía:', data.tipoMembresia.nombre);
+                            }
+                            
+                            this.currentMembresia = data;
+                        })
+                        .catch(error => {
+                            console.error('Error cargando datos de membresía:', error);
+                            // No mostrar alerta, usar los datos que ya tenemos
+                        });
+                }
             }
         }
     }">
@@ -71,6 +86,7 @@
                             <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
                                 <tr>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Precio</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Saldo Pendiente</th>
@@ -83,6 +99,7 @@
                                 @foreach ($membresias as $membresia)
                                     <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->usuario->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->gimnasio->nombre }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->nombre }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($membresia->precio_total, 2) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -102,14 +119,6 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <div class="flex space-x-3">
-                                                <button @click="toggleEditModal({{ $membresia }})" 
-                                                        class="text-teal-600 hover:text-teal-900 font-medium">
-                                                    Editar
-                                                </button>
-                                                <button @click="togglePagosModal({{ $membresia }})"
-                                                        class="text-blue-600 hover:text-blue-900 font-medium">
-                                                    Pagos
-                                                </button>
                                                 @if($membresia->tipo_membresia === 'por_visitas')
                                                     <form action="{{ route('membresias.registrar-visita', $membresia) }}" method="POST" class="inline">
                                                         @csrf
@@ -119,12 +128,20 @@
                                                         </button>
                                                     </form>
                                                 @endif
+                                                <button @click="togglePagoModal({{ $membresia->toJson() }})" 
+                                                        class="text-blue-600 hover:text-blue-900">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                    </svg>
+                                                </button>
                                                 <form action="{{ route('membresias.destroy', $membresia) }}" method="POST" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
-                                                            class="text-red-600 hover:text-red-900 font-medium">
-                                                        Eliminar
+                                                            class="text-red-600 hover:text-red-900">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
                                                     </button>
                                                 </form>
                                             </div>
@@ -236,132 +253,26 @@
                     </div>
                 </div>
 
-                <!-- Modal de Editar Membresía -->
-                <div x-show="isEditModalOpen" 
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
+                <!-- Modal para Agregar Pago -->
+                <div x-show="isPagoModalOpen" 
                      class="fixed inset-0 z-50 overflow-y-auto"
                      style="display: none;">
-                    <!-- Overlay con opacidad mejorada -->
                     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-
-                    <!-- Modal Content -->
                     <div class="flex items-center justify-center min-h-screen p-4">
                         <div class="relative bg-gradient-to-br from-white to-emerald-50 rounded-xl max-w-md w-full shadow-xl">
-                            <div class="p-6">
-                                <!-- Header del modal con gradiente -->
-                                <div class="absolute inset-x-0 top-0 bg-gradient-to-r from-emerald-600 to-teal-600 h-2 rounded-t-xl"></div>
-                                
-                                <h2 class="text-lg font-medium text-emerald-900 mb-6 mt-4">
-                                    Editar Membresía
-                                </h2>
-
-                                <form x-bind:action="'/membresias/' + currentMembresia?.id" method="POST">
-                                    @csrf
-                                    @method('PUT')
-                                    
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Cliente</label>
-                                            <select id="edit_id_usuario" name="id_usuario" 
-                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                @foreach($usuarios as $usuario)
-                                                    <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Tipo de Membresía</label>
-                                            <select id="edit_tipo_membresia" 
-                                                    name="id_tipo_membresia" 
-                                                    @change="toggleEditVisitasFields($event.target.value)"
-                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                @foreach($tiposMembresia as $tipo)
-                                                    <option value="{{ $tipo->id_tipo_membresia }}">{{ $tipo->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Fecha de Compra</label>
-                                            <input type="date" id="edit_fecha_compra" name="fecha_compra"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Fecha de Vencimiento</label>
-                                            <input type="date" id="edit_fecha_vencimiento" name="fecha_vencimiento"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Precio Total</label>
-                                            <input type="number" step="0.01" id="edit_precio_total" name="precio_total"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-emerald-700">Saldo Pendiente</label>
-                                            <input type="number" step="0.01" id="edit_saldo_pendiente" name="saldo_pendiente"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-
-                                        <div class="edit-visitas-fields" style="display: none;">
-                                            <label class="block text-sm font-medium text-emerald-700">Número de Visitas</label>
-                                            <input type="number" id="edit_visitas_permitidas" name="visitas_permitidas"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-
-                                        <div>
-                                            <label class="flex items-center">
-                                                <input type="checkbox" id="edit_renovacion" name="renovacion" value="1"
-                                                       class="rounded border-emerald-300 text-emerald-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                <span class="ml-2 text-sm text-emerald-700">¿Es Renovable?</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-6 flex justify-end space-x-3">
-                                        <button type="button" 
-                                                @click="toggleEditModal()"
-                                                class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors duration-200">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit"
-                                                class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-md">
-                                            Actualizar Membresía
-                                        </button>
-                                    </div>
-                                </form>
+                            <div class="absolute top-0 right-0 pt-4 pr-4">
+                                <button type="button" @click="togglePagoModal()"
+                                        class="text-gray-400 hover:text-gray-500">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal de Pagos -->
-                <div x-show="isPagosModalOpen" 
-                     class="fixed inset-0 z-50 overflow-y-auto"
-                     style="display: none;">
-                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-                    <div class="flex items-center justify-center min-h-screen p-4">
-                        <div class="relative bg-white rounded-xl max-w-4xl w-full shadow-xl">
                             <div class="p-6">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h2 class="text-xl font-semibold text-gray-900">
-                                        Gestión de Pagos
-                                    </h2>
-                                    <button @click="togglePagosModal()" class="text-gray-400 hover:text-gray-500">
-                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </div>
-
+                                <h2 class="text-lg font-medium text-gray-900 mb-4">
+                                    Nuevo Pago
+                                </h2>
+                                
                                 <!-- Información de la Membresía -->
                                 <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg mb-6">
                                     <div class="grid grid-cols-2 gap-4">
@@ -377,106 +288,88 @@
                                             <p class="text-sm text-gray-600">Saldo Pendiente:</p>
                                             <p class="font-medium">$<span x-text="currentMembresia?.saldo_pendiente"></span></p>
                                         </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Estado:</p>
-                                            <p class="font-medium" x-text="currentMembresia?.saldo_pendiente > 0 ? 'Pendiente' : 'Pagado'"></p>
-                                        </div>
                                     </div>
                                 </div>
-
-                                <!-- Formulario de Nuevo Pago -->
-                                <form action="{{ route('pagos.store') }}" method="POST" class="mb-6 bg-gray-50 p-4 rounded-lg">
+                                
+                                <form action="{{ route('pagos.store') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <input type="hidden" name="id_membresia" x-bind:value="currentMembresia?.id_membresia">
                                     <input type="hidden" name="id_usuario" x-bind:value="currentMembresia?.id_usuario">
-                                    
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Monto</label>
-                                            <input type="number" step="0.01" name="monto" required
-                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                                            <select name="id_metodo_pago" required
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                                @foreach($metodosPago as $metodo)
-                                                    <option value="{{ $metodo->id_metodo_pago }}">{{ $metodo->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Monto</label>
+                                        <input type="number" step="0.01" name="monto" required
+                                               x-bind:value="currentMembresia?.saldo_pendiente"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
-                                    <div class="mt-4">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                                        <select name="id_metodo_pago" required
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            @foreach($metodosPago ?? [] as $metodo)
+                                                <option value="{{ $metodo->id_metodo_pago }}">
+                                                    @switch($metodo->nombre_metodo)
+                                                        @case('tarjeta_credito')
+                                                            Tarjeta de Crédito
+                                                            @break
+                                                        @case('efectivo')
+                                                            Efectivo
+                                                            @break
+                                                        @case('transferencia_bancaria')
+                                                            Transferencia Bancaria
+                                                            @break
+                                                        @default
+                                                            {{ $metodo->nombre_metodo }}
+                                                    @endswitch
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Estado de Pago</label>
+                                        <select name="estado_pago" required
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="aprobado" selected>Aprobado</option>
+                                            <option value="pendiente">Pendiente</option>
+                                            <option value="rechazado">Rechazado</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Comprobante (opcional)</label>
+                                        <input type="file" name="comprobante" 
+                                               class="mt-1 block w-full border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Formatos permitidos: JPG, JPEG, PNG, PDF. Tamaño máximo: 5MB.
+                                        </p>
+                                    </div>
+
+                                    <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Notas</label>
                                         <textarea name="notas" rows="2"
                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
                                     </div>
 
-                                    <div class="mt-4">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Fecha de Pago</label>
+                                        <input type="date" name="fecha_pago" value="{{ date('Y-m-d') }}"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+
+                                    <div class="mt-6 flex justify-end space-x-3">
+                                        <button type="button" 
+                                                @click="togglePagoModal()"
+                                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                                            Cancelar
+                                        </button>
                                         <button type="submit"
-                                                class="w-full px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
+                                                class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
                                             Registrar Pago
                                         </button>
                                     </div>
                                 </form>
-
-                                <!-- Historial de Pagos -->
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <template x-for="pago in currentPagos" :key="pago.id_pago">
-                                                <tr>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="new Date(pago.fecha_pago).toLocaleDateString()"></td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<span x-text="pago.monto"></span></td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="pago.metodo_pago.nombre"></td>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        <span class="px-2 py-1 text-xs font-semibold rounded-full"
-                                                              :class="{
-                                                                  'bg-green-100 text-green-800': pago.estado === 'aprobado',
-                                                                  'bg-yellow-100 text-yellow-800': pago.estado === 'pendiente',
-                                                                  'bg-red-100 text-red-800': pago.estado === 'rechazado'
-                                                              }"
-                                                              x-text="pago.estado">
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                        <div class="flex space-x-3">
-                                                            <template x-if="pago.estado === 'pendiente'">
-                                                                <form :action="'/pagos/' + pago.id_pago + '/aprobar'" method="POST" class="inline">
-                                                                    @csrf
-                                                                    <button type="submit" 
-                                                                            class="text-green-600 hover:text-green-900">
-                                                                        Aprobar
-                                                                    </button>
-                                                                </form>
-                                                            </template>
-                                                            <template x-if="pago.estado === 'pendiente'">
-                                                                <form :action="'/pagos/' + pago.id_pago" method="POST" class="inline">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" 
-                                                                            class="text-red-600 hover:text-red-900">
-                                                                        Eliminar
-                                                                    </button>
-                                                                </form>
-                                                            </template>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                        </tbody>
-                                    </table>
-                                </div>
                             </div>
                         </div>
                     </div>

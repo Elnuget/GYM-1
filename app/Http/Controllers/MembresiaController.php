@@ -12,11 +12,13 @@ class MembresiaController extends Controller
 {
     public function index()
     {
-        $membresias = Membresia::with(['usuario', 'tipoMembresia'])->paginate(10);
+        $membresias = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
+            ->orderBy('id_membresia', 'desc')
+            ->paginate(10);
         $usuarios = User::all();
-        $tiposMembresia = TipoMembresia::all();
-        $metodosPago = \App\Models\MetodoPago::where('activo', true)->get();
-        
+        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
+        $metodosPago = MetodoPago::all();
+
         return view('membresias.index', compact('membresias', 'usuarios', 'tiposMembresia', 'metodosPago'));
     }
 

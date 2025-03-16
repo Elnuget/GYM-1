@@ -45,15 +45,39 @@ class PagoController extends Controller
             'id_usuario' => 'required|exists:users,id',
             'monto' => 'required|numeric|min:0',
             'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
-            'notas' => 'nullable|string|max:255'
+            'estado_pago' => 'required|in:pendiente,aprobado,rechazado',
+            'notas' => 'nullable|string|max:255',
+            'fecha_pago' => 'nullable|date'
         ]);
 
         DB::beginTransaction();
         try {
-            $pago = new Pago($request->all());
-            $pago->fecha_pago = now();
-            $pago->estado = 'pendiente';
+            $pago = new Pago();
+            $pago->id_membresia = $request->id_membresia;
+            $pago->id_usuario = $request->id_usuario;
+            $pago->monto = $request->monto;
+            $pago->id_metodo_pago = $request->id_metodo_pago;
+            $pago->estado = $request->estado_pago;
+            $pago->notas = $request->notas;
+            $pago->fecha_pago = $request->fecha_pago ?? now();
+            
+            // Si el estado es aprobado, establecer la fecha de aprobación
+            if ($pago->estado === 'aprobado') {
+                $pago->fecha_aprobacion = now();
+            }
+            
+            // Guardar el pago
             $pago->save();
+            
+            // Si el estado es aprobado, actualizar el saldo pendiente de la membresía
+            if ($pago->estado === 'aprobado') {
+                $membresia = Membresia::findOrFail($request->id_membresia);
+                $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
+                
+                // Asegurarse de que el saldo no sea negativo
+                $membresia->saldo_pendiente = max(0, $nuevoSaldo);
+                $membresia->save();
+            }
 
             DB::commit();
             return redirect()->back()->with('success', 'Pago registrado correctamente');
