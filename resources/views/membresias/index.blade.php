@@ -2,8 +2,10 @@
     <div x-data="{ 
         isModalOpen: false,
         isEditModalOpen: false,
+        isPagosModalOpen: false,
         showVisitasFields: false,
         currentMembresia: null,
+        currentPagos: [],
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
         },
@@ -22,6 +24,18 @@
                     document.getElementById('edit_renovacion').checked = membresia.renovacion;
                     this.toggleEditVisitasFields(membresia.tipo_membresia);
                 });
+            }
+        },
+        togglePagosModal(membresia = null) {
+            this.isPagosModalOpen = !this.isPagosModalOpen;
+            this.currentMembresia = membresia;
+            if(membresia) {
+                // Cargar los pagos de la membresía
+                fetch(`/api/membresias/${membresia.id_membresia}/pagos`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.currentPagos = data;
+                    });
             }
         },
         toggleVisitasFields() {
@@ -91,6 +105,10 @@
                                                 <button @click="toggleEditModal({{ $membresia }})" 
                                                         class="text-teal-600 hover:text-teal-900 font-medium">
                                                     Editar
+                                                </button>
+                                                <button @click="togglePagosModal({{ $membresia }})"
+                                                        class="text-blue-600 hover:text-blue-900 font-medium">
+                                                    Pagos
                                                 </button>
                                                 @if($membresia->tipo_membresia === 'por_visitas')
                                                     <form action="{{ route('membresias.registrar-visita', $membresia) }}" method="POST" class="inline">
@@ -320,6 +338,145 @@
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Pagos -->
+                <div x-show="isPagosModalOpen" 
+                     class="fixed inset-0 z-50 overflow-y-auto"
+                     style="display: none;">
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                    <div class="flex items-center justify-center min-h-screen p-4">
+                        <div class="relative bg-white rounded-xl max-w-4xl w-full shadow-xl">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-xl font-semibold text-gray-900">
+                                        Gestión de Pagos
+                                    </h2>
+                                    <button @click="togglePagosModal()" class="text-gray-400 hover:text-gray-500">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Información de la Membresía -->
+                                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg mb-6">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-sm text-gray-600">Cliente:</p>
+                                            <p class="font-medium" x-text="currentMembresia?.usuario?.name"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Precio Total:</p>
+                                            <p class="font-medium">$<span x-text="currentMembresia?.precio_total"></span></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Saldo Pendiente:</p>
+                                            <p class="font-medium">$<span x-text="currentMembresia?.saldo_pendiente"></span></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Estado:</p>
+                                            <p class="font-medium" x-text="currentMembresia?.saldo_pendiente > 0 ? 'Pendiente' : 'Pagado'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Formulario de Nuevo Pago -->
+                                <form action="{{ route('pagos.store') }}" method="POST" class="mb-6 bg-gray-50 p-4 rounded-lg">
+                                    @csrf
+                                    <input type="hidden" name="id_membresia" x-bind:value="currentMembresia?.id_membresia">
+                                    <input type="hidden" name="id_usuario" x-bind:value="currentMembresia?.id_usuario">
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Monto</label>
+                                            <input type="number" step="0.01" name="monto" required
+                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                                            <select name="id_metodo_pago" required
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                @foreach($metodosPago as $metodo)
+                                                    <option value="{{ $metodo->id_metodo_pago }}">{{ $metodo->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <label class="block text-sm font-medium text-gray-700">Notas</label>
+                                        <textarea name="notas" rows="2"
+                                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button type="submit"
+                                                class="w-full px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
+                                            Registrar Pago
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Historial de Pagos -->
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Método</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <template x-for="pago in currentPagos" :key="pago.id_pago">
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="new Date(pago.fecha_pago).toLocaleDateString()"></td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<span x-text="pago.monto"></span></td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="pago.metodo_pago.nombre"></td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <span class="px-2 py-1 text-xs font-semibold rounded-full"
+                                                              :class="{
+                                                                  'bg-green-100 text-green-800': pago.estado === 'aprobado',
+                                                                  'bg-yellow-100 text-yellow-800': pago.estado === 'pendiente',
+                                                                  'bg-red-100 text-red-800': pago.estado === 'rechazado'
+                                                              }"
+                                                              x-text="pago.estado">
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <div class="flex space-x-3">
+                                                            <template x-if="pago.estado === 'pendiente'">
+                                                                <form :action="'/pagos/' + pago.id_pago + '/aprobar'" method="POST" class="inline">
+                                                                    @csrf
+                                                                    <button type="submit" 
+                                                                            class="text-green-600 hover:text-green-900">
+                                                                        Aprobar
+                                                                    </button>
+                                                                </form>
+                                                            </template>
+                                                            <template x-if="pago.estado === 'pendiente'">
+                                                                <form :action="'/pagos/' + pago.id_pago" method="POST" class="inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" 
+                                                                            class="text-red-600 hover:text-red-900">
+                                                                        Eliminar
+                                                                    </button>
+                                                                </form>
+                                                            </template>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

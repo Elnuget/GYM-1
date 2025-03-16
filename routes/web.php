@@ -127,7 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::post('membresias/{membresia}/registrar-visita', [MembresiaController::class, 'registrarVisita'])
         ->name('membresias.registrar-visita');
     Route::resource('pagos', PagoController::class);
-    Route::post('pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
+    Route::post('/pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
     Route::resource('metodos-pago', MetodoPagoController::class, [
         'parameters' => ['metodos-pago' => 'metodoPago']
     ]);
@@ -188,5 +188,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/register/gimnasio', [RegisterController::class, 'registerGimnasio'])->name('register.gimnasio');
     Route::post('/register/empleado', [RegisterController::class, 'registerEmpleado'])->name('register.empleado');
 });
+
+// Rutas para Pagos
+Route::get('/api/membresias/{membresia}/pagos', [MembresiaController::class, 'pagos'])->name('membresias.pagos');
 
 require __DIR__.'/auth.php';

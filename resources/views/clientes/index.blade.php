@@ -53,6 +53,7 @@
                         <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Foto</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nombre</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Teléfono</th>
@@ -62,9 +63,23 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-emerald-100">
-                            @foreach($clientes as $cliente)
+                            @foreach($clientes->sortByDesc('id_cliente') as $cliente)
                                 <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->id_cliente }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center justify-center">
+                                            @if($cliente->foto_perfil && file_exists(public_path($cliente->foto_perfil)))
+                                                <img src="{{ asset($cliente->foto_perfil) }}" alt="{{ $cliente->nombre }}" 
+                                                     class="h-10 w-10 rounded-full object-cover border-2 border-emerald-200">
+                                            @else
+                                                <div class="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center">
+                                                    <span class="text-sm font-bold text-white">
+                                                        {{ substr($cliente->nombre, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->nombre }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->email }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->telefono ?? 'N/A' }}</td>

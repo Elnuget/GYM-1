@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Membresia;
 use App\Models\User;
 use App\Models\TipoMembresia;
+use App\Models\MetodoPago;
 use Illuminate\Http\Request;
 
 class MembresiaController extends Controller
@@ -14,7 +15,9 @@ class MembresiaController extends Controller
         $membresias = Membresia::with(['usuario', 'tipoMembresia'])->paginate(10);
         $usuarios = User::all();
         $tiposMembresia = TipoMembresia::all();
-        return view('membresias.index', compact('membresias', 'usuarios', 'tiposMembresia'));
+        $metodosPago = \App\Models\MetodoPago::where('activo', true)->get();
+        
+        return view('membresias.index', compact('membresias', 'usuarios', 'tiposMembresia', 'metodosPago'));
     }
 
     public function create()
@@ -91,5 +94,18 @@ class MembresiaController extends Controller
         
         return redirect()->back()
             ->with('success', 'Visita registrada exitosamente');
+    }
+
+    /**
+     * Get all payments for a specific membership.
+     */
+    public function pagos(Membresia $membresia)
+    {
+        return response()->json(
+            $membresia->pagos()
+                ->with(['metodoPago'])
+                ->orderBy('fecha_pago', 'desc')
+                ->get()
+        );
     }
 } 
