@@ -126,6 +126,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('membresias', MembresiaController::class);
     Route::post('membresias/{membresia}/registrar-visita', [MembresiaController::class, 'registrarVisita'])
         ->name('membresias.registrar-visita');
+    Route::get('membresias-vencidas', [MembresiaController::class, 'vencidas'])
+        ->name('membresias.vencidas');
     Route::resource('pagos', PagoController::class);
     Route::post('/pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
     Route::resource('metodos-pago', MetodoPagoController::class, [

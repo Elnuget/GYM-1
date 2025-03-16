@@ -73,6 +73,49 @@ class MembresiaController extends Controller
             $usuarioSeleccionado = User::find($idUsuario);
         }
         
+        // Calcular membresías vencidas en el mes actual (desde el primer día hasta la fecha actual)
+        $fechaActual = now();
+        $primerDiaMes = $fechaActual->copy()->startOfMonth();
+        
+        // Membresías vencidas en el mes actual (con fecha de vencimiento anterior a hoy pero dentro del mes actual)
+        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+            ->whereMonth('fecha_vencimiento', $fechaActual->month)
+            ->whereYear('fecha_vencimiento', $fechaActual->year)
+            ->count();
+        
+        // Total de membresías activas este mes (con fecha de vencimiento en el mes actual)
+        $totalMembresiasActivas = Membresia::whereMonth('fecha_vencimiento', $fechaActual->month)
+            ->whereYear('fecha_vencimiento', $fechaActual->year)
+            ->count();
+        
+        // Calcular porcentaje
+        $porcentajeVencidas = $totalMembresiasActivas > 0 
+            ? round(($membresiasVencidasMes / $totalMembresiasActivas) * 100) 
+            : 0;
+        
+        // Membresías vencidas sin renovar
+        // Aquí buscamos membresías vencidas que no tienen otra membresía del mismo tipo para el mismo usuario
+        // con fecha posterior
+        $membresiasNoRenovadas = 0;
+        $membresiasVencidas = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)->get();
+        
+        foreach ($membresiasVencidas as $membresia) {
+            // Verificar si existe una membresía posterior del mismo tipo para el mismo usuario
+            $tieneRenovacion = Membresia::where('id_usuario', $membresia->id_usuario)
+                ->where('id_tipo_membresia', $membresia->id_tipo_membresia)
+                ->whereDate('fecha_vencimiento', '>', $membresia->fecha_vencimiento)
+                ->exists();
+            
+            if (!$tieneRenovacion) {
+                $membresiasNoRenovadas++;
+            }
+        }
+        
+        // Calcular tasa de no renovación
+        $tasaNoRenovacion = $membresiasVencidas->count() > 0 
+            ? round(($membresiasNoRenovadas / $membresiasVencidas->count()) * 100) 
+            : 0;
+        
         return view('membresias.index', compact(
             'membresias', 
             'usuarios', 
@@ -85,7 +128,11 @@ class MembresiaController extends Controller
             'mostrarTodos',
             'tipoFiltro',
             'idUsuario',
-            'usuarioSeleccionado'
+            'usuarioSeleccionado',
+            'membresiasVencidasMes',
+            'membresiasNoRenovadas',
+            'porcentajeVencidas',
+            'tasaNoRenovacion'
         ));
     }
 
@@ -176,5 +223,99 @@ class MembresiaController extends Controller
                 ->orderBy('fecha_pago', 'desc')
                 ->get()
         );
+    }
+    
+    /**
+     * Mostrar las membresías vencidas en el mes actual.
+     */
+    public function vencidas()
+    {
+        // Obtener fecha actual
+        $fechaActual = now();
+        
+        // Consultar membresías vencidas en el mes actual
+        $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
+            ->whereMonth('fecha_vencimiento', $fechaActual->month)
+            ->whereYear('fecha_vencimiento', $fechaActual->year)
+            ->orderBy('fecha_vencimiento', 'desc');
+            
+        $membresias = $query->get();
+        
+        // Obtener datos necesarios para la vista
+        $usuarios = User::with(['cliente.gimnasio'])->get();
+        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
+        $metodosPago = MetodoPago::all();
+        
+        // Datos para el selector de mes/año
+        $meses = [
+            1 => 'Enero', 
+            2 => 'Febrero', 
+            3 => 'Marzo', 
+            4 => 'Abril', 
+            5 => 'Mayo', 
+            6 => 'Junio', 
+            7 => 'Julio', 
+            8 => 'Agosto', 
+            9 => 'Septiembre', 
+            10 => 'Octubre', 
+            11 => 'Noviembre', 
+            12 => 'Diciembre'
+        ];
+        
+        // Generar años desde el actual hasta 3 años en el futuro
+        $anioActual = date('Y');
+        $anios = range($anioActual - 2, $anioActual + 3);
+        
+        $mes = $fechaActual->month;
+        $anio = $fechaActual->year;
+        $mostrarVencidas = true;
+        $idUsuario = null;
+        $mostrarTodos = false;
+        $tipoFiltro = 'vencimiento';
+        $usuarioSeleccionado = null;
+        
+        // Calcular el resto de estadísticas como en el método index
+        $fechaActual = now();
+        $primerDiaMes = $fechaActual->copy()->startOfMonth();
+        
+        // Membresías vencidas en el mes actual
+        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+            ->whereMonth('fecha_vencimiento', $fechaActual->month)
+            ->whereYear('fecha_vencimiento', $fechaActual->year)
+            ->count();
+        
+        // Membresías sin renovar
+        $membresiasNoRenovadas = 0;
+        $membresiasVencidasTotal = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)->get();
+        
+        foreach ($membresiasVencidasTotal as $membresia) {
+            $tieneRenovacion = Membresia::where('id_usuario', $membresia->id_usuario)
+                ->where('id_tipo_membresia', $membresia->id_tipo_membresia)
+                ->whereDate('fecha_vencimiento', '>', $membresia->fecha_vencimiento)
+                ->exists();
+            
+            if (!$tieneRenovacion) {
+                $membresiasNoRenovadas++;
+            }
+        }
+        
+        return view('membresias.index', compact(
+            'membresias', 
+            'usuarios', 
+            'tiposMembresia', 
+            'metodosPago', 
+            'meses', 
+            'anios',
+            'mes',
+            'anio',
+            'mostrarVencidas',
+            'membresiasVencidasMes',
+            'membresiasNoRenovadas',
+            'idUsuario',
+            'mostrarTodos',
+            'tipoFiltro',
+            'usuarioSeleccionado'
+        ));
     }
 } 
