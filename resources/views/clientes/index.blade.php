@@ -131,8 +131,8 @@
                                         data-cliente-id="{{ $cliente->id_cliente }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center justify-center">
-                                                @if($cliente->foto_perfil && file_exists(public_path($cliente->foto_perfil)))
-                                                    <img src="{{ asset($cliente->foto_perfil) }}" alt="{{ $cliente->nombre }}" 
+                                                @if($cliente->user && $cliente->user->foto_perfil && file_exists(public_path($cliente->user->foto_perfil)))
+                                                    <img src="{{ asset($cliente->user->foto_perfil) }}" alt="{{ $cliente->nombre }}" 
                                                          class="h-10 w-10 rounded-full object-cover border-2 border-emerald-200">
                                                 @else
                                                     <div class="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center">
