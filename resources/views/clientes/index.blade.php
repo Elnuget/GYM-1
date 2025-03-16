@@ -375,6 +375,101 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Tabla de Pagos -->
+                <div class="mt-8">
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
+                        <h2 class="text-xl font-semibold text-white">Todos los Pagos</h2>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-emerald-200">
+                                <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Usuario</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Membresía</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Monto</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Método de Pago</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha de Pago</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-emerald-100">
+                                    @foreach($todosLosPagos ?? [] as $pago)
+                                        <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $pago->usuario->name ?? 'Usuario no asignado' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $pago->membresia->tipoMembresia->nombre ?? 'Membresía no asignada' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($pago->monto, 2) }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @switch($pago->metodoPago->nombre_metodo ?? '')
+                                                    @case('tarjeta_credito')
+                                                        Tarjeta de Crédito
+                                                        @break
+                                                    @case('efectivo')
+                                                        Efectivo
+                                                        @break
+                                                    @case('transferencia_bancaria')
+                                                        Transferencia Bancaria
+                                                        @break
+                                                    @default
+                                                        {{ $pago->metodoPago->nombre_metodo ?? 'Método no definido' }}
+                                                @endswitch
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                                    @switch($pago->estado)
+                                                        @case('aprobado')
+                                                            bg-green-100 text-green-800
+                                                            @break
+                                                        @case('pendiente')
+                                                            bg-yellow-100 text-yellow-800
+                                                            @break
+                                                        @case('rechazado')
+                                                            bg-red-100 text-red-800
+                                                            @break
+                                                        @default
+                                                            bg-gray-100 text-gray-800
+                                                    @endswitch
+                                                ">
+                                                    {{ ucfirst($pago->estado) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $pago->fecha_pago->format('d/m/Y') }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div class="flex space-x-3">
+                                                    <a href="{{ route('pagos.edit', $pago->id_pago) }}" 
+                                                       class="text-teal-600 hover:text-teal-900 font-medium">
+                                                        Editar
+                                                    </a>
+                                                    @if($pago->estado === 'pendiente')
+                                                        <form action="{{ route('pagos.aprobar', $pago->id_pago) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" 
+                                                                    class="text-green-600 hover:text-green-900 font-medium">
+                                                                Aprobar
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                    <form action="{{ route('pagos.destroy', $pago->id_pago) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" 
+                                                                class="text-red-600 hover:text-red-900 font-medium"
+                                                                onclick="return confirm('¿Está seguro de eliminar este pago?')">
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
