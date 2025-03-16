@@ -68,7 +68,15 @@
                 <!-- Header con gradiente -->
                 <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
                     <h2 class="text-2xl font-semibold text-white">
-                        Membresías
+                        @if($mostrarTodos)
+                            Todas las Membresías
+                        @else
+                            @if($tipoFiltro === 'vencimiento')
+                                Membresías que vencen en {{ $meses[$mes] }} {{ $anio }}
+                            @else
+                                Membresías creadas en {{ $meses[$mes] }} {{ $anio }}
+                            @endif
+                        @endif
                     </h2>
                     <button @click="toggleModal()" 
                             class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
@@ -77,6 +85,78 @@
                         </svg>
                         Nueva Membresía
                     </button>
+                </div>
+
+                <!-- Mensajes de alerta -->
+                @if(session('success'))
+                <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" 
+                     class="mb-6 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 p-4 rounded-md shadow-md transition-opacity duration-500">
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-emerald-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <p class="font-medium">{{ session('success') }}</p>
+                    </div>
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" 
+                     class="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md transition-opacity duration-500">
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-red-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <p class="font-medium">{{ session('error') }}</p>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Filtro por mes y año -->
+                <div class="mb-6 bg-white p-4 rounded-lg shadow border border-emerald-100">
+                    <form action="{{ route('membresias.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por</label>
+                            <div class="flex space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tipo_filtro" value="creacion" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'creacion' ? 'checked' : '' }}>
+                                    <span class="ml-2 text-sm text-gray-700">Fecha de Creación</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tipo_filtro" value="vencimiento" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'vencimiento' ? 'checked' : '' }}>
+                                    <span class="ml-2 text-sm text-gray-700">Fecha de Vencimiento</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mes</label>
+                            <select name="mes" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                @foreach($meses as $valor => $nombre)
+                                    <option value="{{ $valor }}" {{ $mes == $valor ? 'selected' : '' }}>
+                                        {{ $nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Año</label>
+                            <select name="anio" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                @foreach($anios as $anioOption)
+                                    <option value="{{ $anioOption }}" {{ $anio == $anioOption ? 'selected' : '' }}>
+                                        {{ $anioOption }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
+                                Filtrar
+                            </button>
+                            <a href="{{ route('membresias.index', ['mostrar_todos' => 1]) }}" class="ml-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                                Mostrar todos
+                            </a>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Tabla con nuevo diseño -->
@@ -153,11 +233,6 @@
                     </div>
                 </div>
 
-                <!-- Paginación con estilo mejorado -->
-                <div class="mt-4">
-                    {{ $membresias->links() }}
-                </div>
-
                 <!-- Modal de Nueva Membresía -->
                 <div x-show="isModalOpen" 
                      class="fixed inset-0 z-50 overflow-y-auto"
@@ -174,8 +249,11 @@
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Cliente</label>
                                         <select name="id_usuario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($usuarios as $usuario)
-                                                <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                            @foreach($usuarios->sortByDesc('id') as $usuario)
+                                                @php
+                                                    $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
+                                                @endphp
+                                                <option value="{{ $usuario->id }}">{{ $usuario->name }} - {{ $gimnasioNombre }}</option>
                                             @endforeach
                                         </select>
                                     </div>

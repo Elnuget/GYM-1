@@ -49,4 +49,12 @@ class User extends Authenticatable
         'password' => 'hashed',
         'configuracion_completa' => 'boolean',
     ];
+
+    /**
+     * Get the cliente associated with the user.
+     */
+    public function cliente()
+    {
+        return $this->hasOne(Cliente::class, 'user_id', 'id');
+    }
 }

@@ -10,16 +10,70 @@ use Illuminate\Http\Request;
 
 class MembresiaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $membresias = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
-            ->orderBy('id_membresia', 'desc')
-            ->paginate(10);
-        $usuarios = User::all();
+        $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
+            ->orderBy('id_membresia', 'desc');
+            
+        // Definir mes y año actuales como valores predeterminados
+        $mesActual = date('n');
+        $anioActual = date('Y');
+        
+        // Obtener valores de la solicitud o usar valores predeterminados
+        $mes = $request->filled('mes') ? $request->input('mes') : $mesActual;
+        $anio = $request->filled('anio') ? $request->input('anio') : $anioActual;
+        $tipoFiltro = $request->input('tipo_filtro', 'creacion'); // valor predeterminado: creacion
+        
+        // Verificar si se solicitó "mostrar todos"
+        $mostrarTodos = $request->has('mostrar_todos');
+        
+        // Aplicar filtros a menos que se haya solicitado mostrar todos
+        if (!$mostrarTodos) {
+            // Usar el campo correcto según el tipo de filtro
+            $campoFecha = $tipoFiltro === 'vencimiento' ? 'fecha_vencimiento' : 'fecha_compra';
+            
+            $query->whereYear($campoFecha, $anio)
+                  ->whereMonth($campoFecha, $mes);
+        }
+        
+        // Obtener todas las membresías sin paginación
+        $membresias = $query->get();
+        $usuarios = User::with(['cliente.gimnasio'])->get();
         $tiposMembresia = TipoMembresia::where('estado', 1)->get();
         $metodosPago = MetodoPago::all();
-
-        return view('membresias.index', compact('membresias', 'usuarios', 'tiposMembresia', 'metodosPago'));
+        
+        // Datos para el selector de mes/año
+        $meses = [
+            1 => 'Enero', 
+            2 => 'Febrero', 
+            3 => 'Marzo', 
+            4 => 'Abril', 
+            5 => 'Mayo', 
+            6 => 'Junio', 
+            7 => 'Julio', 
+            8 => 'Agosto', 
+            9 => 'Septiembre', 
+            10 => 'Octubre', 
+            11 => 'Noviembre', 
+            12 => 'Diciembre'
+        ];
+        
+        // Generar años desde el actual hasta 3 años en el futuro
+        $anioActual = date('Y');
+        $anios = range($anioActual - 2, $anioActual + 3);
+        
+        return view('membresias.index', compact(
+            'membresias', 
+            'usuarios', 
+            'tiposMembresia', 
+            'metodosPago', 
+            'meses', 
+            'anios',
+            'mes',
+            'anio',
+            'mostrarTodos',
+            'tipoFiltro'
+        ));
     }
 
     public function create()
