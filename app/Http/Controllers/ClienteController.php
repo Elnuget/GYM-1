@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use App\Models\Gimnasio;
+use App\Models\Membresia;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
@@ -15,7 +16,11 @@ class ClienteController extends Controller
     {
         $clientes = Cliente::with('gimnasio')->get();
         $gimnasios = Gimnasio::all();
-        return view('clientes.index', compact('clientes', 'gimnasios'));
+        
+        // Cargar todas las membresías con sus relaciones necesarias
+        $todasLasMembresias = Membresia::with(['usuario', 'tipoMembresia'])->get();
+        
+        return view('clientes.index', compact('clientes', 'gimnasios', 'todasLasMembresias'));
     }
 
     /**

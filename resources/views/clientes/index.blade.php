@@ -191,7 +191,7 @@
                                 <h2 class="text-lg font-medium text-emerald-900 mb-6 mt-4">
                                     Editar Cliente
                                 </h2>
-                                <form :action="'{{ route('clientes.update', '') }}/' + currentCliente?.id_cliente" method="POST">
+                                <form x-bind:action="'/clientes/' + currentCliente?.id_cliente" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <div class="space-y-4">
@@ -302,6 +302,76 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Membresías -->
+                <div class="mt-8">
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
+                        <h2 class="text-xl font-semibold text-white">Todas las Membresías</h2>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-emerald-200">
+                                <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Precio</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Saldo Pendiente</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Vencimiento</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Visitas</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-emerald-100">
+                                    @foreach($todasLasMembresias ?? [] as $membresia)
+                                        <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->usuario->name }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->nombre }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($membresia->precio_total, 2) }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $membresia->saldo_pendiente > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                    ${{ number_format($membresia->saldo_pendiente, 2) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->fecha_vencimiento ? $membresia->fecha_vencimiento->format('d/m/Y') : 'N/A' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($membresia->visitas_permitidas)
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                                                        {{ $membresia->visitas_restantes }}/{{ $membresia->visitas_permitidas }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-gray-500">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div class="flex space-x-3">
+                                                    <a href="{{ route('membresias.edit', $membresia->id_membresia) }}" 
+                                                       class="text-teal-600 hover:text-teal-900 font-medium">
+                                                        Editar
+                                                    </a>
+                                                    <a href="{{ route('membresias.pagos', $membresia->id_membresia) }}"
+                                                       class="text-blue-600 hover:text-blue-900 font-medium">
+                                                        Pagos
+                                                    </a>
+                                                    @if($membresia->tipo_membresia === 'por_visitas')
+                                                        <form action="{{ route('membresias.registrar-visita', $membresia->id_membresia) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" 
+                                                                    class="text-emerald-600 hover:text-emerald-900 font-medium">
+                                                                Registrar Visita
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
