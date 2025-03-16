@@ -470,6 +470,87 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Tabla de Asistencias -->
+                <div class="mt-8">
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
+                        <h2 class="text-xl font-semibold text-white">Todas las Asistencias</h2>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-emerald-200">
+                                <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Hora Entrada</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Hora Salida</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Duración</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
+                                        <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-emerald-100">
+                                    @foreach ($todasLasAsistencias ?? [] as $asistencia)
+                                        <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $asistencia->cliente->nombre }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ \Carbon\Carbon::parse($asistencia->fecha)->timezone('America/Guayaquil')->format('d/m/Y') }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ \Carbon\Carbon::parse($asistencia->hora_entrada)->timezone('America/Guayaquil')->format('H:i') }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($asistencia->hora_salida)
+                                                    {{ \Carbon\Carbon::parse($asistencia->hora_salida)->timezone('America/Guayaquil')->format('H:i') }}
+                                                @else
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                        Pendiente
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($asistencia->hora_salida)
+                                                    {{ $asistencia->duracion_formateada }}
+                                                @else
+                                                    <span class="text-sm text-gray-500">En curso</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $asistencia->estado == 'activa' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                    {{ ucfirst($asistencia->estado) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div class="flex space-x-3">
+                                                    <a href="{{ route('asistencias.edit', $asistencia->id_asistencia) }}" 
+                                                       class="text-teal-600 hover:text-teal-900 font-medium">
+                                                        Editar
+                                                    </a>
+                                                    @if(!$asistencia->hora_salida)
+                                                        <form action="{{ route('asistencias.registrar-salida', $asistencia->id_asistencia) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" 
+                                                                    class="text-emerald-600 hover:text-emerald-900 font-medium">
+                                                                Registrar Salida
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                    <form action="{{ route('asistencias.destroy', $asistencia->id_asistencia) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" 
+                                                                class="text-red-600 hover:text-red-900 font-medium"
+                                                                onclick="return confirm('¿Está seguro de eliminar esta asistencia?')">
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

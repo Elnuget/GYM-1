@@ -23,7 +23,10 @@ class ClienteController extends Controller
         // Cargar todos los pagos con sus relaciones
         $todosLosPagos = \App\Models\Pago::with(['usuario', 'membresia.tipoMembresia', 'metodoPago'])->get();
         
-        return view('clientes.index', compact('clientes', 'gimnasios', 'todasLasMembresias', 'todosLosPagos'));
+        // Cargar todas las asistencias con sus relaciones
+        $todasLasAsistencias = \App\Models\Asistencia::with('cliente')->get();
+        
+        return view('clientes.index', compact('clientes', 'gimnasios', 'todasLasMembresias', 'todosLosPagos', 'todasLasAsistencias'));
     }
 
     /**
