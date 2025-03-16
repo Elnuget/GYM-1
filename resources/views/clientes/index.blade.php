@@ -122,6 +122,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nombre</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Teléfono</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Membresías</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
@@ -146,6 +147,50 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->nombre }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->telefono ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $cliente->gimnasio->nombre }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            @php
+                                                // Verificar si existe la colección de membresías
+                                                if (!isset($todasLasMembresias)) {
+                                                    $todasLasMembresias = collect([]);
+                                                }
+                                                
+                                                // Intentar obtener las membresías por nombre del cliente
+                                                $membresiasCliente = $todasLasMembresias->filter(function($membresia) use ($cliente) {
+                                                    // Verificar si el nombre del usuario coincide con el nombre del cliente
+                                                    return isset($membresia->usuario) && 
+                                                           (strtolower($membresia->usuario->name) == strtolower($cliente->nombre) || 
+                                                            (isset($cliente->user) && isset($cliente->user->id) && 
+                                                             isset($membresia->usuario->id) && 
+                                                             $membresia->usuario->id == $cliente->user->id));
+                                                });
+                                                
+                                                $totalMembresias = $membresiasCliente->count();
+                                                $ultimaMembresia = $membresiasCliente->sortByDesc('fecha_vencimiento')->first();
+                                                $hoy = \Carbon\Carbon::now();
+                                                $estaVencida = $ultimaMembresia && isset($ultimaMembresia->fecha_vencimiento) && 
+                                                    \Carbon\Carbon::parse($ultimaMembresia->fecha_vencimiento)->lt($hoy);
+                                            @endphp
+                                            <div class="flex flex-col">
+                                                @if($totalMembresias > 0)
+                                                    <span class="font-medium">Total: {{ $totalMembresias }}</span>
+                                                    @if($ultimaMembresia)
+                                                        <span class="mt-1">
+                                                            @if(isset($ultimaMembresia->tipoMembresia))
+                                                                {{ $ultimaMembresia->tipoMembresia->nombre ?? 'Membresía' }}
+                                                            @else
+                                                                {{ $ultimaMembresia->tipo ?? 'Membresía' }}
+                                                            @endif
+                                                            <span class="ml-1 px-2 py-0.5 text-xs font-bold rounded-full {{ $estaVencida ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                                {{ $estaVencida ? 'Vencida' : 'Activa' }}
+                                                            </span>
+                                                        </span>
+                                                    @endif
+                                                @else
+                                                    <span class="font-medium">Total: 0</span>
+                                                    <span class="text-gray-500 text-xs">Sin membresías</span>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-3">
                                                 <button @click="toggleViewModal({{ $cliente->toJson() }})" 
