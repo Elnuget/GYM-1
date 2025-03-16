@@ -48,4 +48,9 @@ class Cliente extends Model
     {
         return $this->hasOne(OnboardingProgress::class, 'cliente_id', 'id_cliente');
     }
+
+    public function medidasCorporales()
+    {
+        return $this->hasMany(MedidaCorporal::class, 'cliente_id', 'id_cliente');
+    }
 }

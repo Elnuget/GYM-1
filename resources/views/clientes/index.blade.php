@@ -4,6 +4,9 @@
         isEditModalOpen: false,
         isViewModalOpen: false,
         currentCliente: null,
+        showNotificationModal: false,
+        notificationType: '',
+        notificationMessage: '',
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
         },
@@ -17,6 +20,8 @@
                     document.getElementById('edit_email').value = cliente.email;
                     document.getElementById('edit_telefono').value = cliente.telefono || '';
                     document.getElementById('edit_fecha_nacimiento').value = cliente.fecha_nacimiento || '';
+                    document.getElementById('edit_genero').value = cliente.genero || '';
+                    document.getElementById('edit_direccion').value = cliente.direccion || '';
                 });
             }
         },
@@ -24,7 +29,40 @@
             this.isViewModalOpen = !this.isViewModalOpen;
             this.currentCliente = cliente;
         },
-        tablaClientesAbierta: false
+        tablaClientesAbierta: false,
+        deleteCliente(clienteId, clienteNombre) {
+            if (confirm('¿Está seguro de eliminar a ' + clienteNombre + '?')) {
+                const csrfToken = document.querySelector('meta[name=csrf-token]').content;
+                
+                fetch(`/clientes/${clienteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.showNotificationModal = true;
+                    if (data.success) {
+                        this.notificationType = 'success';
+                        this.notificationMessage = data.message || 'Cliente eliminado exitosamente';
+                        
+                        // Remover la fila de la tabla
+                        document.querySelector(`tr[data-cliente-id='${clienteId}']`).remove();
+                    } else {
+                        this.notificationType = 'error';
+                        this.notificationMessage = data.message || 'Error al eliminar el cliente';
+                    }
+                })
+                .catch(error => {
+                    this.showNotificationModal = true;
+                    this.notificationType = 'error';
+                    this.notificationMessage = 'Error de conexión: ' + error.message;
+                });
+            }
+        }
     }">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,7 +127,8 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-emerald-100">
                                 @foreach($clientes->sortByDesc('id_cliente') as $cliente)
-                                    <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
+                                    <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150"
+                                        data-cliente-id="{{ $cliente->id_cliente }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center justify-center">
                                                 @if($cliente->foto_perfil && file_exists(public_path($cliente->foto_perfil)))
@@ -124,17 +163,13 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                     </svg>
                                                 </button>
-                                                <form action="{{ route('clientes.destroy', $cliente) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
-                                                            onclick="return confirm('¿Está seguro?')"
-                                                            title="Eliminar cliente">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                        </svg>
-                                                    </button>
+                                                <button @click="deleteCliente({{ $cliente->id_cliente }}, '{{ $cliente->nombre }}')" 
+                                                        class="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors duration-150"
+                                                        title="Eliminar cliente">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -145,9 +180,7 @@
                 </div>
 
                 <!-- Modal Crear -->
-                <div x-show="isModalOpen" 
-                     class="fixed inset-0 z-50 overflow-y-auto"
-                     style="display: none;">
+                <div x-show="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
                     <div class="flex items-center justify-center min-h-screen p-4">
                         <div class="relative bg-gradient-to-br from-white to-emerald-50 rounded-xl max-w-md w-full shadow-xl">
@@ -156,7 +189,57 @@
                                 <h2 class="text-lg font-medium text-emerald-900 mb-6 mt-4">
                                     Crear Nuevo Cliente
                                 </h2>
-                                <form action="{{ route('clientes.store') }}" method="POST">
+                                <form id="createClientForm" @submit.prevent="
+                                    const formData = new FormData($event.target);
+                                    fetch($event.target.action, {
+                                        method: 'POST',
+                                        body: formData,
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                            'Accept': 'application/json'
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            if (response.status === 422) {
+                                                return response.json().then(data => {
+                                                    throw { type: 'validation', errors: data.errors };
+                                                });
+                                            } else if (response.status === 500) {
+                                                return response.json().then(data => {
+                                                    throw { type: 'server', message: data.message || 'Error interno del servidor' };
+                                                });
+                                            }
+                                            throw { type: 'http', status: response.status };
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        showNotificationModal = true;
+                                        if (data.success) {
+                                            notificationType = 'success';
+                                            notificationMessage = data.message || '¡Cliente creado exitosamente!';
+                                            setTimeout(() => {
+                                                window.location.reload();
+                                            }, 2000);
+                                        } else {
+                                            notificationType = 'error';
+                                            notificationMessage = data.message || 'Error al crear el cliente';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        showNotificationModal = true;
+                                        notificationType = 'error';
+                                        if (error.type === 'validation') {
+                                            const errorMessages = Object.values(error.errors).flat();
+                                            notificationMessage = errorMessages.join('\n');
+                                        } else if (error.type === 'server') {
+                                            notificationMessage = 'Error del servidor: ' + error.message;
+                                        } else {
+                                            notificationMessage = 'Error al procesar la solicitud. Por favor, intente nuevamente.';
+                                        }
+                                    })"
+                                    action="{{ route('clientes.store') }}">
                                     @csrf
                                     <div class="space-y-4">
                                         <div>
@@ -193,6 +276,26 @@
                                             <input type="date" name="fecha_nacimiento"
                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                         </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Género</label>
+                                            <select name="genero" 
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="">Seleccione un género</option>
+                                                <option value="masculino">Masculino</option>
+                                                <option value="femenino">Femenino</option>
+                                                <option value="otro">Otro</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Dirección</label>
+                                            <input type="text" name="direccion"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <!-- Campo oculto para la contraseña predeterminada -->
+                                        <input type="hidden" name="password" value="gymflow2025">
                                     </div>
 
                                     <div class="mt-6 flex justify-end space-x-3">
@@ -211,6 +314,54 @@
                     </div>
                 </div>
 
+                <!-- Modal de Notificación -->
+                <div x-show="showNotificationModal" 
+                     class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                         :class="{ 'border-l-4 border-green-500': notificationType === 'success', 'border-l-4 border-red-500': notificationType === 'error' }">
+                        <div class="flex items-start">
+                            <!-- Icono de éxito -->
+                            <template x-if="notificationType === 'success'">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                            </template>
+                            <!-- Icono de error -->
+                            <template x-if="notificationType === 'error'">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                            </template>
+                            
+                            <div class="ml-3 w-full">
+                                <h3 class="text-lg font-medium" :class="{ 'text-green-700': notificationType === 'success', 'text-red-700': notificationType === 'error' }">
+                                    <span x-text="notificationType === 'success' ? 'Operación Exitosa' : 'Error'"></span>
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-700 whitespace-pre-line" x-text="notificationMessage"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-end">
+                            <button @click="showNotificationModal = false" 
+                                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Modal Editar -->
                 <div x-show="isEditModalOpen" 
                      class="fixed inset-0 z-50 overflow-y-auto"
@@ -223,7 +374,56 @@
                                 <h2 class="text-lg font-medium text-emerald-900 mb-6 mt-4">
                                     Editar Cliente
                                 </h2>
-                                <form x-bind:action="'/clientes/' + currentCliente?.id_cliente" method="POST">
+                                <form @submit.prevent="
+                                    const formData = new FormData($event.target);
+                                    fetch('/clientes/' + currentCliente.id_cliente, {
+                                        method: 'POST',
+                                        body: formData,
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                            'Accept': 'application/json'
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            if (response.status === 422) {
+                                                return response.json().then(data => {
+                                                    throw { type: 'validation', errors: data.errors };
+                                                });
+                                            } else if (response.status === 500) {
+                                                return response.json().then(data => {
+                                                    throw { type: 'server', message: data.message || 'Error interno del servidor' };
+                                                });
+                                            }
+                                            throw { type: 'http', status: response.status };
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        showNotificationModal = true;
+                                        if (data.success) {
+                                            notificationType = 'success';
+                                            notificationMessage = data.message || '¡Cliente actualizado exitosamente!';
+                                            setTimeout(() => {
+                                                window.location.reload();
+                                            }, 2000);
+                                        } else {
+                                            notificationType = 'error';
+                                            notificationMessage = data.message || 'Error al actualizar el cliente';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        showNotificationModal = true;
+                                        notificationType = 'error';
+                                        if (error.type === 'validation') {
+                                            const errorMessages = Object.values(error.errors).flat();
+                                            notificationMessage = errorMessages.join('\n');
+                                        } else if (error.type === 'server') {
+                                            notificationMessage = 'Error del servidor: ' + error.message;
+                                        } else {
+                                            notificationMessage = 'Error al procesar la solicitud. Por favor, intente nuevamente.';
+                                        }
+                                    })">
                                     @csrf
                                     @method('PUT')
                                     <div class="space-y-4">
@@ -258,6 +458,23 @@
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Fecha de Nacimiento</label>
                                             <input type="date" id="edit_fecha_nacimiento" name="fecha_nacimiento"
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Género</label>
+                                            <select id="edit_genero" name="genero" 
+                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="">Seleccione un género</option>
+                                                <option value="masculino">Masculino</option>
+                                                <option value="femenino">Femenino</option>
+                                                <option value="otro">Otro</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-emerald-700">Dirección</label>
+                                            <input type="text" id="edit_direccion" name="direccion"
                                                    class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                         </div>
                                     </div>

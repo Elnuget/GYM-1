@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\Gimnasio;
 use App\Models\Membresia;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ClienteController extends Controller
 {
@@ -43,18 +46,63 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'gimnasio_id' => 'required|exists:gimnasios,id_gimnasio',
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:clientes,email',
-            'telefono' => 'nullable|string|max:20',
-            'fecha_nacimiento' => 'nullable|date',
-        ]);
+        try {
+            $validator = $request->validate([
+                'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
+                'nombre' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'telefono' => ['nullable', 'string', 'max:20'],
+                'fecha_nacimiento' => ['nullable', 'date'],
+                'genero' => ['nullable', 'string', 'in:masculino,femenino,otro'],
+                'direccion' => ['nullable', 'string', 'max:255'],
+                'password' => ['required', 'string', 'min:8'],
+            ]);
 
-        Cliente::create($validated);
+            DB::beginTransaction();
 
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente creado exitosamente.');
+            // Crear el usuario
+            $user = User::create([
+                'name' => $request->nombre,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'rol' => 'cliente'
+            ]);
+
+            // Asignar rol
+            $user->assignRole('cliente');
+
+            // Crear el cliente
+            $cliente = new Cliente();
+            $cliente->user_id = $user->id;
+            $cliente->gimnasio_id = $request->gimnasio_id;
+            $cliente->nombre = $request->nombre;
+            $cliente->email = $request->email;
+            $cliente->telefono = $request->telefono;
+            $cliente->fecha_nacimiento = $request->fecha_nacimiento;
+            $cliente->genero = $request->genero;
+            $cliente->direccion = $request->direccion;
+            $cliente->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Cliente {$cliente->nombre} creado exitosamente.\nSe ha creado una cuenta con el email: {$cliente->email}\nContraseña: gymflow2025"
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el cliente: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -79,18 +127,65 @@ class ClienteController extends Controller
      */
     public function update(Request $request, Cliente $cliente)
     {
-        $validated = $request->validate([
-            'gimnasio_id' => 'required|exists:gimnasios,id_gimnasio',
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:clientes,email,' . $cliente->id_cliente . ',id_cliente',
-            'telefono' => 'nullable|string|max:20',
-            'fecha_nacimiento' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'gimnasio_id' => 'required|exists:gimnasios,id_gimnasio',
+                'nombre' => 'required|string|max:255',
+                'email' => 'required|email|unique:clientes,email,' . $cliente->id_cliente . ',id_cliente',
+                'telefono' => 'nullable|string|max:20',
+                'fecha_nacimiento' => 'nullable|date',
+                'genero' => 'nullable|string|in:masculino,femenino,otro',
+                'direccion' => 'nullable|string|max:255',
+            ]);
 
-        $cliente->update($validated);
+            DB::beginTransaction();
 
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente actualizado exitosamente.');
+            // Actualizar el cliente
+            $cliente->update($validated);
+
+            // Si existe un usuario asociado, actualizar datos básicos
+            if ($cliente->user_id) {
+                $user = User::find($cliente->user_id);
+                if ($user) {
+                    $user->name = $request->nombre;
+                    $user->email = $request->email;
+                    $user->save();
+                }
+            }
+
+            DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Cliente {$cliente->nombre} actualizado exitosamente."
+                ]);
+            }
+
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente actualizado exitosamente.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar el cliente: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()
+                ->with('error', 'Error al actualizar el cliente: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -98,9 +193,44 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
-        $cliente->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente eliminado exitosamente.');
+            // Primero eliminamos las medidas corporales relacionadas
+            $cliente->medidasCorporales()->delete();
+            
+            // Si hay un usuario asociado, también lo eliminamos
+            if ($cliente->user_id) {
+                User::find($cliente->user_id)->delete();
+            }
+            
+            // Luego eliminamos el cliente
+            $cliente->delete();
+
+            DB::commit();
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cliente eliminado exitosamente.'
+                ]);
+            }
+
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente eliminado exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al eliminar el cliente: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Error al eliminar el cliente: ' . $e->getMessage());
+        }
     }
 }
