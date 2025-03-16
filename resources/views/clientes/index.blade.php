@@ -7,6 +7,26 @@
         showNotificationModal: false,
         notificationType: '',
         notificationMessage: '',
+        formatearFecha(fecha) {
+            if (!fecha) return 'N/A';
+            try {
+                // Intentar crear objeto Date a partir de la fecha
+                const fechaObj = new Date(fecha);
+                // Verificar si la fecha es válida
+                if (!isNaN(fechaObj.getTime())) {
+                    // Formatear a DD/MM/YYYY
+                    return fechaObj.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+                return fecha;
+            } catch (e) {
+                console.error('Error al formatear fecha:', e);
+                return fecha;
+            }
+        },
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
         },
@@ -14,12 +34,67 @@
             this.isEditModalOpen = !this.isEditModalOpen;
             this.currentCliente = cliente;
             if(cliente) {
+                console.log('Fecha de nacimiento original:', cliente.fecha_nacimiento);
+                
                 this.$nextTick(() => {
                     document.getElementById('edit_gimnasio_id').value = cliente.gimnasio_id;
                     document.getElementById('edit_nombre').value = cliente.nombre;
                     document.getElementById('edit_email').value = cliente.email;
                     document.getElementById('edit_telefono').value = cliente.telefono || '';
-                    document.getElementById('edit_fecha_nacimiento').value = cliente.fecha_nacimiento || '';
+                    
+                    // Formatear correctamente la fecha de nacimiento
+                    const fechaNacimientoInput = document.getElementById('edit_fecha_nacimiento');
+                    if (cliente.fecha_nacimiento) {
+                        let fechaNacimiento = cliente.fecha_nacimiento;
+                        console.log('Procesando fecha:', fechaNacimiento);
+                        
+                        try {
+                            // Convertir a objeto Date para normalizar el formato
+                            let fechaObj;
+                            
+                            // Determinar el formato de fecha de entrada
+                            if (fechaNacimiento.includes('/')) {
+                                const [dia, mes, anio] = fechaNacimiento.split('/');
+                                fechaObj = new Date(`${anio}-${mes}-${dia}`);
+                            } else if (fechaNacimiento.includes('-')) {
+                                // Podría ser YYYY-MM-DD o DD-MM-YYYY
+                                const partes = fechaNacimiento.split('-');
+                                if (partes.length === 3) {
+                                    if (partes[0].length === 4) {
+                                        // Ya está en formato YYYY-MM-DD
+                                        fechaObj = new Date(fechaNacimiento);
+                                    } else {
+                                        // Formato DD-MM-YYYY
+                                        fechaObj = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+                                    }
+                                }
+                            } else {
+                                // Intentar parsear como timestamp o cualquier otro formato
+                                fechaObj = new Date(fechaNacimiento);
+                            }
+                            
+                            // Verificar si la fecha es válida
+                            if (!isNaN(fechaObj.getTime())) {
+                                // Formatear a YYYY-MM-DD para el input date
+                                const fechaFormateada = fechaObj.toISOString().split('T')[0];
+                                console.log('Fecha formateada:', fechaFormateada);
+                                
+                                // Cambiar temporalmente a tipo date para establecer el valor
+                                fechaNacimientoInput.type = 'date';
+                                fechaNacimientoInput.value = fechaFormateada;
+                            } else {
+                                console.log('Fecha inválida:', fechaNacimiento);
+                                fechaNacimientoInput.value = '';
+                            }
+                        } catch (e) {
+                            console.error('Error al procesar la fecha:', e);
+                            fechaNacimientoInput.value = '';
+                        }
+                    } else {
+                        console.log('No hay fecha de nacimiento');
+                        fechaNacimientoInput.value = '';
+                    }
+                    
                     document.getElementById('edit_genero').value = cliente.genero || '';
                     document.getElementById('edit_direccion').value = cliente.direccion || '';
                 });
@@ -502,8 +577,10 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-emerald-700">Fecha de Nacimiento</label>
-                                            <input type="date" id="edit_fecha_nacimiento" name="fecha_nacimiento"
-                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <input type="text" id="edit_fecha_nacimiento" name="fecha_nacimiento"
+                                                   placeholder="dd/mm/aaaa" 
+                                                   class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                                   onfocus="(this.type='date')" onblur="if(!this.value) this.type='text'">
                                         </div>
 
                                         <div>
@@ -570,7 +647,7 @@
 
                                     <div>
                                         <h5 class="text-sm font-medium text-emerald-700">Fecha de Nacimiento</h5>
-                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.fecha_nacimiento || 'N/A'"></p>
+                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.fecha_nacimiento ? formatearFecha(currentCliente?.fecha_nacimiento) : 'N/A'"></p>
                                     </div>
 
                                     <div>
@@ -580,12 +657,12 @@
 
                                     <div>
                                         <h5 class="text-sm font-medium text-emerald-700">Fecha de Registro</h5>
-                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.created_at"></p>
+                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.created_at ? formatearFecha(currentCliente?.created_at) : 'N/A'"></p>
                                     </div>
 
                                     <div>
                                         <h5 class="text-sm font-medium text-emerald-700">Última Actualización</h5>
-                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.updated_at"></p>
+                                        <p class="mt-1 text-gray-900" x-text="currentCliente?.updated_at ? formatearFecha(currentCliente?.updated_at) : 'N/A'"></p>
                                     </div>
                                 </div>
 
