@@ -68,7 +68,9 @@
                 <!-- Header con gradiente -->
                 <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
                     <h2 class="text-2xl font-semibold text-white">
-                        @if($mostrarTodos)
+                        @if($idUsuario && $usuarioSeleccionado)
+                            Membresías de {{ $usuarioSeleccionado->name }}
+                        @elseif($mostrarTodos)
                             Todas las Membresías
                         @else
                             @if($tipoFiltro === 'vencimiento')
@@ -112,9 +114,31 @@
                 </div>
                 @endif
 
-                <!-- Filtro por mes y año -->
+                <!-- Filtro por usuario -->
+                <div class="mb-4 bg-white p-4 rounded-lg shadow border border-emerald-100">
+                    <form action="{{ route('membresias.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
+                        <div class="flex-grow">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                            <select name="id_usuario" onchange="this.form.submit()" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 w-full">
+                                <option value="">Todos los usuarios</option>
+                                @foreach($usuarios->sortBy('name') as $usuario)
+                                    @php
+                                        $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
+                                    @endphp
+                                    <option value="{{ $usuario->id }}" {{ $idUsuario == $usuario->id ? 'selected' : '' }}>
+                                        {{ $usuario->name }} - {{ $gimnasioNombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Filtro por fecha -->
                 <div class="mb-6 bg-white p-4 rounded-lg shadow border border-emerald-100">
                     <form action="{{ route('membresias.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
+                        <!-- Eliminamos el campo oculto para que no se mantenga el usuario seleccionado -->
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por</label>
                             <div class="flex space-x-4">
@@ -209,10 +233,11 @@
                                                     </form>
                                                 @endif
                                                 <button @click="togglePagoModal({{ $membresia->toJson() }})" 
-                                                        class="text-blue-600 hover:text-blue-900">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        class="text-blue-600 hover:text-blue-900 flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                                     </svg>
+                                                    Pagar
                                                 </button>
                                                 <form action="{{ route('membresias.destroy', $membresia) }}" method="POST" class="inline">
                                                     @csrf

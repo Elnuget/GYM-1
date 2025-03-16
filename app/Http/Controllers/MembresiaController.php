@@ -23,12 +23,17 @@ class MembresiaController extends Controller
         $mes = $request->filled('mes') ? $request->input('mes') : $mesActual;
         $anio = $request->filled('anio') ? $request->input('anio') : $anioActual;
         $tipoFiltro = $request->input('tipo_filtro', 'creacion'); // valor predeterminado: creacion
+        $idUsuario = $request->input('id_usuario'); // Filtro por usuario
         
         // Verificar si se solicitó "mostrar todos"
         $mostrarTodos = $request->has('mostrar_todos');
         
-        // Aplicar filtros a menos que se haya solicitado mostrar todos
-        if (!$mostrarTodos) {
+        // Filtro por usuario si está presente
+        if ($idUsuario) {
+            $query->where('id_usuario', $idUsuario);
+        }
+        // Aplicar filtros de fecha a menos que se haya solicitado mostrar todos
+        elseif (!$mostrarTodos) {
             // Usar el campo correcto según el tipo de filtro
             $campoFecha = $tipoFiltro === 'vencimiento' ? 'fecha_vencimiento' : 'fecha_compra';
             
@@ -62,6 +67,12 @@ class MembresiaController extends Controller
         $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
+        // Obtener nombre del usuario si existe
+        $usuarioSeleccionado = null;
+        if ($idUsuario) {
+            $usuarioSeleccionado = User::find($idUsuario);
+        }
+        
         return view('membresias.index', compact(
             'membresias', 
             'usuarios', 
@@ -72,7 +83,9 @@ class MembresiaController extends Controller
             'mes',
             'anio',
             'mostrarTodos',
-            'tipoFiltro'
+            'tipoFiltro',
+            'idUsuario',
+            'usuarioSeleccionado'
         ));
     }
 
