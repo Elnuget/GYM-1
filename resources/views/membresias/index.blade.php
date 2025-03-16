@@ -114,73 +114,126 @@
                 </div>
                 @endif
 
-                <!-- Filtro por usuario -->
-                <div class="mb-4 bg-white p-4 rounded-lg shadow border border-emerald-100">
-                    <form action="{{ route('membresias.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
-                        <div class="flex-grow">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                            <select name="id_usuario" onchange="this.form.submit()" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 w-full">
-                                <option value="">Todos los usuarios</option>
-                                @foreach($usuarios->sortBy('name') as $usuario)
-                                    @php
-                                        $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
-                                    @endphp
-                                    <option value="{{ $usuario->id }}" {{ $idUsuario == $usuario->id ? 'selected' : '' }}>
-                                        {{ $usuario->name }} - {{ $gimnasioNombre }}
-                                    </option>
-                                @endforeach
-                            </select>
+                <!-- Panel de Filtros Colapsable -->
+                <div x-data="{ open: false }" class="mb-6 bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                    <!-- Cabecera del panel de filtros -->
+                    <div @click="open = !open" class="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 cursor-pointer">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-white flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                </svg>
+                                Opciones de Filtrado
+                            </h3>
+                            <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
                         </div>
-                    </form>
-                </div>
-
-                <!-- Filtro por fecha -->
-                <div class="mb-6 bg-white p-4 rounded-lg shadow border border-emerald-100">
-                    <form action="{{ route('membresias.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
-                        <!-- Eliminamos el campo oculto para que no se mantenga el usuario seleccionado -->
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por</label>
-                            <div class="flex space-x-4">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="tipo_filtro" value="creacion" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'creacion' ? 'checked' : '' }}>
-                                    <span class="ml-2 text-sm text-gray-700">Fecha de Creación</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="tipo_filtro" value="vencimiento" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'vencimiento' ? 'checked' : '' }}>
-                                    <span class="ml-2 text-sm text-gray-700">Fecha de Vencimiento</span>
-                                </label>
+                    </div>
+                    
+                    <!-- Contenido de los filtros (colapsable) -->
+                    <div x-show="open" class="p-4 bg-gradient-to-br from-white to-emerald-50">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Filtro por usuario -->
+                            <div class="bg-white p-4 rounded-lg shadow border border-emerald-100">
+                                <h4 class="text-base font-medium text-emerald-700 mb-3 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Filtrar por Cliente
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    Selecciona un cliente para ver todas sus membresías. Se aplicará automáticamente.
+                                </p>
+                                <form action="{{ route('membresias.index') }}" method="GET">
+                                    <div>
+                                        <select name="id_usuario" onchange="this.form.submit()" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="">Seleccionar cliente...</option>
+                                            @foreach($usuarios->sortBy('name') as $usuario)
+                                                @php
+                                                    $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
+                                                @endphp
+                                                <option value="{{ $usuario->id }}" {{ $idUsuario == $usuario->id ? 'selected' : '' }}>
+                                                    {{ $usuario->name }} - {{ $gimnasioNombre }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Filtro por fecha -->
+                            <div class="bg-white p-4 rounded-lg shadow border border-emerald-100">
+                                <h4 class="text-base font-medium text-emerald-700 mb-3 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Filtrar por Fecha
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    Filtra las membresías por fecha de creación o vencimiento.
+                                </p>
+                                <form action="{{ route('membresias.index') }}" method="GET" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Fecha</label>
+                                        <div class="flex space-x-4">
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="tipo_filtro" value="creacion" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'creacion' ? 'checked' : '' }}>
+                                                <span class="ml-2 text-sm text-gray-700">Fecha de Creación</span>
+                                            </label>
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="tipo_filtro" value="vencimiento" class="text-emerald-600 focus:ring-emerald-500" {{ $tipoFiltro === 'vencimiento' ? 'checked' : '' }}>
+                                                <span class="ml-2 text-sm text-gray-700">Fecha de Vencimiento</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Mes</label>
+                                            <select name="mes" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                @foreach($meses as $valor => $nombre)
+                                                    <option value="{{ $valor }}" {{ $mes == $valor ? 'selected' : '' }}>
+                                                        {{ $nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Año</label>
+                                            <select name="anio" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                @foreach($anios as $anioOption)
+                                                    <option value="{{ $anioOption }}" {{ $anio == $anioOption ? 'selected' : '' }}>
+                                                        {{ $anioOption }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-2">
+                                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 w-full md:w-auto">
+                                            <div class="flex justify-center items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                                </svg>
+                                                Aplicar Filtro
+                                            </div>
+                                        </button>
+                                        <a href="{{ route('membresias.index', ['mostrar_todos' => 1]) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex justify-center items-center w-full md:w-auto">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                            </svg>
+                                            Mostrar Todos
+                                        </a>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Mes</label>
-                            <select name="mes" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                @foreach($meses as $valor => $nombre)
-                                    <option value="{{ $valor }}" {{ $mes == $valor ? 'selected' : '' }}>
-                                        {{ $nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Año</label>
-                            <select name="anio" class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                @foreach($anios as $anioOption)
-                                    <option value="{{ $anioOption }}" {{ $anio == $anioOption ? 'selected' : '' }}>
-                                        {{ $anioOption }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
-                                Filtrar
-                            </button>
-                            <a href="{{ route('membresias.index', ['mostrar_todos' => 1]) }}" class="ml-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                                Mostrar todos
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
 
                 <!-- Tabla con nuevo diseño -->
