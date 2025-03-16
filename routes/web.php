@@ -128,6 +128,10 @@ Route::middleware('auth')->group(function () {
         ->name('membresias.registrar-visita');
     Route::get('membresias-vencidas', [MembresiaController::class, 'vencidas'])
         ->name('membresias.vencidas');
+    Route::get('membresias-sin-renovar', [MembresiaController::class, 'sinRenovar'])
+        ->name('membresias.sin-renovar');
+    Route::get('membresias-activas', [MembresiaController::class, 'activas'])
+        ->name('membresias.activas');
     Route::resource('pagos', PagoController::class);
     Route::post('/pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
     Route::resource('metodos-pago', MetodoPagoController::class, [

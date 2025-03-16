@@ -197,6 +197,10 @@
                         Todas las Membresías
                         @elseif(isset($mostrarVencidas) && $mostrarVencidas)
                         Membresías vencidas este mes
+                        @elseif(isset($mostrarSinRenovar) && $mostrarSinRenovar)
+                        Membresías sin renovar
+                        @elseif(isset($mostrarActivas) && $mostrarActivas)
+                        Membresías activas
                         @else
                         @if($tipoFiltro === 'vencimiento')
                         Membresías que vencen en {{ $meses[$mes] }} {{ $anio }}
@@ -240,7 +244,37 @@
                 @endif
 
                 <!-- Tarjeta de Estadísticas de Membresías -->
-                <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Membresías activas -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Membresías Activas
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Vigentes actualmente</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasActivas ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.activas') }}" class="inline-block w-full py-2 px-4 bg-green-500 text-white text-center font-medium rounded-md hover:bg-green-600 transition-colors">
+                                    Ver membresías activas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Membresías vencidas en el mes actual -->
                     <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-red-500 to-orange-500 px-4 py-3">
@@ -292,6 +326,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.sin-renovar') }}" class="inline-block w-full py-2 px-4 bg-indigo-500 text-white text-center font-medium rounded-md hover:bg-indigo-600 transition-colors">
+                                    Ver membresías sin renovar
+                                </a>
                             </div>
                         </div>
                     </div>
