@@ -201,6 +201,8 @@
                         Membresías sin renovar
                         @elseif(isset($mostrarActivas) && $mostrarActivas)
                         Membresías activas
+                        @elseif(isset($mostrarSaldosPendientes) && $mostrarSaldosPendientes)
+                        Membresías con saldo pendiente
                         @else
                         @if($tipoFiltro === 'vencimiento')
                         Membresías que vencen en {{ $meses[$mes] }} {{ $anio }}
@@ -244,7 +246,7 @@
                 @endif
 
                 <!-- Tarjeta de Estadísticas de Membresías -->
-                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <!-- Membresías activas -->
                     <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-3">
@@ -330,6 +332,36 @@
                             <div class="mt-3">
                                 <a href="{{ route('membresias.sin-renovar') }}" class="inline-block w-full py-2 px-4 bg-indigo-500 text-white text-center font-medium rounded-md hover:bg-indigo-600 transition-colors">
                                     Ver membresías sin renovar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membresías con saldo pendiente -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Saldos Pendientes
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Total: ${{ number_format($totalSaldosPendientes ?? 0, 2) }}</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasPendientesPago ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-yellow-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.saldos-pendientes') }}" class="inline-block w-full py-2 px-4 bg-yellow-500 text-white text-center font-medium rounded-md hover:bg-yellow-600 transition-colors">
+                                    Ver saldos pendientes
                                 </a>
                             </div>
                         </div>
