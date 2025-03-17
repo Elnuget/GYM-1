@@ -67,6 +67,128 @@
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Tarjeta de Estadísticas de Membresías -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Membresías activas -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Membresías Activas
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Vigentes actualmente</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasActivas ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.activas') }}" class="inline-block w-full py-2 px-4 bg-green-500 text-white text-center font-medium rounded-md hover:bg-green-600 transition-colors">
+                                    Ver membresías activas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membresías vencidas en el mes actual -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-red-500 to-orange-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Membresías Vencidas
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Vencidas este mes</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasVencidasMes ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.vencidas') }}" class="inline-block w-full py-2 px-4 bg-red-500 text-white text-center font-medium rounded-md hover:bg-red-600 transition-colors">
+                                    Ver membresías vencidas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membresías vencidas sin renovar -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-500 to-indigo-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Sin Renovación
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Vencidas sin renovar</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasNoRenovadas ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.sin-renovar') }}" class="inline-block w-full py-2 px-4 bg-indigo-500 text-white text-center font-medium rounded-md hover:bg-indigo-600 transition-colors">
+                                    Ver membresías sin renovar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membresías con saldo pendiente -->
+                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-3">
+                            <h3 class="text-white font-medium text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Saldos Pendientes
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm mb-1">Total: ${{ number_format($totalSaldosPendientes ?? 0, 2) }}</p>
+                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasPendientesPago ?? 0 }}</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-yellow-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('membresias.saldos-pendientes') }}" class="inline-block w-full py-2 px-4 bg-yellow-500 text-white text-center font-medium rounded-md hover:bg-yellow-600 transition-colors">
+                                    Ver saldos pendientes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Panel de Filtros Colapsable -->
                 <div x-data="{ open: false }" class="mb-6 bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
                     <!-- Cabecera del panel de filtros -->
@@ -211,13 +333,22 @@
                         @endif
                         @endif
                     </h2>
-                    <button @click="toggleModal()"
-                        class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nueva Membresía
-                    </button>
+                    <div class="flex space-x-2">
+                        <button id="exportExcel" 
+                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Exportar Excel
+                        </button>
+                        <button @click="toggleModal()"
+                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Nueva Membresía
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Mensajes de alerta -->
@@ -245,128 +376,7 @@
                 </div>
                 @endif
 
-                <!-- Tarjeta de Estadísticas de Membresías -->
-                <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- Membresías activas -->
-                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-3">
-                            <h3 class="text-white font-medium text-lg flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Membresías Activas
-                            </h3>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm mb-1">Vigentes actualmente</p>
-                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasActivas ?? 0 }}</p>
-                                </div>
-                                <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <a href="{{ route('membresias.activas') }}" class="inline-block w-full py-2 px-4 bg-green-500 text-white text-center font-medium rounded-md hover:bg-green-600 transition-colors">
-                                    Ver membresías activas
-                                </a>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Membresías vencidas en el mes actual -->
-                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-red-500 to-orange-500 px-4 py-3">
-                            <h3 class="text-white font-medium text-lg flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Membresías Vencidas
-                            </h3>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm mb-1">Vencidas este mes</p>
-                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasVencidasMes ?? 0 }}</p>
-                                </div>
-                                <div class="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <a href="{{ route('membresias.vencidas') }}" class="inline-block w-full py-2 px-4 bg-red-500 text-white text-center font-medium rounded-md hover:bg-red-600 transition-colors">
-                                    Ver membresías vencidas
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Membresías vencidas sin renovar -->
-                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-purple-500 to-indigo-500 px-4 py-3">
-                            <h3 class="text-white font-medium text-lg flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Sin Renovación
-                            </h3>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm mb-1">Vencidas sin renovar</p>
-                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasNoRenovadas ?? 0 }}</p>
-                                </div>
-                                <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <a href="{{ route('membresias.sin-renovar') }}" class="inline-block w-full py-2 px-4 bg-indigo-500 text-white text-center font-medium rounded-md hover:bg-indigo-600 transition-colors">
-                                    Ver membresías sin renovar
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Membresías con saldo pendiente -->
-                    <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-lg border border-emerald-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-3">
-                            <h3 class="text-white font-medium text-lg flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Saldos Pendientes
-                            </h3>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-600 text-sm mb-1">Total: ${{ number_format($totalSaldosPendientes ?? 0, 2) }}</p>
-                                    <p class="text-3xl font-bold text-gray-800">{{ $membresiasPendientesPago ?? 0 }}</p>
-                                </div>
-                                <div class="h-16 w-16 rounded-full bg-yellow-100 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <a href="{{ route('membresias.saldos-pendientes') }}" class="inline-block w-full py-2 px-4 bg-yellow-500 text-white text-center font-medium rounded-md hover:bg-yellow-600 transition-colors">
-                                    Ver saldos pendientes
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Tabla con nuevo diseño -->
                 <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
@@ -376,6 +386,7 @@
                                 <tr>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha Creación</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Tipo</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Precio</th>
                                     <th class="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">Saldo Pendiente</th>
@@ -387,8 +398,23 @@
                             <tbody class="bg-white divide-y divide-emerald-100">
                                 @foreach ($membresias as $membresia)
                                 <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->usuario->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            @if($membresia->usuario && isset($membresia->usuario->foto_perfil) && file_exists(public_path($membresia->usuario->foto_perfil)))
+                                            <img src="{{ asset($membresia->usuario->foto_perfil) }}" alt="{{ $membresia->usuario->name }}"
+                                                class="h-10 w-10 rounded-full object-cover border-2 border-emerald-200 mr-3">
+                                            @else
+                                            <div class="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center mr-3">
+                                                <span class="text-sm font-bold text-white">
+                                                    {{ substr($membresia->usuario->name, 0, 1) }}
+                                                </span>
+                                            </div>
+                                            @endif
+                                            <span>{{ $membresia->usuario->name }}</span>
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->gimnasio->nombre }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->created_at ? $membresia->created_at->format('d/m/Y') : 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $membresia->tipoMembresia->nombre }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($membresia->precio_total, 2) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -704,6 +730,50 @@
 
             // Calcular valores iniciales
             calcularVencimiento();
+        });
+    </script>
+
+    <!-- Script para exportación de Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botón para exportar a Excel
+            document.getElementById('exportExcel').addEventListener('click', function() {
+                exportTableToExcel('membresias_data');
+            });
+
+            function exportTableToExcel(fileName) {
+                // Obtener la tabla
+                const table = document.querySelector('.min-w-full');
+                
+                // Crear una copia de la tabla para manipular
+                const cloneTable = table.cloneNode(true);
+                
+                // Eliminar la columna de acciones (última columna)
+                const rows = cloneTable.querySelectorAll('tr');
+                rows.forEach(row => {
+                    // Verificar si la fila tiene la última celda (columna de acciones)
+                    const cells = row.querySelectorAll('th, td');
+                    if (cells.length > 0) {
+                        // Eliminar la última celda (columna de acciones)
+                        cells[cells.length - 1].remove();
+                    }
+                });
+                
+                // Convertir a worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.table_to_sheet(cloneTable);
+                
+                // Añadir la hoja al libro
+                XLSX.utils.book_append_sheet(wb, ws, "Membresías");
+                
+                // Obtener fecha actual para el nombre del archivo
+                const date = new Date();
+                const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+                
+                // Generar y descargar archivo
+                XLSX.writeFile(wb, `${fileName}_${formattedDate}.xlsx`);
+            }
         });
     </script>
 </x-app-layout>
