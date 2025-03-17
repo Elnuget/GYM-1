@@ -311,8 +311,8 @@
                     </div>
                 </div>
                 <!-- Header con gradiente -->
-                <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-semibold text-white">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
+                    <h2 class="text-xl md:text-2xl font-semibold text-white mb-3 sm:mb-0">
                         @if($idUsuario && $usuarioSeleccionado)
                         Membresías de {{ $usuarioSeleccionado->name }}
                         @elseif($mostrarTodos)
@@ -335,18 +335,18 @@
                     </h2>
                     <div class="flex space-x-2">
                         <button id="exportExcel" 
-                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                            <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            Exportar Excel
+                            <span class="hidden sm:inline">Exportar Excel</span>
                         </button>
                         <button @click="toggleModal()"
-                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                            <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            Nueva Membresía
+                            <span class="hidden sm:inline">Nueva Membresía</span>
                         </button>
                     </div>
                 </div>
