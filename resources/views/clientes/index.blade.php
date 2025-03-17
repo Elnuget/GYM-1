@@ -7,6 +7,9 @@
         showNotificationModal: false,
         notificationType: '',
         notificationMessage: '',
+        tablaMembresiaAbierta: false,
+        tablaPagosAbierta: false,
+        tablaAsistenciasAbierta: false,
         formatearFecha(fecha) {
             if (!fecha) return 'N/A';
             try {
@@ -104,7 +107,6 @@
             this.isViewModalOpen = !this.isViewModalOpen;
             this.currentCliente = cliente;
         },
-        tablaClientesAbierta: false,
         deleteCliente(clienteId, clienteNombre) {
             if (confirm('¿Está seguro de eliminar a ' + clienteNombre + '?')) {
                 const csrfToken = document.querySelector('meta[name=csrf-token]').content;
@@ -142,20 +144,12 @@
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Header con gradiente -->
-                <div @click="tablaClientesAbierta = !tablaClientesAbierta" 
-                     class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg cursor-pointer hover:from-emerald-700 hover:to-teal-700 transition-colors duration-200">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
                     <div class="flex items-center space-x-4 mb-4 sm:mb-0">
                         <div class="flex items-center">
                             <h2 class="text-2xl font-semibold text-white mr-2">
                                 Clientes
                             </h2>
-                            <svg class="w-5 h-5 transform transition-transform text-white" 
-                                 :class="{'rotate-180': tablaClientesAbierta}"
-                                 fill="none" 
-                                 stroke="currentColor" 
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             @foreach($gimnasios as $gimnasio)
@@ -181,14 +175,7 @@
                 @endif
 
                 <!-- Tabla -->
-                <div x-show="tablaClientesAbierta" 
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 transform -translate-y-4"
-                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                     x-transition:leave="transition ease-in duration-300"
-                     x-transition:leave-start="opacity-100 transform translate-y-0"
-                     x-transition:leave-end="opacity-0 transform -translate-y-4"
-                     class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100 mb-8">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-emerald-200">
                             <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
@@ -240,29 +227,66 @@
                                                 });
                                                 
                                                 $totalMembresias = $membresiasCliente->count();
-                                                $ultimaMembresia = $membresiasCliente->sortByDesc('fecha_vencimiento')->first();
-                                                $hoy = \Carbon\Carbon::now();
-                                                $estaVencida = $ultimaMembresia && isset($ultimaMembresia->fecha_vencimiento) && 
-                                                    \Carbon\Carbon::parse($ultimaMembresia->fecha_vencimiento)->lt($hoy);
+                                                $membresiasActivas = $membresiasCliente->filter(function($membresia) {
+                                                    $hoy = \Carbon\Carbon::now();
+                                                    return isset($membresia->fecha_vencimiento) && 
+                                                           \Carbon\Carbon::parse($membresia->fecha_vencimiento)->gte($hoy);
+                                                })->count();
+                                                
+                                                $membresiasVencidas = $membresiasCliente->filter(function($membresia) {
+                                                    $hoy = \Carbon\Carbon::now();
+                                                    return isset($membresia->fecha_vencimiento) && 
+                                                           \Carbon\Carbon::parse($membresia->fecha_vencimiento)->lt($hoy);
+                                                })->count();
+                                                
+                                                $saldosPendientes = $membresiasCliente->sum('saldo_pendiente');
                                             @endphp
-                                            <div class="flex flex-col">
+                                            
+                                            <div class="flex flex-col space-y-2">
+                                                <div class="bg-emerald-600 text-white text-xs font-bold py-1 px-2 rounded-t-md">
+                                                    MEMBRESÍAS
+                                                </div>
+                                                
                                                 @if($totalMembresias > 0)
-                                                    <span class="font-medium">Total: {{ $totalMembresias }}</span>
-                                                    @if($ultimaMembresia)
-                                                        <span class="mt-1">
-                                                            @if(isset($ultimaMembresia->tipoMembresia))
-                                                                {{ $ultimaMembresia->tipoMembresia->nombre ?? 'Membresía' }}
-                                                            @else
-                                                                {{ $ultimaMembresia->tipo ?? 'Membresía' }}
-                                                            @endif
-                                                            <span class="ml-1 px-2 py-0.5 text-xs font-bold rounded-full {{ $estaVencida ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
-                                                                {{ $estaVencida ? 'Vencida' : 'Activa' }}
-                                                            </span>
-                                                        </span>
-                                                    @endif
+                                                    <div class="flex flex-col space-y-1">
+                                                        @if($membresiasActivas > 0)
+                                                            <a href="{{ route('membresias.activas', ['id_usuario' => $cliente->user->id ?? 0]) }}" 
+                                                               class="flex items-center bg-green-500 text-white text-xs font-semibold py-1 px-2 rounded-md hover:bg-green-600 transition-colors">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                </svg>
+                                                                {{ $membresiasActivas }} Activas
+                                                            </a>
+                                                        @endif
+                                                        
+                                                        @if($membresiasVencidas > 0)
+                                                            <a href="{{ route('membresias.vencidas', ['id_usuario' => $cliente->user->id ?? 0]) }}" 
+                                                               class="flex items-center bg-red-500 text-white text-xs font-semibold py-1 px-2 rounded-md hover:bg-red-600 transition-colors">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                </svg>
+                                                                {{ $membresiasVencidas }} Vencidas
+                                                            </a>
+                                                        @endif
+                                                        
+                                                        @if($saldosPendientes > 0)
+                                                            <a href="{{ route('membresias.saldos-pendientes', ['id_usuario' => $cliente->user->id ?? 0]) }}" 
+                                                               class="flex items-center bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded-md hover:bg-amber-600 transition-colors">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                </svg>
+                                                                ${{ number_format($saldosPendientes, 2) }}
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                    
+                                                    <div class="text-xs text-gray-500 border-t border-gray-200 pt-1">
+                                                        Total: {{ $totalMembresias }} membresía(s)
+                                                    </div>
                                                 @else
-                                                    <span class="font-medium">Total: 0</span>
-                                                    <span class="text-gray-500 text-xs">Sin membresías</span>
+                                                    <div class="text-gray-500 text-xs py-1">
+                                                        Sin membresías
+                                                    </div>
                                                 @endif
                                             </div>
                                         </td>
@@ -677,13 +701,30 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Membresías -->
+                <!-- Tabla de Membresías - Plegable -->
                 <div class="mt-8">
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
-                        <h2 class="text-xl font-semibold text-white">Todas las Membresías</h2>
+                    <div @click="tablaMembresiaAbierta = !tablaMembresiaAbierta" 
+                         class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg cursor-pointer hover:from-emerald-700 hover:to-teal-700 transition-colors duration-200">
+                        <div class="flex items-center">
+                            <h2 class="text-xl font-semibold text-white mr-2">Todas las Membresías</h2>
+                            <svg class="w-5 h-5 transform transition-transform text-white" 
+                                 :class="{'rotate-180': tablaMembresiaAbierta}"
+                                 fill="none" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                    <div x-show="tablaMembresiaAbierta" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform -translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 transform translate-y-0"
+                         x-transition:leave-end="opacity-0 transform -translate-y-4"
+                         class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-emerald-200">
                                 <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
@@ -747,13 +788,30 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Pagos -->
+                <!-- Tabla de Pagos - Plegable -->
                 <div class="mt-8">
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
-                        <h2 class="text-xl font-semibold text-white">Todos los Pagos</h2>
+                    <div @click="tablaPagosAbierta = !tablaPagosAbierta" 
+                         class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg cursor-pointer hover:from-emerald-700 hover:to-teal-700 transition-colors duration-200">
+                        <div class="flex items-center">
+                            <h2 class="text-xl font-semibold text-white mr-2">Todos los Pagos</h2>
+                            <svg class="w-5 h-5 transform transition-transform text-white" 
+                                 :class="{'rotate-180': tablaPagosAbierta}"
+                                 fill="none" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                    <div x-show="tablaPagosAbierta" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform -translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 transform translate-y-0"
+                         x-transition:leave-end="opacity-0 transform -translate-y-4"
+                         class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-emerald-200">
                                 <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
@@ -842,13 +900,30 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Asistencias -->
+                <!-- Tabla de Asistencias - Plegable -->
                 <div class="mt-8">
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg mb-4">
-                        <h2 class="text-xl font-semibold text-white">Todas las Asistencias</h2>
+                    <div @click="tablaAsistenciasAbierta = !tablaAsistenciasAbierta" 
+                         class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg cursor-pointer hover:from-emerald-700 hover:to-teal-700 transition-colors duration-200">
+                        <div class="flex items-center">
+                            <h2 class="text-xl font-semibold text-white mr-2">Todas las Asistencias</h2>
+                            <svg class="w-5 h-5 transform transition-transform text-white" 
+                                 :class="{'rotate-180': tablaAsistenciasAbierta}"
+                                 fill="none" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                    <div x-show="tablaAsistenciasAbierta" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform -translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 transform translate-y-0"
+                         x-transition:leave-end="opacity-0 transform -translate-y-4"
+                         class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-emerald-200">
                                 <thead class="bg-gradient-to-r from-emerald-600 to-teal-600">
