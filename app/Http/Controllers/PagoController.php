@@ -20,6 +20,7 @@ class PagoController extends Controller
         $mes = $request->input('mes', date('m'));
         $anio = $request->input('anio', date('Y'));
         $mostrarTodos = $request->input('mostrar_todos', false);
+        $metodoPago = $request->input('metodo_pago');
         
         // Crear query base con relaciones necesarias
         $query = Pago::with([
@@ -33,16 +34,55 @@ class PagoController extends Controller
             $query->where('id_usuario', $idUsuario);
         }
         
+        // Aplicar filtro por método de pago si está presente
+        if ($metodoPago) {
+            $query->whereHas('metodoPago', function($q) use ($metodoPago) {
+                $q->where('nombre_metodo', $metodoPago);
+            });
+        }
+        
         // Aplicar filtro por fecha de pago (mes y año) si no se seleccionó "mostrar todos"
         if (!$mostrarTodos) {
             $query->whereMonth('fecha_pago', $mes)
                   ->whereYear('fecha_pago', $anio);
         }
         
-        // Ejecutar la consulta ordenando por fecha de pago descendente
-        $pagos = $query->orderBy('fecha_pago', 'desc')
-                       ->paginate(10)
-                       ->appends($request->except('page'));
+        // Ejecutar la consulta ordenando por fecha de pago descendente - sin paginación
+        $pagos = $query->orderBy('fecha_pago', 'desc')->get();
+        
+        // Obtener el total de pagos
+        $totalPagos = $pagos->count();
+        
+        // Estadísticas de pagos
+        $estadisticasQuery = DB::table('pagos')
+            ->join('metodos_pago', 'pagos.id_metodo_pago', '=', 'metodos_pago.id_metodo_pago')
+            ->select(
+                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "tarjeta_credito" THEN pagos.monto ELSE 0 END) as total_tarjeta'),
+                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "efectivo" THEN pagos.monto ELSE 0 END) as total_efectivo'),
+                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "transferencia_bancaria" THEN pagos.monto ELSE 0 END) as total_transferencia'),
+                DB::raw('SUM(pagos.monto) as total_general'),
+                DB::raw('COUNT(CASE WHEN pagos.estado = "aprobado" THEN 1 END) as pagos_aprobados'),
+                DB::raw('COUNT(CASE WHEN pagos.estado = "pendiente" THEN 1 END) as pagos_pendientes')
+            );
+
+        // Aplicar filtros si no se seleccionó "mostrar todos"
+        if (!$mostrarTodos) {
+            $estadisticasQuery->whereMonth('fecha_pago', $mes)
+                            ->whereYear('fecha_pago', $anio);
+        }
+
+        if ($idUsuario) {
+            $estadisticasQuery->where('id_usuario', $idUsuario);
+        }
+
+        $estadisticas = $estadisticasQuery->first();
+
+        $montoTotalFormateado = number_format($estadisticas->total_general ?? 0, 2);
+        $pagosTarjeta = number_format($estadisticas->total_tarjeta ?? 0, 2);
+        $pagosEfectivo = number_format($estadisticas->total_efectivo ?? 0, 2);
+        $pagosTransferencia = number_format($estadisticas->total_transferencia ?? 0, 2);
+        $totalPagosAprobados = $estadisticas->pagos_aprobados ?? 0;
+        $totalPagosPendientes = $estadisticas->pagos_pendientes ?? 0;
         
         // Datos para los selectores de filtro
         $usuarios = User::all();
@@ -81,7 +121,14 @@ class PagoController extends Controller
             'mes', 
             'anio', 
             'meses', 
-            'anios'
+            'anios',
+            'pagosTarjeta',
+            'pagosEfectivo',
+            'pagosTransferencia',
+            'totalPagos',
+            'totalPagosAprobados',
+            'totalPagosPendientes',
+            'montoTotalFormateado'
         ));
     }
 

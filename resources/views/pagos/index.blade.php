@@ -5,6 +5,219 @@
     <div x-data="pagoData">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Tarjeta de Estadísticas de Pagos -->
+                <div class="mb-2 space-y-2">
+                    <!-- Primera fila de tarjetas -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <!-- Total de Pagos -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 to-green-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Total de Pagos
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Monto total de pagos</p>
+                                        <p class="text-2xl font-bold text-gray-800">${{ $montoTotalFormateado }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorMetodo(null)" class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 hover:text-green-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver todos los pagos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagos con Tarjeta de Crédito -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                    Tarjeta de Crédito
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Monto pagado</p>
+                                        <p class="text-2xl font-bold text-gray-800">${{ $pagosTarjeta }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorMetodo('tarjeta_credito')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 hover:text-blue-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver pagos con tarjeta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagos en Efectivo -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-yellow-500 to-amber-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                    Efectivo
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Monto pagado</p>
+                                        <p class="text-2xl font-bold text-gray-800">${{ $pagosEfectivo }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorMetodo('efectivo')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 hover:text-yellow-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver pagos en efectivo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda fila de tarjetas -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <!-- Pagos por Transferencia Bancaria -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                    </svg>
+                                    Transferencia
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Monto pagado</p>
+                                        <p class="text-2xl font-bold text-gray-800">${{ $pagosTransferencia }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorMetodo('transferencia_bancaria')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-purple-700 hover:text-purple-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver pagos por transferencia
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagos Aprobados -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Pagos Aprobados
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Total de pagos aprobados</p>
+                                        <p class="text-2xl font-bold text-gray-800">{{ $totalPagosAprobados }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorEstado('aprobado')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 hover:text-green-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver pagos aprobados
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagos Pendientes -->
+                        <div class="bg-gradient-to-br from-white to-emerald-50 rounded-lg shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-yellow-500 to-amber-500 px-2 py-1">
+                                <h3 class="text-white font-medium text-base flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Pagos Pendientes
+                                </h3>
+                            </div>
+                            <div class="p-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-xs mb-1">Total de pagos pendientes</p>
+                                        <p class="text-2xl font-bold text-gray-800">{{ $totalPagosPendientes }}</p>
+                                    </div>
+                                    <div class="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <button @click="filtrarPorEstado('pendiente')" class="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 hover:text-yellow-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Ver pagos pendientes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Panel de Filtros Colapsable -->
                 <div x-data="{ open: false }" class="mb-6 bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
                     <!-- Cabecera del panel de filtros -->
@@ -260,7 +473,7 @@
 
                 <!-- Paginación con estilo mejorado -->
                 <div class="mt-4">
-                    {{ $pagos->links() }}
+                    <!-- Eliminada la paginación ya que ahora mostramos todos los registros -->
                 </div>
 
                 <!-- Modal de Detalles del Pago -->
@@ -692,7 +905,138 @@
             isEditModalOpen: false,
             isDetallesModalOpen: false,
             currentPago: null,
-            pagos: @json($pagos->items()),
+            pagos: @json($pagos),
+            pagosFiltrados: @json($pagos),
+            
+            filtrarPorMetodo(metodo) {
+                if (metodo === null) {
+                    // Mostrar todos los pagos
+                    this.pagosFiltrados = this.pagos;
+                } else {
+                    // Filtrar pagos por método de pago
+                    this.pagosFiltrados = this.pagos.filter(pago => 
+                        pago.metodo_pago?.nombre_metodo === metodo
+                    );
+                }
+                
+                // Actualizar la tabla
+                this.actualizarTabla();
+            },
+            
+            filtrarPorEstado(estado) {
+                if (estado === null) {
+                    // Mostrar todos los pagos
+                    this.pagosFiltrados = this.pagos;
+                } else {
+                    // Filtrar pagos por estado
+                    this.pagosFiltrados = this.pagos.filter(pago => 
+                        pago.estado === estado
+                    );
+                }
+                
+                // Actualizar la tabla
+                this.actualizarTabla();
+            },
+            
+            actualizarTabla() {
+                const tbody = document.querySelector('table tbody');
+                tbody.innerHTML = '';
+                
+                this.pagosFiltrados.forEach(pago => {
+                    const tr = document.createElement('tr');
+                    
+                    // Usuario
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                ${pago.usuario?.name || 'Usuario no asignado'}
+                            </div>
+                        </td>`;
+                    
+                    // Membresía
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${pago.membresia?.tipo_membresia?.nombre || 'Membresía no asignada'}
+                            </div>
+                        </td>`;
+                    
+                    // Monto
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                $${parseFloat(pago.monto).toFixed(2)}
+                            </div>
+                        </td>`;
+                    
+                    // Método de pago
+                    const metodoPago = this.formatMetodoPago(pago.metodo_pago?.nombre_metodo);
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${metodoPago}
+                            </div>
+                        </td>`;
+                    
+                    // Estado
+                    const estadoClase = {
+                        'aprobado': 'bg-green-100 text-green-800',
+                        'pendiente': 'bg-yellow-100 text-yellow-800',
+                        'rechazado': 'bg-red-100 text-red-800'
+                    }[pago.estado] || 'bg-gray-100 text-gray-800';
+                    
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoClase}">
+                                ${pago.estado.charAt(0).toUpperCase() + pago.estado.slice(1)}
+                            </span>
+                        </td>`;
+                    
+                    // Fecha de pago
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${this.formatFecha(pago.fecha_pago)}
+                            </div>
+                        </td>`;
+                    
+                    // Acciones
+                    tr.innerHTML += `
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            ${pago.estado === 'pendiente' ? `
+                                <button type="button" @click="toggleDetallesModal(${pago.id_pago})"
+                                        class="text-blue-600 hover:text-blue-900 mr-2 inline-flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Ver Detalles
+                                </button>
+                            ` : ''}
+                            <button type="button" @click="toggleEditModal(${pago.id_pago})"
+                                    class="text-emerald-600 hover:text-emerald-900 inline-flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar
+                            </button>
+                            <form class="inline-block" action="/pagos/${pago.id_pago}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="ml-2 text-red-600 hover:text-red-900 inline-flex items-center"
+                                        onclick="return confirm('¿Estás seguro de que deseas eliminar este pago?')">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>`;
+                    
+                    tbody.appendChild(tr);
+                });
+            },
             
             toggleModal() {
                 this.isModalOpen = !this.isModalOpen;
