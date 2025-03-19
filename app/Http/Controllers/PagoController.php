@@ -9,23 +9,80 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PagoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pagos = Pago::with([
+        // Obtener los parámetros de filtro
+        $idUsuario = $request->input('id_usuario');
+        $mes = $request->input('mes', date('m'));
+        $anio = $request->input('anio', date('Y'));
+        $mostrarTodos = $request->input('mostrar_todos', false);
+        
+        // Crear query base con relaciones necesarias
+        $query = Pago::with([
             'membresia.tipoMembresia', 
             'usuario', 
             'metodoPago'
-        ])
-            ->orderBy('id_pago', 'desc')
-            ->paginate(10);
+        ]);
+        
+        // Aplicar filtro por usuario si está presente
+        if ($idUsuario) {
+            $query->where('id_usuario', $idUsuario);
+        }
+        
+        // Aplicar filtro por fecha de pago (mes y año) si no se seleccionó "mostrar todos"
+        if (!$mostrarTodos) {
+            $query->whereMonth('fecha_pago', $mes)
+                  ->whereYear('fecha_pago', $anio);
+        }
+        
+        // Ejecutar la consulta ordenando por fecha de pago descendente
+        $pagos = $query->orderBy('fecha_pago', 'desc')
+                       ->paginate(10)
+                       ->appends($request->except('page'));
+        
+        // Datos para los selectores de filtro
         $usuarios = User::all();
         $membresias = Membresia::with('tipoMembresia', 'usuario')->get();
         $metodosPago = MetodoPago::where('activo', true)->get();
         
-        return view('pagos.index', compact('pagos', 'usuarios', 'membresias', 'metodosPago'));
+        // Datos para el selector de mes
+        $meses = [
+            '01' => 'Enero',
+            '02' => 'Febrero',
+            '03' => 'Marzo',
+            '04' => 'Abril',
+            '05' => 'Mayo',
+            '06' => 'Junio',
+            '07' => 'Julio',
+            '08' => 'Agosto',
+            '09' => 'Septiembre',
+            '10' => 'Octubre',
+            '11' => 'Noviembre',
+            '12' => 'Diciembre',
+        ];
+        
+        // Datos para el selector de año (últimos 5 años)
+        $anioActual = date('Y');
+        $anios = [];
+        for ($i = $anioActual - 4; $i <= $anioActual + 1; $i++) {
+            $anios[] = $i;
+        }
+        
+        return view('pagos.index', compact(
+            'pagos', 
+            'usuarios', 
+            'membresias', 
+            'metodosPago', 
+            'idUsuario', 
+            'mes', 
+            'anio', 
+            'meses', 
+            'anios'
+        ));
     }
 
     public function create()
