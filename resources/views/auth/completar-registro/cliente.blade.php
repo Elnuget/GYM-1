@@ -60,6 +60,10 @@
                     } else if (currentStep === 2) {
                         if (!formElement.peso.value.trim()) camposFaltantes.push('Peso');
                         if (!formElement.altura.value.trim()) camposFaltantes.push('Altura');
+                    } else if (currentStep === 3) {
+                        if (!formElement.objetivo_principal.value) camposFaltantes.push('Objetivo Principal');
+                        if (!formElement.nivel_experiencia.value) camposFaltantes.push('Nivel de Experiencia');
+                        if (!formElement.dias_entrenamiento.value) camposFaltantes.push('Días de Entrenamiento');
                     }
                     
                     if (camposFaltantes.length > 0) {
@@ -91,7 +95,7 @@
                             
                             setTimeout(() => {
                                 this.showSuccessModal = false;
-                                if (currentStep < 3) {
+                                if (currentStep < 4) {
                                     this.step = currentStep + 1;
                                 }
                             }, 1500);
@@ -166,6 +170,15 @@
                                     </div>
                                     <div class="ml-2 flex-1">
                                         <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="h-1 w-full mt-2"></div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm">4</span>
+                                    </div>
+                                    <div class="ml-2 flex-1">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
                                     </div>
                                 </div>
                             </div>
@@ -200,8 +213,19 @@
                                     <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-10 h-10 rounded-full">
                                         <span class="text-white font-bold">3</span>
                                     </div>
-                                    <div class="ml-2">
+                                    <div class="ml-2 mr-8">
                                         <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
+                                    </div>
+                                </div>
+                                
+                                <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="flex-1 h-1"></div>
+                                
+                                <div class="flex items-center relative">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold">4</span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
                                     </div>
                                 </div>
                             </div>
@@ -214,10 +238,9 @@
                         // Validar campos requeridos antes de enviar
                         let camposFaltantes = [];
                         
-                        if (step === 3) {
-                            if (!$event.target.objetivo_principal.value) camposFaltantes.push('Objetivo Principal');
-                            if (!$event.target.nivel_experiencia.value) camposFaltantes.push('Nivel de Experiencia');
-                            if (!$event.target.dias_entrenamiento.value) camposFaltantes.push('Días de Entrenamiento');
+                        if (step === 4) {
+                            if (!$event.target.id_tipo_membresia.value) camposFaltantes.push('Tipo de Membresía');
+                            if (!$event.target.fecha_compra.value) camposFaltantes.push('Fecha de Compra');
                         }
                         
                         if (camposFaltantes.length > 0) {
@@ -484,6 +507,61 @@
                             
                             <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
                                 <button type="button" x-on:click="step = 2" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Anterior
+                                </button>
+                                <button type="button" x-on:click="saveStep(3)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Guardar y Continuar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 4: Membresía -->
+                        <div x-show="step === 4" style="display: none;">
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Selección de Membresía</h2>
+                            
+                            <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Selecciona la membresía que mejor se adapte a tus necesidades.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <!-- Tipo de Membresía -->
+                                <div class="md:col-span-2">
+                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía *')" />
+                                    <select id="id_tipo_membresia" name="id_tipo_membresia" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                        <option value="" selected disabled>Selecciona un tipo de membresía</option>
+                                        @foreach(\App\Models\TipoMembresia::all() as $tipoMembresia)
+                                            <option value="{{ $tipoMembresia->id_tipo_membresia }}" {{ old('id_tipo_membresia') == $tipoMembresia->id_tipo_membresia ? 'selected' : '' }}>
+                                                {{ $tipoMembresia->nombre }} - {{ $tipoMembresia->gimnasio->nombre }} - ${{ number_format($tipoMembresia->precio, 2) }} - {{ $tipoMembresia->duracion_dias }} días
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-2" />
+                                </div>
+                                
+                                <!-- Fecha de Compra -->
+                                <div>
+                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra *')" />
+                                    <x-text-input id="fecha_compra" class="block mt-1 w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" required />
+                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-2" />
+                                </div>
+                                
+                                <!-- Saldo Pendiente -->
+                                <div>
+                                    <x-input-label for="saldo_pendiente" :value="__('Saldo Pendiente')" />
+                                    <x-text-input id="saldo_pendiente" class="block mt-1 w-full" type="number" step="0.01" name="saldo_pendiente" :value="old('saldo_pendiente', 0)" />
+                                    <x-input-error :messages="$errors->get('saldo_pendiente')" class="mt-2" />
+                                </div>
+                                
+                                <!-- Renovación Automática -->
+                                <div class="md:col-span-2">
+                                    <div class="flex items-center mt-4">
+                                        <input id="renovacion" name="renovacion" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('renovacion') ? 'checked' : '' }}>
+                                        <label for="renovacion" class="ml-2 text-sm text-gray-600">Habilitar renovación automática</label>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-2" />
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
+                                <button type="button" x-on:click="step = 3" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Anterior
                                 </button>
                                 <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
