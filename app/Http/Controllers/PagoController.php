@@ -48,7 +48,7 @@ class PagoController extends Controller
         }
         
         // Ejecutar la consulta ordenando por fecha de pago descendente - sin paginación
-        $pagos = $query->orderBy('fecha_pago', 'desc')->get();
+        $pagos = $query->orderBy('id_pago', 'desc')->get();
         
         // Obtener el total de pagos
         $totalPagos = $pagos->count();
