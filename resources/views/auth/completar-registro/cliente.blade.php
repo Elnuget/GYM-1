@@ -553,8 +553,16 @@
                                             const duracion = option.dataset.duracion || 0;
                                             this.nombreTipo = option.textContent || '';
                                             
-                                            // Mostrar campos de visitas si corresponde
-                                            this.showVisitasFields = this.nombreTipo.toLowerCase().includes('visita');
+                                            // Verificar si es una membresía por visitas
+                                            // Comprobar tanto por el nombre como por el atributo de visitas
+                                            const tieneVisitas = parseInt(option.dataset.visitas) > 0;
+                                            const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
+                                            this.showVisitasFields = tieneVisitas || nombreContieneVisita;
+                                            
+                                            // Si es membresía por visitas, establecer el valor predeterminado
+                                            if (this.showVisitasFields && option.dataset.visitas) {
+                                                document.getElementById('visitas_permitidas').value = option.dataset.visitas;
+                                            }
                                             
                                             // Calcular fecha de vencimiento
                                             if (fechaCompra && duracion) {
