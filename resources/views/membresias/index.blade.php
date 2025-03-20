@@ -237,7 +237,7 @@
                                     <div>
                                         <select name="id_usuario" onchange="this.form.submit()" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                             <option value="">Seleccionar cliente...</option>
-                                            @foreach($usuarios->sortBy('name') as $usuario)
+                                            @foreach($usuarios->sortByDesc('id') as $usuario)
                                             @php
                                             $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
                                             @endphp
@@ -518,8 +518,13 @@
                                                 <label for="id_usuario" class="block text-sm font-medium text-gray-700">Usuario</label>
                                                 <select id="id_usuario" name="id_usuario" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                     <option value="">Selecciona un usuario</option>
-                                                    @foreach($usuarios as $usuario)
-                                                        <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                                    @foreach($usuarios->sortByDesc('id') as $usuario)
+                                                        @php
+                                                        $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
+                                                        @endphp
+                                                        <option value="{{ $usuario->id }}">
+                                                            {{ $usuario->name }} - {{ $gimnasioNombre }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                                 <div id="id_usuario-error" class="text-red-500 text-xs mt-1"></div>
@@ -552,19 +557,23 @@
                                             <!-- Fecha de Compra -->
                                             <div>
                                                 <label for="fecha_compra" class="block text-sm font-medium text-gray-700">Fecha de Compra</label>
-                                                <input type="date" id="fecha_compra" name="fecha_compra" required @change="calcularVencimiento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <input type="date" id="fecha_compra" name="fecha_compra" required @change="calcularVencimiento" 
+                                                    value="{{ date('Y-m-d') }}"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                 <div id="fecha_compra-error" class="text-red-500 text-xs mt-1"></div>
                                             </div>
 
                                             <!-- Fecha de Vencimiento -->
                                             <div>
                                                 <label for="fecha_vencimiento" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                                                <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" required readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" required 
+                                                    value="{{ date('Y-m-d') }}"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                 <div id="fecha_vencimiento-error" class="text-red-500 text-xs mt-1"></div>
                                             </div>
 
                                             <!-- Visitas Permitidas -->
-                                            <div>
+                                            <div x-show="nombreTipo && nombreTipo.includes('visita')">
                                                 <label for="visitas_permitidas" class="block text-sm font-medium text-gray-700">Visitas Permitidas</label>
                                                 <input type="number" id="visitas_permitidas" name="visitas_permitidas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                 <div id="visitas_permitidas-error" class="text-red-500 text-xs mt-1"></div>
@@ -573,7 +582,7 @@
                                             <!-- Renovación -->
                                             <div class="flex items-start">
                                                 <div class="flex items-center h-5">
-                                                    <input type="checkbox" id="renovacion" name="renovacion" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                                    <input type="checkbox" id="renovacion" name="renovacion" value="1" checked class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                                 </div>
                                                 <div class="ml-3 text-sm">
                                                     <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
@@ -807,6 +816,7 @@
                 precioTotal: 0,
                 saldoPendiente: 0,
                 montoPago: 0,
+                nombreTipo: null,
                 
                 nextStep() {
                     if (this.validateStep1()) {
@@ -919,6 +929,7 @@
                         const precio = option.dataset.precio;
                         const duracionDias = option.dataset.duracion;
                         const numeroVisitas = option.dataset.visitas;
+                        this.nombreTipo = option.textContent.toLowerCase();
                         
                         // Establecer precio total y saldo pendiente
                         this.precioTotal = parseFloat(precio);
@@ -932,14 +943,20 @@
                         }
                         
                         // Calcular fecha de vencimiento
-                        if (duracionDias && fechaVencimiento) {
-                            const fecha = new Date(fechaCompra.value);
-                            fecha.setDate(fecha.getDate() + parseInt(duracionDias));
-                            fechaVencimiento.value = fecha.toISOString().split('T')[0];
+                        if (fechaVencimiento) {
+                            if (this.nombreTipo.includes('visita')) {
+                                // Si es membresía por visitas, mantener la fecha actual
+                                fechaVencimiento.value = new Date().toISOString().split('T')[0];
+                            } else if (duracionDias) {
+                                // Para otros tipos de membresía, calcular según la duración
+                                const fecha = new Date(fechaCompra.value);
+                                fecha.setDate(fecha.getDate() + parseInt(duracionDias));
+                                fechaVencimiento.value = fecha.toISOString().split('T')[0];
+                            }
                         }
                         
                         // Establecer número de visitas si aplica
-                        if (numeroVisitas && visitasPermitidas) {
+                        if (numeroVisitas && visitasPermitidas && this.nombreTipo.includes('visita')) {
                             visitasPermitidas.value = numeroVisitas;
                         }
                     }
