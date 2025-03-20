@@ -517,55 +517,129 @@
                         
                         <!-- Paso 4: Membresía -->
                         <div x-show="step === 4" style="display: none;">
-                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Selección de Membresía</h2>
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Membresía</h2>
                             
-                            <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Selecciona la membresía que mejor se adapte a tus necesidades.</p>
+                            <div class="mb-6">
+                                <!-- Indicador de pasos para la membresía -->
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
+                                        <span class="text-white font-bold text-sm">1</span>
+                                    </div>
+                                    <div class="ml-2 text-emerald-500 font-medium">MEMBRESÍA</div>
+                                    <div class="mx-4 h-1 w-24 bg-gray-200"></div>
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300">
+                                        <span class="text-white font-bold text-sm">2</span>
+                                    </div>
+                                    <div class="ml-2 text-gray-500">PAGO</div>
+                                </div>
+                            </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div class="grid grid-cols-1 gap-6" x-data="{
+                                precioTotal: 0,
+                                nombreTipo: '',
+                                showVisitasFields: false,
+                                
+                                calcularVencimiento() {
+                                    const selectTipo = document.getElementById('id_tipo_membresia');
+                                    const fechaCompra = document.getElementById('fecha_compra').value;
+                                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+                                    
+                                    if (selectTipo && fechaCompra) {
+                                        const option = selectTipo.options[selectTipo.selectedIndex];
+                                        
+                                        if (option) {
+                                            // Obtener precio y duración
+                                            this.precioTotal = option.dataset.precio || 0;
+                                            const duracion = option.dataset.duracion || 0;
+                                            this.nombreTipo = option.textContent || '';
+                                            
+                                            // Mostrar campos de visitas si corresponde
+                                            this.showVisitasFields = this.nombreTipo.toLowerCase().includes('visita');
+                                            
+                                            // Calcular fecha de vencimiento
+                                            if (fechaCompra && duracion) {
+                                                const date = new Date(fechaCompra);
+                                                date.setDate(date.getDate() + parseInt(duracion));
+                                                
+                                                // Formatear fecha YYYY-MM-DD
+                                                const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+                                                const dia = date.getDate().toString().padStart(2, '0');
+                                                fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }">
+                                <!-- Usuario (oculto y fijo para el usuario actual) -->
+                                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+                                
                                 <!-- Tipo de Membresía -->
-                                <div class="md:col-span-2">
-                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía *')" />
-                                    <select id="id_tipo_membresia" name="id_tipo_membresia" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                        <option value="" selected disabled>Selecciona un tipo de membresía</option>
-                                        @foreach(\App\Models\TipoMembresia::all() as $tipoMembresia)
-                                            <option value="{{ $tipoMembresia->id_tipo_membresia }}" {{ old('id_tipo_membresia') == $tipoMembresia->id_tipo_membresia ? 'selected' : '' }}>
-                                                {{ $tipoMembresia->nombre }} - {{ $tipoMembresia->gimnasio->nombre }} - ${{ number_format($tipoMembresia->precio, 2) }} - {{ $tipoMembresia->duracion_dias }} días
+                                <div>
+                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <option value="" selected disabled>Selecciona un tipo</option>
+                                        @foreach(\App\Models\TipoMembresia::all() as $tipo)
+                                            <option value="{{ $tipo->id_tipo_membresia }}" 
+                                                    data-precio="{{ $tipo->precio }}"
+                                                    data-duracion="{{ $tipo->duracion_dias }}"
+                                                    data-visitas="{{ $tipo->numero_visitas }}"
+                                                    {{ old('id_tipo_membresia') == $tipo->id_tipo_membresia ? 'selected' : '' }}>
+                                                {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-2" />
+                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Precio Total -->
+                                <div>
+                                    <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" x-model="precioTotal" readonly />
+                                    <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
                                 </div>
                                 
                                 <!-- Fecha de Compra -->
                                 <div>
-                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra *')" />
-                                    <x-text-input id="fecha_compra" class="block mt-1 w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" required />
-                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-2" />
+                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
+                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
                                 </div>
                                 
-                                <!-- Saldo Pendiente -->
+                                <!-- Fecha de Vencimiento -->
                                 <div>
-                                    <x-input-label for="saldo_pendiente" :value="__('Saldo Pendiente')" />
-                                    <x-text-input id="saldo_pendiente" class="block mt-1 w-full" type="number" step="0.01" name="saldo_pendiente" :value="old('saldo_pendiente', 0)" />
-                                    <x-input-error :messages="$errors->get('saldo_pendiente')" class="mt-2" />
+                                    <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
+                                    <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
                                 </div>
                                 
-                                <!-- Renovación Automática -->
-                                <div class="md:col-span-2">
-                                    <div class="flex items-center mt-4">
-                                        <input id="renovacion" name="renovacion" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('renovacion') ? 'checked' : '' }}>
-                                        <label for="renovacion" class="ml-2 text-sm text-gray-600">Habilitar renovación automática</label>
+                                <!-- Visitas Permitidas - Solo visible para membresías por visitas -->
+                                <div x-show="showVisitasFields">
+                                    <x-input-label for="visitas_permitidas" :value="__('Visitas Permitidas')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="visitas_permitidas" class="block w-full" type="number" name="visitas_permitidas" :value="old('visitas_permitidas')" min="1" />
+                                    <x-input-error :messages="$errors->get('visitas_permitidas')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Renovación -->
+                                <div>
+                                    <div class="flex items-start">
+                                        <div class="flex items-center h-5">
+                                            <input id="renovacion" name="renovacion" type="checkbox" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" {{ old('renovacion') ? 'checked' : '' }} checked>
+                                        </div>
+                                        <div class="ml-3 text-sm">
+                                            <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
+                                            <p class="text-gray-500">Marcar si es una renovación de membresía</p>
+                                        </div>
                                     </div>
-                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-2" />
+                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-1" />
                                 </div>
                             </div>
                             
-                            <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
-                                <button type="button" x-on:click="step = 3" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    Anterior
+                            <div class="flex justify-between mt-8">
+                                <button type="button" x-on:click="step = 3" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
+                                    Cancelar
                                 </button>
-                                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    Finalizar Registro
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+                                    Siguiente
                                 </button>
                             </div>
                         </div>
