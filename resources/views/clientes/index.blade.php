@@ -364,7 +364,9 @@
                                             notificationType = 'success';
                                             notificationMessage = data.message || '¡Cliente creado exitosamente!';
                                             setTimeout(() => {
-                                                window.location.reload();
+                                                // Redirigir a la página de membresías con el cliente seleccionado y modal abierto
+                                                const nuevoClienteId = data.cliente_id;
+                                                window.location.href = '/membresias?id_usuario=' + nuevoClienteId + '&open_modal=true';
                                             }, 2000);
                                         } else {
                                             notificationType = 'error';

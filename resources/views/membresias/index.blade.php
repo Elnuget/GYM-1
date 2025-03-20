@@ -72,7 +72,32 @@
                 }
             }
         }
-    }">
+    }"
+        x-init="
+            // Verificar si debemos abrir el modal al cargar la página
+            $nextTick(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const openModal = urlParams.get('open_modal');
+                const idUsuario = urlParams.get('id_usuario');
+                if (openModal === 'true') {
+                    isModalOpen = true;
+                    console.log('Abriendo modal automáticamente');
+                    
+                    // Si también viene un id_usuario, seleccionarlo automáticamente en el dropdown
+                    if (idUsuario) {
+                        setTimeout(() => {
+                            const selectUsuario = document.getElementById('id_usuario');
+                            if (selectUsuario) {
+                                selectUsuario.value = idUsuario;
+                                // Disparar evento de cambio para activar cualquier listeners
+                                selectUsuario.dispatchEvent(new Event('change'));
+                                console.log('Usuario seleccionado automáticamente:', idUsuario);
+                            }
+                        }, 200);
+                    }
+                }
+            });
+        ">
 
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
 
@@ -1077,6 +1102,40 @@
                 
                 // Generar y descargar archivo
                 XLSX.writeFile(wb, `${fileName}_${formattedDate}.xlsx`);
+            }
+        });
+    </script>
+
+    <script>
+        // Script para abrir el modal automáticamente si el parámetro está presente en la URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const openModal = urlParams.get('open_modal');
+            const idUsuario = urlParams.get('id_usuario');
+            
+            if (openModal === 'true') {
+                // Pequeño retraso para asegurar que Alpine.js ha inicializado completamente
+                setTimeout(() => {
+                    // Buscar el componente Alpine y activar el modal
+                    const appElement = document.querySelector('[x-data]');
+                    if (appElement && appElement.__x) {
+                        appElement.__x.$data.isModalOpen = true;
+                        console.log('Modal abierto mediante script externo');
+                        
+                        // Si también viene un id_usuario, seleccionarlo automáticamente en el dropdown
+                        if (idUsuario) {
+                            setTimeout(() => {
+                                const selectUsuario = document.getElementById('id_usuario');
+                                if (selectUsuario) {
+                                    selectUsuario.value = idUsuario;
+                                    // Disparar evento de cambio para activar cualquier listeners
+                                    selectUsuario.dispatchEvent(new Event('change'));
+                                    console.log('Usuario seleccionado automáticamente:', idUsuario);
+                                }
+                            }, 200);
+                        }
+                    }
+                }, 100);
             }
         });
     </script>

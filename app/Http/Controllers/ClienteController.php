@@ -87,7 +87,8 @@ class ClienteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Cliente {$cliente->nombre} creado exitosamente.\nSe ha creado una cuenta con el email: {$cliente->email}\nContraseña: gymflow2025"
+                'message' => "Cliente {$cliente->nombre} creado exitosamente.\nSe ha creado una cuenta con el email: {$cliente->email}\nContraseña: gymflow2025",
+                'cliente_id' => $user->id
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
