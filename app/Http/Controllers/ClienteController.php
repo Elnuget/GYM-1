@@ -197,16 +197,46 @@ class ClienteController extends Controller
         try {
             DB::beginTransaction();
 
-            // Primero eliminamos las medidas corporales relacionadas
-            $cliente->medidasCorporales()->delete();
-            
-            // Si hay un usuario asociado, también lo eliminamos
+            // Si el cliente tiene un usuario asociado
             if ($cliente->user_id) {
-                User::find($cliente->user_id)->delete();
+                $user = User::find($cliente->user_id);
+                
+                if ($user) {
+                    // Buscar todas las membresías del usuario
+                    $membresias = Membresia::where('id_usuario', $user->id)->get();
+                    
+                    // Para cada membresía, eliminar primero sus pagos
+                    foreach ($membresias as $membresia) {
+                        // Eliminar los pagos asociados a la membresía
+                        \App\Models\Pago::where('id_membresia', $membresia->id_membresia)->delete();
+                        
+                        // Eliminar la membresía
+                        $membresia->delete();
+                    }
+                    
+                    // Eliminar medidas corporales
+                    $cliente->medidasCorporales()->delete();
+                    
+                    // Eliminar objetivos (si existen)
+                    if (class_exists('\App\Models\ObjetivoCliente')) {
+                        \App\Models\ObjetivoCliente::where('cliente_id', $cliente->id_cliente)->delete();
+                    }
+                    
+                    // Eliminar asistencias del cliente (si existen)
+                    if (class_exists('\App\Models\Asistencia')) {
+                        \App\Models\Asistencia::where('cliente_id', $cliente->id_cliente)->delete();
+                    }
+                    
+                    // Eliminar el cliente
+                    $cliente->delete();
+                    
+                    // Eliminar el usuario
+                    $user->delete();
+                }
+            } else {
+                // Si no hay usuario asociado, simplemente eliminamos el cliente
+                $cliente->delete();
             }
-            
-            // Luego eliminamos el cliente
-            $cliente->delete();
 
             DB::commit();
 

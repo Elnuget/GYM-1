@@ -896,7 +896,7 @@
                                 confirmButtonText: 'Aceptar',
                                 confirmButtonColor: '#059669'
                             }).then(() => {
-                                window.location.reload();
+                                window.location.href = '/membresias';
                             });
                         } else {
                             let errorMessage = result.message || 'Error al crear la membresía';
