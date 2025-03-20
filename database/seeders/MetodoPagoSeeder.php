@@ -11,13 +11,14 @@ class MetodoPagoSeeder extends Seeder
     {
         $metodos = [
             [
-                'nombre_metodo' => 'tarjeta_credito',
-                'descripcion' => 'Pago con tarjeta de crédito',
-                'activo' => true
-            ],
-            [
                 'nombre_metodo' => 'efectivo',
                 'descripcion' => 'Pago en efectivo',
+                'activo' => true
+                
+            ],
+            [
+                'nombre_metodo' => 'tarjeta_credito',
+                'descripcion' => 'Pago con tarjeta de crédito',
                 'activo' => true
             ],
             [

@@ -6,7 +6,9 @@ use App\Models\Membresia;
 use App\Models\User;
 use App\Models\TipoMembresia;
 use App\Models\MetodoPago;
+use App\Models\Pago;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MembresiaController extends Controller
 {
@@ -156,25 +158,97 @@ class MembresiaController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'id_usuario' => 'required|exists:users,id',
-            'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
-            'precio_total' => 'required|numeric|min:0',
-            'saldo_pendiente' => 'required|numeric|min:0',
-            'fecha_compra' => 'required|date',
-            'fecha_vencimiento' => 'required|date|after:fecha_compra',
-            'visitas_permitidas' => 'nullable|integer',
-            'renovacion' => 'boolean'
-        ]);
+        try {
+            $validated = $request->validate([
+                'id_usuario' => 'required|exists:users,id',
+                'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
+                'precio_total' => 'required|numeric|min:0',
+                'saldo_pendiente' => 'required|numeric|min:0',
+                'fecha_compra' => 'required|date',
+                'fecha_vencimiento' => 'required|date|after:fecha_compra',
+                'visitas_permitidas' => 'nullable|integer',
+                'renovacion' => 'boolean',
+                // Campos del pago
+                'monto_pago' => 'required|numeric|min:0',
+                'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
+                'estado_pago' => 'required|in:pendiente,aprobado,rechazado',
+                'notas' => 'nullable|string|max:255',
+                'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
+            ]);
 
-        if ($validated['visitas_permitidas']) {
-            $validated['visitas_restantes'] = $validated['visitas_permitidas'];
+            DB::beginTransaction();
+
+            // Crear la membresía
+            if ($validated['visitas_permitidas']) {
+                $validated['visitas_restantes'] = $validated['visitas_permitidas'];
+            }
+
+            $membresia = Membresia::create([
+                'id_usuario' => $validated['id_usuario'],
+                'id_tipo_membresia' => $validated['id_tipo_membresia'],
+                'precio_total' => $validated['precio_total'],
+                'saldo_pendiente' => $validated['saldo_pendiente'],
+                'fecha_compra' => $validated['fecha_compra'],
+                'fecha_vencimiento' => $validated['fecha_vencimiento'],
+                'visitas_permitidas' => $validated['visitas_permitidas'] ?? null,
+                'visitas_restantes' => $validated['visitas_restantes'] ?? null,
+                'renovacion' => $validated['renovacion'] ?? false
+            ]);
+
+            // Crear el pago
+            $pago = new Pago();
+            $pago->id_membresia = $membresia->id_membresia;
+            $pago->id_usuario = $validated['id_usuario'];
+            $pago->monto = $validated['monto_pago'];
+            $pago->fecha_pago = now();
+            $pago->estado = $validated['estado_pago'];
+            $pago->id_metodo_pago = $validated['id_metodo_pago'];
+            $pago->notas = $validated['notas'] ?? null;
+
+            // Si hay comprobante, guardarlo
+            if ($request->hasFile('comprobante')) {
+                $file = $request->file('comprobante');
+                $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('comprobantes', $filename, 'public');
+                $pago->comprobante_url = $path;
+            }
+
+            // Si el pago es aprobado, establecer la fecha de aprobación
+            if ($pago->estado === 'aprobado') {
+                $pago->fecha_aprobacion = now();
+                // Actualizar el saldo pendiente de la membresía
+                $membresia->saldo_pendiente = max(0, $membresia->saldo_pendiente - $pago->monto);
+                $membresia->save();
+            }
+
+            $pago->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Membresía y pago creados exitosamente',
+                'data' => [
+                    'membresia' => $membresia,
+                    'pago' => $pago
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la membresía y el pago',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        Membresia::create($validated);
-
-        return redirect()->route('membresias.index')
-            ->with('success', 'Membresía creada exitosamente');
     }
 
     public function edit(Membresia $membresia)

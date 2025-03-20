@@ -144,26 +144,36 @@ class PagoController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'id_membresia' => 'required|exists:membresias,id_membresia',
-            'id_usuario' => 'required|exists:users,id',
-            'monto' => 'required|numeric|min:0',
-            'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
-            'estado_pago' => 'required|in:pendiente,aprobado,rechazado',
-            'notas' => 'nullable|string|max:255',
-            'fecha_pago' => 'nullable|date'
-        ]);
-
-        DB::beginTransaction();
         try {
+            $validated = $request->validate([
+                'id_membresia' => 'required|exists:membresias,id_membresia',
+                'id_usuario' => 'required|exists:users,id',
+                'monto' => 'required|numeric|min:0',
+                'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
+                'estado_pago' => 'required|in:pendiente,aprobado,rechazado',
+                'notas' => 'nullable|string|max:255',
+                'fecha_pago' => 'nullable|date',
+                'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
+            ]);
+
+            DB::beginTransaction();
+
             $pago = new Pago();
-            $pago->id_membresia = $request->id_membresia;
-            $pago->id_usuario = $request->id_usuario;
-            $pago->monto = $request->monto;
-            $pago->id_metodo_pago = $request->id_metodo_pago;
-            $pago->estado = $request->estado_pago;
-            $pago->notas = $request->notas;
-            $pago->fecha_pago = $request->fecha_pago ?? now();
+            $pago->id_membresia = $validated['id_membresia'];
+            $pago->id_usuario = $validated['id_usuario'];
+            $pago->monto = $validated['monto'];
+            $pago->id_metodo_pago = $validated['id_metodo_pago'];
+            $pago->estado = $validated['estado_pago'];
+            $pago->notas = $validated['notas'] ?? null;
+            $pago->fecha_pago = $validated['fecha_pago'] ?? now();
+            
+            // Si hay comprobante, guardarlo
+            if ($request->hasFile('comprobante')) {
+                $file = $request->file('comprobante');
+                $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('comprobantes', $filename, 'public');
+                $pago->comprobante_url = $path;
+            }
             
             // Si el estado es aprobado, establecer la fecha de aprobación
             if ($pago->estado === 'aprobado') {
@@ -175,7 +185,7 @@ class PagoController extends Controller
             
             // Si el estado es aprobado, actualizar el saldo pendiente de la membresía
             if ($pago->estado === 'aprobado') {
-                $membresia = Membresia::findOrFail($request->id_membresia);
+                $membresia = Membresia::findOrFail($validated['id_membresia']);
                 $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
                 
                 // Asegurarse de que el saldo no sea negativo
@@ -184,10 +194,30 @@ class PagoController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Pago registrado correctamente');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago registrado correctamente',
+                'data' => [
+                    'pago' => $pago,
+                    'membresia' => $membresia ?? null
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error al registrar el pago: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar el pago',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -201,38 +231,73 @@ class PagoController extends Controller
 
     public function update(Request $request, Pago $pago)
     {
-        $validated = $request->validate([
-            'id_membresia' => 'required|exists:membresias,id_membresia',
-            'id_usuario' => 'required|exists:users,id',
-            'monto' => 'required|numeric|min:0',
-            'fecha_pago' => 'required|date',
-            'estado' => 'required|in:pendiente,aprobado,rechazado',
-            'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
-            'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB máx
-            'notas' => 'nullable|string',
-            'fecha_aprobacion' => 'nullable|date'
-        ]);
+        try {
+            $validated = $request->validate([
+                'id_membresia' => 'required|exists:membresias,id_membresia',
+                'id_usuario' => 'required|exists:users,id',
+                'monto' => 'required|numeric|min:0',
+                'fecha_pago' => 'required|date',
+                'estado' => 'required|in:pendiente,aprobado,rechazado',
+                'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
+                'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+                'notas' => 'nullable|string',
+                'fecha_aprobacion' => 'nullable|date'
+            ]);
 
-        if ($request->hasFile('comprobante')) {
-            // Eliminar el archivo antiguo si existe
-            if ($pago->comprobante_url && Storage::disk('public')->exists($pago->comprobante_url)) {
-                Storage::disk('public')->delete($pago->comprobante_url);
+            DB::beginTransaction();
+
+            if ($request->hasFile('comprobante')) {
+                // Eliminar el archivo antiguo si existe
+                if ($pago->comprobante_url && Storage::disk('public')->exists($pago->comprobante_url)) {
+                    Storage::disk('public')->delete($pago->comprobante_url);
+                }
+                
+                $file = $request->file('comprobante');
+                $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('comprobantes', $filename, 'public');
+                $validated['comprobante_url'] = $path;
             }
-            
-            $file = $request->file('comprobante');
-            $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('comprobantes', $filename, 'public');
-            $validated['comprobante_url'] = $path;
+
+            if ($validated['estado'] === 'aprobado' && !$pago->fecha_aprobacion) {
+                $validated['fecha_aprobacion'] = now();
+            }
+
+            // Si el estado cambia a aprobado, actualizar el saldo pendiente de la membresía
+            if ($validated['estado'] === 'aprobado' && $pago->estado !== 'aprobado') {
+                $membresia = Membresia::findOrFail($validated['id_membresia']);
+                $nuevoSaldo = $membresia->saldo_pendiente - $validated['monto'];
+                $membresia->saldo_pendiente = max(0, $nuevoSaldo);
+                $membresia->save();
+            }
+
+            $pago->update($validated);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago actualizado correctamente',
+                'data' => [
+                    'pago' => $pago,
+                    'membresia' => $membresia ?? null
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el pago',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($validated['estado'] === 'aprobado' && !$pago->fecha_aprobacion) {
-            $validated['fecha_aprobacion'] = now();
-        }
-
-        $pago->update($validated);
-
-        return redirect()->route('pagos.index')
-            ->with('success', 'Pago actualizado exitosamente');
     }
 
     /**
@@ -241,7 +306,10 @@ class PagoController extends Controller
     public function aprobar(Pago $pago)
     {
         if ($pago->estado !== 'pendiente') {
-            return redirect()->back()->with('error', 'Solo se pueden aprobar pagos pendientes');
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden aprobar pagos pendientes'
+            ], 422);
         }
 
         DB::beginTransaction();
@@ -252,18 +320,29 @@ class PagoController extends Controller
             $pago->save();
 
             // Actualizar el saldo pendiente de la membresía
-            $membresia = $pago->membresia;
+            $membresia = Membresia::findOrFail($pago->id_membresia);
             $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
-            
-            // Asegurarse de que el saldo no sea negativo
             $membresia->saldo_pendiente = max(0, $nuevoSaldo);
             $membresia->save();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Pago aprobado correctamente');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago aprobado correctamente',
+                'data' => [
+                    'pago' => $pago,
+                    'membresia' => $membresia
+                ]
+            ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error al aprobar el pago: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al aprobar el pago',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -272,15 +351,40 @@ class PagoController extends Controller
      */
     public function destroy(Pago $pago)
     {
-        if ($pago->estado !== 'pendiente') {
-            return redirect()->back()->with('error', 'Solo se pueden eliminar pagos pendientes');
-        }
-
         try {
+            DB::beginTransaction();
+
+            // Si el pago estaba aprobado, revertir el saldo pendiente de la membresía
+            if ($pago->estado === 'aprobado') {
+                $membresia = Membresia::findOrFail($pago->id_membresia);
+                $membresia->saldo_pendiente += $pago->monto;
+                $membresia->save();
+            }
+
+            // Eliminar el comprobante si existe
+            if ($pago->comprobante_url && Storage::disk('public')->exists($pago->comprobante_url)) {
+                Storage::disk('public')->delete($pago->comprobante_url);
+            }
+
             $pago->delete();
-            return redirect()->back()->with('success', 'Pago eliminado correctamente');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago eliminado correctamente',
+                'data' => [
+                    'membresia' => $membresia ?? null
+                ]
+            ]);
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al eliminar el pago: ' . $e->getMessage());
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el pago',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -4,8 +4,18 @@
         isPagoModalOpen: false,
         currentMembresia: null,
         showVisitasFields: false,
+        currentStep: 1,
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
+            if (!this.isModalOpen) {
+                this.currentStep = 1;
+            }
+        },
+        nextStep() {
+            this.currentStep = 2;
+        },
+        prevStep() {
+            this.currentStep = 1;
         },
         toggleVisitasFields() {
             this.showVisitasFields = document.getElementById('tipo_membresia').value === 'por_visitas';
@@ -469,100 +479,195 @@
                     </div>
                 </div>
 
-                <!-- Modal de Nueva Membresía -->
-                <div x-show="isModalOpen"
-                    class="fixed inset-0 z-50 overflow-y-auto"
-                    style="display: none;">
-                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <!-- Modal para crear membresía -->
+                <div x-show="isModalOpen" class="fixed inset-0 overflow-y-auto z-50" x-cloak>
                     <div class="flex items-center justify-center min-h-screen p-4">
-                        <div class="relative bg-gradient-to-br from-white to-emerald-50 rounded-xl max-w-md w-full shadow-xl">
-                            <div class="p-6">
-                                <h2 class="text-lg font-medium text-gray-900 mb-4">
-                                    Nueva Membresía
-                                </h2>
-                                <form action="{{ route('membresias.store') }}" method="POST">
-                                    @csrf
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Cliente</label>
-                                        <select name="id_usuario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($usuarios->sortByDesc('id') as $usuario)
-                                            @php
-                                            $gimnasioNombre = isset($usuario->cliente) && isset($usuario->cliente->gimnasio) ? $usuario->cliente->gimnasio->nombre : 'Sin gimnasio';
-                                            @endphp
-                                            <option value="{{ $usuario->id }}">{{ $usuario->name }} - {{ $gimnasioNombre }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
 
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Tipo de Membresía</label>
-                                        <select name="id_tipo_membresia"
-                                            id="tipo_membresia"
-                                            @change="toggleVisitasFields()"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($tiposMembresia as $tipo)
-                                            <option value="{{ $tipo->id_tipo_membresia }}"
-                                                data-precio="{{ $tipo->precio }}"
-                                                data-duracion="{{ $tipo->duracion_dias }}"
-                                                data-tipo="{{ $tipo->tipo }}">
-                                                {{ $tipo->nombre }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Fecha de Compra</label>
-                                        <input type="date" name="fecha_compra" id="fecha_compra" value="{{ date('Y-m-d') }}"
-                                            @change="calcularVencimiento()"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                                        <input type="date" name="fecha_vencimiento" id="fecha_vencimiento"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Precio Total</label>
-                                        <input type="number" step="0.01" name="precio_total" id="precio_total" required readonly
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Saldo Pendiente</label>
-                                        <input type="number" step="0.01" name="saldo_pendiente" id="saldo_pendiente" required readonly
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div class="mb-4 visitas-fields" style="display: none;">
-                                        <label class="block text-sm font-medium text-gray-700">Número de Visitas</label>
-                                        <input type="number" name="visitas_permitidas"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="flex items-center">
-                                            <input type="checkbox" name="renovacion" value="1" checked
-                                                class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            <span class="ml-2 text-sm text-gray-600">¿Es Renovable?</span>
-                                        </label>
-                                    </div>
-
-                                    <div class="mt-6 flex justify-end space-x-3">
-                                        <button type="button"
-                                            @click="toggleModal()"
-                                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit"
-                                            class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
-                                            Crear Membresía
-                                        </button>
-                                    </div>
-                                </form>
+                        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-2xl w-full" x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                            
+                            <!-- Encabezado del modal -->
+                            <div class="bg-emerald-600 px-4 py-3 sm:px-6">
+                                <h3 class="text-lg font-medium text-white" x-text="currentStep === 1 ? 'Nueva Membresía' : 'Información de Pago'"></h3>
                             </div>
+
+                            <!-- Indicador de pasos -->
+                            <div class="px-4 py-3 sm:px-6">
+                                <div class="flex items-center justify-center space-x-8">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 flex items-center justify-center rounded-full" :class="currentStep === 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'">1</div>
+                                        <span class="ml-2 text-sm font-medium" :class="currentStep === 1 ? 'text-emerald-600' : 'text-gray-600'">MEMBRESÍA</span>
+                                    </div>
+                                    <div class="flex-auto border-t-2 transition duration-500 ease-in-out mx-8" :class="currentStep === 2 ? 'border-emerald-600' : 'border-gray-200'"></div>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 flex items-center justify-center rounded-full" :class="currentStep === 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'">2</div>
+                                        <span class="ml-2 text-sm font-medium" :class="currentStep === 2 ? 'text-emerald-600' : 'text-gray-600'">PAGO</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form x-data="membresiaForm" @submit="submitForm" action="{{ route('membresias.store') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                
+                                <div class="px-4 py-5 sm:p-6">
+                                    <!-- Paso 1: Información de la membresía -->
+                                    <div x-show="currentStep === 1">
+                                        <div class="grid grid-cols-1 gap-4">
+                                            <!-- Usuario -->
+                                            <div>
+                                                <label for="id_usuario" class="block text-sm font-medium text-gray-700">Usuario</label>
+                                                <select id="id_usuario" name="id_usuario" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                    <option value="">Selecciona un usuario</option>
+                                                    @foreach($usuarios as $usuario)
+                                                        <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div id="id_usuario-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Tipo de Membresía -->
+                                            <div>
+                                                <label for="id_tipo_membresia" class="block text-sm font-medium text-gray-700">Tipo de Membresía</label>
+                                                <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                    <option value="">Selecciona un tipo</option>
+                                                    @foreach($tiposMembresia as $tipo)
+                                                        <option value="{{ $tipo->id_tipo_membresia }}" 
+                                                                data-precio="{{ $tipo->precio }}"
+                                                                data-duracion="{{ $tipo->duracion_dias }}"
+                                                                data-visitas="{{ $tipo->numero_visitas }}">
+                                                            {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div id="id_tipo_membresia-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Precio Total -->
+                                            <div>
+                                                <label for="precio_total" class="block text-sm font-medium text-gray-700">Precio Total</label>
+                                                <input type="number" step="0.01" id="precio_total" name="precio_total" required x-model="precioTotal" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="precio_total-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Fecha de Compra -->
+                                            <div>
+                                                <label for="fecha_compra" class="block text-sm font-medium text-gray-700">Fecha de Compra</label>
+                                                <input type="date" id="fecha_compra" name="fecha_compra" required @change="calcularVencimiento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="fecha_compra-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Fecha de Vencimiento -->
+                                            <div>
+                                                <label for="fecha_vencimiento" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                                                <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" required readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="fecha_vencimiento-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Visitas Permitidas -->
+                                            <div>
+                                                <label for="visitas_permitidas" class="block text-sm font-medium text-gray-700">Visitas Permitidas</label>
+                                                <input type="number" id="visitas_permitidas" name="visitas_permitidas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="visitas_permitidas-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Renovación -->
+                                            <div class="flex items-start">
+                                                <div class="flex items-center h-5">
+                                                    <input type="checkbox" id="renovacion" name="renovacion" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                                </div>
+                                                <div class="ml-3 text-sm">
+                                                    <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
+                                                    <p class="text-gray-500">Marcar si es una renovación de membresía</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Paso 2: Información del pago -->
+                                    <div x-show="currentStep === 2">
+                                        <div class="grid grid-cols-1 gap-4">
+                                            <!-- Monto del Pago -->
+                                            <div>
+                                                <label for="monto_pago" class="block text-sm font-medium text-gray-700">Monto Inicial</label>
+                                                <input type="number" step="0.01" id="monto_pago" name="monto_pago" required @input="actualizarSaldoPendiente" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="monto_pago-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Saldo Pendiente -->
+                                            <div>
+                                                <label for="saldo_pendiente" class="block text-sm font-medium text-gray-700">Saldo Pendiente</label>
+                                                <input type="number" step="0.01" id="saldo_pendiente" name="saldo_pendiente" required x-model="saldoPendiente" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                <div id="saldo_pendiente-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Método de Pago -->
+                                            <div>
+                                                <label for="id_metodo_pago" class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                                                <select id="id_metodo_pago" name="id_metodo_pago" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                    <option value="">Selecciona un método</option>
+                                                    @foreach($metodosPago as $metodo)
+                                                        <option value="{{ $metodo->id_metodo_pago }}">{{ $metodo->nombre_metodo }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div id="id_metodo_pago-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Estado del Pago -->
+                                            <div>
+                                                <label for="estado_pago" class="block text-sm font-medium text-gray-700">Estado del Pago</label>
+                                                <select id="estado_pago" name="estado_pago" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                                    <option value="aprobado">Aprobado</option>
+                                                    <option value="pendiente">Pendiente</option>
+                                                    <option value="rechazado">Rechazado</option>
+                                                </select>
+                                                <div id="estado_pago-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Comprobante -->
+                                            <div>
+                                                <label for="comprobante" class="block text-sm font-medium text-gray-700">Comprobante</label>
+                                                <input type="file" id="comprobante" name="comprobante" accept=".jpg,.jpeg,.png,.pdf" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                                                <p class="mt-1 text-xs text-gray-500">Formatos permitidos: JPG, JPEG, PNG, PDF. Tamaño máximo: 5MB</p>
+                                                <div id="comprobante-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+
+                                            <!-- Notas -->
+                                            <div>
+                                                <label for="notas" class="block text-sm font-medium text-gray-700">Notas</label>
+                                                <textarea id="notas" name="notas" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
+                                                <div id="notas-error" class="text-red-500 text-xs mt-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Botones del modal -->
+                                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <template x-if="currentStep === 1">
+                                        <div class="flex justify-end space-x-3">
+                                            <button type="button" @click="toggleModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                                Cancelar
+                                            </button>
+                                            <button type="button" @click="nextStep" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                Siguiente
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="currentStep === 2">
+                                        <div class="flex justify-end space-x-3">
+                                            <button type="button" @click="prevStep" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                                Anterior
+                                            </button>
+                                            <button type="button" @click="toggleModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                                Cancelar
+                                            </button>
+                                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                Crear Membresía
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -605,7 +710,7 @@
                                     </div>
                                 </div>
 
-                                <form action="{{ route('pagos.store') }}" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('pagos.store') }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitPagoForm">
                                     @csrf
                                     <input type="hidden" name="id_membresia" x-bind:value="currentMembresia?.id_membresia">
                                     <input type="hidden" name="id_usuario" x-bind:value="currentMembresia?.id_usuario">
@@ -692,49 +797,231 @@
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tipoMembresia = document.getElementById('tipo_membresia');
-            const visitasFields = document.querySelector('.visitas-fields');
-            const fechaVencimiento = document.getElementById('fecha_vencimiento');
-            const precioTotal = document.getElementById('precio_total');
-            const saldoPendiente = document.getElementById('saldo_pendiente');
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('membresiaForm', () => ({
+                currentStep: 1,
+                precioTotal: 0,
+                saldoPendiente: 0,
+                montoPago: 0,
+                
+                nextStep() {
+                    if (this.validateStep1()) {
+                        this.currentStep = 2;
+                    }
+                },
+                
+                prevStep() {
+                    this.currentStep = 1;
+                },
+                
+                validateStep1() {
+                    // Validar campos del paso 1
+                    const requiredFields = ['id_usuario', 'id_tipo_membresia', 'fecha_compra'];
+                    let isValid = true;
+                    
+                    requiredFields.forEach(field => {
+                        const element = document.getElementById(field);
+                        if (!element.value) {
+                            element.classList.add('border-red-500');
+                            isValid = false;
+                        } else {
+                            element.classList.remove('border-red-500');
+                        }
+                    });
+                    
+                    return isValid;
+                },
+                
+                async submitForm(event) {
+                    event.preventDefault();
+                    const form = event.target;
+                    const formData = new FormData(form);
+                    
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            Swal.fire({
+                                title: '¡Éxito!',
+                                text: result.message || 'Membresía creada exitosamente',
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar',
+                                confirmButtonColor: '#059669'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            let errorMessage = result.message || 'Error al crear la membresía';
+                            if (result.errors) {
+                                errorMessage += '<ul class="mt-2 list-disc pl-4">';
+                                Object.values(result.errors).forEach(error => {
+                                    errorMessage += `<li>${error}</li>`;
+                                });
+                                errorMessage += '</ul>';
+                            }
+                            
+                            Swal.fire({
+                                title: 'Error',
+                                html: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'Entendido',
+                                confirmButtonColor: '#DC2626'
+                            });
+                            
+                            // Mostrar errores de validación en los campos
+                            if (result.errors) {
+                                Object.keys(result.errors).forEach(field => {
+                                    const element = document.getElementById(field);
+                                    const errorDiv = document.getElementById(`${field}-error`);
+                                    if (element) {
+                                        element.classList.add('border-red-500');
+                                        if (errorDiv) {
+                                            errorDiv.textContent = result.errors[field][0];
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#DC2626'
+                        });
+                    }
+                },
+                
+                calcularVencimiento() {
+                    const tipoMembresia = document.getElementById('id_tipo_membresia');
+                    const fechaCompra = document.getElementById('fecha_compra');
+                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+                    const visitasPermitidas = document.getElementById('visitas_permitidas');
+                    const montoPagoInput = document.getElementById('monto_pago');
+                    
+                    if (tipoMembresia && tipoMembresia.value && fechaCompra && fechaCompra.value) {
+                        const option = tipoMembresia.options[tipoMembresia.selectedIndex];
+                        const precio = option.dataset.precio;
+                        const duracionDias = option.dataset.duracion;
+                        const numeroVisitas = option.dataset.visitas;
+                        
+                        // Establecer precio total y saldo pendiente
+                        this.precioTotal = parseFloat(precio);
+                        this.saldoPendiente = this.precioTotal;
+                        
+                        // Establecer monto inicial del pago igual al precio total
+                        this.montoPago = this.precioTotal;
+                        if (montoPagoInput) {
+                            montoPagoInput.value = this.precioTotal;
+                            montoPagoInput.max = this.precioTotal;
+                        }
+                        
+                        // Calcular fecha de vencimiento
+                        if (duracionDias && fechaVencimiento) {
+                            const fecha = new Date(fechaCompra.value);
+                            fecha.setDate(fecha.getDate() + parseInt(duracionDias));
+                            fechaVencimiento.value = fecha.toISOString().split('T')[0];
+                        }
+                        
+                        // Establecer número de visitas si aplica
+                        if (numeroVisitas && visitasPermitidas) {
+                            visitasPermitidas.value = numeroVisitas;
+                        }
+                    }
+                },
+                
+                actualizarSaldoPendiente() {
+                    const montoPagoInput = document.getElementById('monto_pago');
+                    const saldoPendienteInput = document.getElementById('saldo_pendiente');
+                    
+                    if (montoPagoInput && saldoPendienteInput) {
+                        const montoIngresado = parseFloat(montoPagoInput.value) || 0;
+                        
+                        // Validar que el monto no exceda el precio total
+                        if (montoIngresado > this.precioTotal) {
+                            montoPagoInput.value = this.precioTotal;
+                            this.saldoPendiente = 0;
+                        } else {
+                            this.saldoPendiente = parseFloat((this.precioTotal - montoIngresado).toFixed(2));
+                        }
+                        
+                        saldoPendienteInput.value = this.saldoPendiente;
+                    }
+                },
+                submitPagoForm(event) {
+                    const form = event.target;
+                    const formData = new FormData(form);
 
-            function calcularVencimiento() {
-                const fechaCompra = new Date(document.getElementById('fecha_compra').value);
-                const tipoSeleccionado = tipoMembresia.options[tipoMembresia.selectedIndex];
-                const duracion = parseInt(tipoSeleccionado.dataset.duracion);
-                const precio = parseFloat(tipoSeleccionado.dataset.precio);
-                const tipo = tipoSeleccionado.dataset.tipo;
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            Swal.fire({
+                                title: '¡Éxito!',
+                                text: result.message || 'Pago registrado exitosamente',
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar',
+                                confirmButtonColor: '#059669',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            let errorMessage = result.message || 'Error al registrar el pago';
+                            if (result.errors) {
+                                errorMessage += '<ul class="mt-2 list-disc pl-4">';
+                                Object.values(result.errors).forEach(error => {
+                                    errorMessage += `<li>${error}</li>`;
+                                });
+                                errorMessage += '</ul>';
+                            }
 
-                // Calcular precio y saldo pendiente
-                precioTotal.value = precio;
-                saldoPendiente.value = precio;
-
-                // Calcular fecha de vencimiento solo si no es por visitas
-                if (tipo !== 'por_visitas') {
-                    const fechaVenc = new Date(fechaCompra);
-                    fechaVenc.setDate(fechaVenc.getDate() + duracion);
-                    fechaVencimiento.value = fechaVenc.toISOString().split('T')[0];
-                    fechaVencimiento.disabled = false;
-                } else {
-                    fechaVencimiento.value = '';
-                    fechaVencimiento.disabled = true;
+                            Swal.fire({
+                                title: 'Error',
+                                html: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'Entendido',
+                                confirmButtonColor: '#DC2626',
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.',
+                            icon: 'error',
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#DC2626',
+                        });
+                    });
                 }
-            }
-
-            tipoMembresia.addEventListener('change', function() {
-                visitasFields.style.display = this.options[this.selectedIndex].dataset.tipo === 'por_visitas' ? 'block' : 'none';
-                calcularVencimiento();
-            });
-
-            // Calcular valores iniciales
-            calcularVencimiento();
+            }));
         });
     </script>
 
     <!-- Script para exportación de Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Botón para exportar a Excel
