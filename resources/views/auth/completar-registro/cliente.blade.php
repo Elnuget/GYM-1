@@ -1,4 +1,9 @@
 <x-app-layout>
+    @php
+        // Verificar si el usuario actual tiene membresías
+        $tieneMembresiaActiva = \App\Models\Membresia::where('id_usuario', auth()->id())->exists();
+        $totalPasos = $tieneMembresiaActiva ? 3 : 4;
+    @endphp
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div x-data="{ 
@@ -8,6 +13,8 @@
                 modalMessage: '',
                 errorMessage: '',
                 formData: {},
+                tieneMembresiaActiva: {{ $tieneMembresiaActiva ? 'true' : 'false' }},
+                totalPasos: {{ $totalPasos }},
                 
                 previewImage(event) {
                     const file = event.target.files[0];
@@ -95,8 +102,15 @@
                             
                             setTimeout(() => {
                                 this.showSuccessModal = false;
-                                if (currentStep < 4) {
-                                    this.step = currentStep + 1;
+                                // Si es el último paso o tiene membresía activa y está en el paso 3, completar el registro
+                                if ((this.tieneMembresiaActiva && currentStep === 3) || (!this.tieneMembresiaActiva && currentStep < 4)) {
+                                    if (this.tieneMembresiaActiva && currentStep === 3) {
+                                        // Es el último paso cuando tiene membresía
+                                        window.location.href = '{{ route('dashboard') }}';
+                                    } else if (!this.tieneMembresiaActiva) {
+                                        // Avanzar al siguiente paso cuando no tiene membresía
+                                        this.step = currentStep + 1;
+                                    }
                                 }
                             }, 1500);
                         } else {
@@ -170,10 +184,10 @@
                                     </div>
                                     <div class="ml-2 flex-1">
                                         <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
-                                        <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="h-1 w-full mt-2"></div>
+                                        <div x-show="!tieneMembresiaActiva" x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="h-1 w-full mt-2"></div>
                                     </div>
                                 </div>
-                                <div class="flex items-center">
+                                <div x-show="!tieneMembresiaActiva" class="flex items-center">
                                     <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-8 h-8 rounded-full">
                                         <span class="text-white font-bold text-sm">4</span>
                                     </div>
@@ -213,21 +227,25 @@
                                     <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-10 h-10 rounded-full">
                                         <span class="text-white font-bold">3</span>
                                     </div>
-                                    <div class="ml-2 mr-8">
+                                    <div class="ml-2" :class="{'mr-8': !tieneMembresiaActiva}">
                                         <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
                                     </div>
                                 </div>
                                 
-                                <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="flex-1 h-1"></div>
+                                <template x-if="!tieneMembresiaActiva">
+                                    <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="flex-1 h-1"></div>
+                                </template>
                                 
-                                <div class="flex items-center relative">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                        <span class="text-white font-bold">4</span>
+                                <template x-if="!tieneMembresiaActiva">
+                                    <div class="flex items-center relative">
+                                        <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                            <span class="text-white font-bold">4</span>
+                                        </div>
+                                        <div class="ml-2">
+                                            <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
+                                        </div>
                                     </div>
-                                    <div class="ml-2">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
-                                    </div>
-                                </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -238,7 +256,7 @@
                         // Validar campos requeridos antes de enviar
                         let camposFaltantes = [];
                         
-                        if (step === 4) {
+                        if (step === 4 && !tieneMembresiaActiva) {
                             if (!$event.target.id_tipo_membresia.value) camposFaltantes.push('Tipo de Membresía');
                             if (!$event.target.fecha_compra.value) camposFaltantes.push('Fecha de Compra');
                         }
@@ -247,6 +265,11 @@
                             errorMessage = `Por favor, complete los siguientes campos obligatorios: ${camposFaltantes.join(', ')}`;
                             showErrorModal = true;
                             return;
+                        }
+                        
+                        // Si tiene membresía activa y está en el paso 3, ya está completando el registro
+                        if (tieneMembresiaActiva && step === 3) {
+                            formData.append('completion', 'true');
                         }
                         
                         fetch($event.target.action, {
@@ -278,6 +301,7 @@
                         });">
                         @csrf
                         <input type="hidden" name="current_step" x-bind:value="step">
+                        <input type="hidden" name="tiene_membresia" value="{{ $tieneMembresiaActiva ? '1' : '0' }}">
                         
                         <!-- Paso 1: Información Personal -->
                         <div x-show="step === 1">
@@ -510,13 +534,14 @@
                                     Anterior
                                 </button>
                                 <button type="button" x-on:click="saveStep(3)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    Guardar y Continuar
+                                    <span x-show="!tieneMembresiaActiva">Guardar y Continuar</span>
+                                    <span x-show="tieneMembresiaActiva">Completar Registro</span>
                                 </button>
                             </div>
                         </div>
                         
                         <!-- Paso 4: Membresía -->
-                        <div x-show="step === 4" style="display: none;">
+                        <div x-show="step === 4 && !tieneMembresiaActiva" style="display: none;">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Membresía</h2>
                             
                             <div class="mb-6">

@@ -53,4 +53,20 @@ class Cliente extends Model
     {
         return $this->hasMany(MedidaCorporal::class, 'cliente_id', 'id_cliente');
     }
+    
+    /**
+     * Obtiene las membresías asociadas al usuario del cliente.
+     */
+    public function membresias()
+    {
+        return $this->user->membresias();
+    }
+    
+    /**
+     * Verifica si el cliente tiene alguna membresía activa.
+     */
+    public function tieneMembresiaActiva()
+    {
+        return \App\Models\Membresia::where('id_usuario', $this->user_id)->exists();
+    }
 }
