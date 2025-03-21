@@ -160,39 +160,41 @@
                         <!-- Indicador de progreso para móviles (vertical) -->
                         <div class="sm:hidden">
                             <div class="space-y-4">
+                                <template x-if="!tieneMembresiaActiva">
+                                    <div class="flex items-center">
+                                        <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                            <span class="text-white font-bold text-sm">1</span>
+                                        </div>
+                                        <div class="ml-2 flex-1">
+                                            <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Membresía</p>
+                                            <div x-bind:class="{ 'bg-emerald-300': step > 1, 'bg-gray-200': step <= 1 }" class="h-1 w-full mt-2"></div>
+                                        </div>
+                                    </div>
+                                </template>
                                 <div class="flex items-center">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-8 h-8 rounded-full">
-                                        <span class="text-white font-bold text-sm">1</span>
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 1 : 2), 'bg-gray-300': step < (tieneMembresiaActiva ? 1 : 2) }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm" x-text="tieneMembresiaActiva ? '1' : '2'"></span>
                                     </div>
                                     <div class="ml-2 flex-1">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Información Personal</p>
-                                        <div x-bind:class="{ 'bg-emerald-300': step > 1, 'bg-gray-200': step <= 1 }" class="h-1 w-full mt-2"></div>
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 1 : 2), 'text-gray-500': step < (tieneMembresiaActiva ? 1 : 2) }">Información Personal</p>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > (tieneMembresiaActiva ? 1 : 2), 'bg-gray-200': step <= (tieneMembresiaActiva ? 1 : 2) }" class="h-1 w-full mt-2"></div>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 2, 'bg-gray-300': step < 2 }" class="flex items-center justify-center w-8 h-8 rounded-full">
-                                        <span class="text-white font-bold text-sm">2</span>
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 2 : 3), 'bg-gray-300': step < (tieneMembresiaActiva ? 2 : 3) }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm" x-text="tieneMembresiaActiva ? '2' : '3'"></span>
                                     </div>
                                     <div class="ml-2 flex-1">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 2, 'text-gray-500': step < 2 }">Medidas Corporales</p>
-                                        <div x-bind:class="{ 'bg-emerald-300': step > 2, 'bg-gray-200': step <= 2 }" class="h-1 w-full mt-2"></div>
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 2 : 3), 'text-gray-500': step < (tieneMembresiaActiva ? 2 : 3) }">Medidas Corporales</p>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > (tieneMembresiaActiva ? 2 : 3), 'bg-gray-200': step <= (tieneMembresiaActiva ? 2 : 3) }" class="h-1 w-full mt-2"></div>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-8 h-8 rounded-full">
-                                        <span class="text-white font-bold text-sm">3</span>
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 3 : 4), 'bg-gray-300': step < (tieneMembresiaActiva ? 3 : 4) }" class="flex items-center justify-center w-8 h-8 rounded-full">
+                                        <span class="text-white font-bold text-sm" x-text="tieneMembresiaActiva ? '3' : '4'"></span>
                                     </div>
                                     <div class="ml-2 flex-1">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
-                                        <div x-show="!tieneMembresiaActiva" x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="h-1 w-full mt-2"></div>
-                                    </div>
-                                </div>
-                                <div x-show="!tieneMembresiaActiva" class="flex items-center">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-8 h-8 rounded-full">
-                                        <span class="text-white font-bold text-sm">4</span>
-                                    </div>
-                                    <div class="ml-2 flex-1">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 3 : 4), 'text-gray-500': step < (tieneMembresiaActiva ? 3 : 4) }">Objetivos Fitness</p>
                                     </div>
                                 </div>
                             </div>
@@ -201,51 +203,46 @@
                         <!-- Indicador de progreso para desktop (horizontal) -->
                         <div class="hidden sm:block">
                             <div class="flex items-center">
-                                <div class="flex items-center relative">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                        <span class="text-white font-bold">1</span>
-                                    </div>
-                                    <div class="ml-2 mr-8">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Información Personal</p>
-                                    </div>
-                                </div>
-                                
-                                <div x-bind:class="{ 'bg-emerald-300': step > 1, 'bg-gray-200': step <= 1 }" class="flex-1 h-1"></div>
-                                
-                                <div class="flex items-center relative">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 2, 'bg-gray-300': step < 2 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                        <span class="text-white font-bold">2</span>
-                                    </div>
-                                    <div class="ml-2 mr-8">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 2, 'text-gray-500': step < 2 }">Medidas Corporales</p>
-                                    </div>
-                                </div>
-                                
-                                <div x-bind:class="{ 'bg-emerald-300': step > 2, 'bg-gray-200': step <= 2 }" class="flex-1 h-1"></div>
-                                
-                                <div class="flex items-center relative">
-                                    <div x-bind:class="{ 'bg-emerald-500': step >= 3, 'bg-gray-300': step < 3 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                        <span class="text-white font-bold">3</span>
-                                    </div>
-                                    <div class="ml-2" :class="{'mr-8': !tieneMembresiaActiva}">
-                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 3, 'text-gray-500': step < 3 }">Objetivos Fitness</p>
-                                    </div>
-                                </div>
-                                
-                                <template x-if="!tieneMembresiaActiva">
-                                    <div x-bind:class="{ 'bg-emerald-300': step > 3, 'bg-gray-200': step <= 3 }" class="flex-1 h-1"></div>
-                                </template>
-                                
                                 <template x-if="!tieneMembresiaActiva">
                                     <div class="flex items-center relative">
-                                        <div x-bind:class="{ 'bg-emerald-500': step >= 4, 'bg-gray-300': step < 4 }" class="flex items-center justify-center w-10 h-10 rounded-full">
-                                            <span class="text-white font-bold">4</span>
+                                        <div x-bind:class="{ 'bg-emerald-500': step >= 1, 'bg-gray-300': step < 1 }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                            <span class="text-white font-bold">1</span>
                                         </div>
-                                        <div class="ml-2">
-                                            <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 4, 'text-gray-500': step < 4 }">Membresía</p>
+                                        <div class="ml-2 mr-8">
+                                            <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= 1, 'text-gray-500': step < 1 }">Membresía</p>
                                         </div>
+                                        <div x-bind:class="{ 'bg-emerald-300': step > 1, 'bg-gray-200': step <= 1 }" class="flex-1 h-1"></div>
                                     </div>
                                 </template>
+                                
+                                <div class="flex items-center relative">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 1 : 2), 'bg-gray-300': step < (tieneMembresiaActiva ? 1 : 2) }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold" x-text="tieneMembresiaActiva ? '1' : '2'"></span>
+                                    </div>
+                                    <div class="ml-2 mr-8">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 1 : 2), 'text-gray-500': step < (tieneMembresiaActiva ? 1 : 2) }">Información Personal</p>
+                                    </div>
+                                    <div x-bind:class="{ 'bg-emerald-300': step > (tieneMembresiaActiva ? 1 : 2), 'bg-gray-200': step <= (tieneMembresiaActiva ? 1 : 2) }" class="flex-1 h-1"></div>
+                                </div>
+                                
+                                <div class="flex items-center relative">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 2 : 3), 'bg-gray-300': step < (tieneMembresiaActiva ? 2 : 3) }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold" x-text="tieneMembresiaActiva ? '2' : '3'"></span>
+                                    </div>
+                                    <div class="ml-2 mr-8">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 2 : 3), 'text-gray-500': step < (tieneMembresiaActiva ? 2 : 3) }">Medidas Corporales</p>
+                                    </div>
+                                    <div x-bind:class="{ 'bg-emerald-300': step > (tieneMembresiaActiva ? 2 : 3), 'bg-gray-200': step <= (tieneMembresiaActiva ? 2 : 3) }" class="flex-1 h-1"></div>
+                                </div>
+                                
+                                <div class="flex items-center relative">
+                                    <div x-bind:class="{ 'bg-emerald-500': step >= (tieneMembresiaActiva ? 3 : 4), 'bg-gray-300': step < (tieneMembresiaActiva ? 3 : 4) }" class="flex items-center justify-center w-10 h-10 rounded-full">
+                                        <span class="text-white font-bold" x-text="tieneMembresiaActiva ? '3' : '4'"></span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <p x-bind:class="{ 'text-emerald-500 font-semibold': step >= (tieneMembresiaActiva ? 3 : 4), 'text-gray-500': step < (tieneMembresiaActiva ? 3 : 4) }">Objetivos Fitness</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -303,8 +300,138 @@
                         <input type="hidden" name="current_step" x-bind:value="step">
                         <input type="hidden" name="tiene_membresia" value="{{ $tieneMembresiaActiva ? '1' : '0' }}">
                         
-                        <!-- Paso 1: Información Personal -->
-                        <div x-show="step === 1">
+                        <!-- Paso 1: Membresía (solo si no tiene membresía activa) -->
+                        <div x-show="!tieneMembresiaActiva && step === 1" style="display: none;">
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Membresía</h2>
+                            
+                            <div class="mb-6">
+                                <!-- Indicador de pasos para la membresía -->
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
+                                        <span class="text-white font-bold text-sm">1</span>
+                                    </div>
+                                    <div class="ml-2 text-emerald-500 font-medium">MEMBRESÍA</div>
+                                    <div class="mx-4 h-1 w-24 bg-gray-200"></div>
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300">
+                                        <span class="text-white font-bold text-sm">2</span>
+                                    </div>
+                                    <div class="ml-2 text-gray-500">PAGO</div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 gap-6" x-data="{
+                                precioTotal: 0,
+                                nombreTipo: '',
+                                showVisitasFields: false,
+                                
+                                calcularVencimiento() {
+                                    const selectTipo = document.getElementById('id_tipo_membresia');
+                                    const fechaCompra = document.getElementById('fecha_compra').value;
+                                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+                                    
+                                    if (selectTipo && fechaCompra) {
+                                        const option = selectTipo.options[selectTipo.selectedIndex];
+                                        
+                                        if (option) {
+                                            this.precioTotal = option.dataset.precio || 0;
+                                            const duracion = option.dataset.duracion || 0;
+                                            this.nombreTipo = option.textContent || '';
+                                            
+                                            const tieneVisitas = parseInt(option.dataset.visitas) > 0;
+                                            const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
+                                            this.showVisitasFields = tieneVisitas || nombreContieneVisita;
+                                            
+                                            if (this.showVisitasFields && option.dataset.visitas) {
+                                                document.getElementById('visitas_permitidas').value = option.dataset.visitas;
+                                            }
+                                            
+                                            if (fechaCompra && duracion) {
+                                                const date = new Date(fechaCompra);
+                                                date.setDate(date.getDate() + parseInt(duracion));
+                                                
+                                                const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+                                                const dia = date.getDate().toString().padStart(2, '0');
+                                                fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }">
+                                <!-- Contenido del paso de membresía -->
+                                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+                                
+                                <div>
+                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <option value="" selected disabled>Selecciona un tipo</option>
+                                        @foreach(\App\Models\TipoMembresia::all() as $tipo)
+                                            <option value="{{ $tipo->id_tipo_membresia }}" 
+                                                    data-precio="{{ $tipo->precio }}"
+                                                    data-duracion="{{ $tipo->duracion_dias }}"
+                                                    data-visitas="{{ $tipo->numero_visitas }}"
+                                                    {{ old('id_tipo_membresia') == $tipo->id_tipo_membresia ? 'selected' : '' }}>
+                                                {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Precio Total -->
+                                <div>
+                                    <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" x-model="precioTotal" readonly />
+                                    <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Fecha de Compra -->
+                                <div>
+                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
+                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Fecha de Vencimiento -->
+                                <div>
+                                    <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
+                                    <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Visitas Permitidas - Solo visible para membresías por visitas -->
+                                <div x-show="showVisitasFields">
+                                    <x-input-label for="visitas_permitidas" :value="__('Visitas Permitidas')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="visitas_permitidas" class="block w-full" type="number" name="visitas_permitidas" :value="old('visitas_permitidas')" min="1" />
+                                    <x-input-error :messages="$errors->get('visitas_permitidas')" class="mt-1" />
+                                </div>
+                                
+                                <!-- Renovación -->
+                                <div>
+                                    <div class="flex items-start">
+                                        <div class="flex items-center h-5">
+                                            <input id="renovacion" name="renovacion" type="checkbox" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" {{ old('renovacion') ? 'checked' : '' }} checked>
+                                        </div>
+                                        <div class="ml-3 text-sm">
+                                            <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
+                                            <p class="text-gray-500">Marcar si es una renovación de membresía</p>
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-1" />
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between mt-8">
+                                <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium" disabled>
+                                    Anterior
+                                </button>
+                                <button type="button" x-on:click="saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+                                    Guardar y Continuar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 2/1: Información Personal -->
+                        <div x-show="step === (tieneMembresiaActiva ? 1 : 2)" style="display: none;">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Información Personal</h2>
                             
                             <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Completa tu información personal para configurar tu perfil de cliente.</p>
@@ -375,14 +502,14 @@
                             </div>
                             
                             <div class="flex flex-col sm:flex-row justify-end mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
-                                <button type="button" x-on:click="saveStep(1)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <button type="button" x-on:click="saveStep(2)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Guardar y Continuar
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- Paso 2: Medidas Corporales -->
-                        <div x-show="step === 2" style="display: none;">
+                        <!-- Paso 3/2: Medidas Corporales -->
+                        <div x-show="step === (tieneMembresiaActiva ? 2 : 3)" style="display: none;">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4">Medidas Corporales</h2>
                             
                             <p class="mb-4 text-sm sm:text-base text-gray-600">Registra tus medidas corporales para un mejor seguimiento de tu progreso.</p>
@@ -467,7 +594,7 @@
                                         Anterior
                                     </button>
                                     <button type="button" 
-                                            x-on:click="saveStep(2)" 
+                                            x-on:click="saveStep(3)" 
                                             class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         Guardar y Continuar
                                     </button>
@@ -475,8 +602,8 @@
                             </div>
                         </div>
                         
-                        <!-- Paso 3: Objetivos Fitness -->
-                        <div x-show="step === 3" style="display: none;">
+                        <!-- Paso 4/3: Objetivos Fitness -->
+                        <div x-show="step === (tieneMembresiaActiva ? 3 : 4)" style="display: none;">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Objetivos Fitness</h2>
                             
                             <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Define tus objetivos de entrenamiento para personalizar tu experiencia.</p>
@@ -533,146 +660,9 @@
                                 <button type="button" x-on:click="step = 2" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     Anterior
                                 </button>
-                                <button type="button" x-on:click="saveStep(3)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <button type="button" x-on:click="saveStep(4)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     <span x-show="!tieneMembresiaActiva">Guardar y Continuar</span>
                                     <span x-show="tieneMembresiaActiva">Completar Registro</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Paso 4: Membresía -->
-                        <div x-show="step === 4 && !tieneMembresiaActiva" style="display: none;">
-                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Nueva Membresía</h2>
-                            
-                            <div class="mb-6">
-                                <!-- Indicador de pasos para la membresía -->
-                                <div class="flex items-center">
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
-                                        <span class="text-white font-bold text-sm">1</span>
-                                    </div>
-                                    <div class="ml-2 text-emerald-500 font-medium">MEMBRESÍA</div>
-                                    <div class="mx-4 h-1 w-24 bg-gray-200"></div>
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300">
-                                        <span class="text-white font-bold text-sm">2</span>
-                                    </div>
-                                    <div class="ml-2 text-gray-500">PAGO</div>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 gap-6" x-data="{
-                                precioTotal: 0,
-                                nombreTipo: '',
-                                showVisitasFields: false,
-                                
-                                calcularVencimiento() {
-                                    const selectTipo = document.getElementById('id_tipo_membresia');
-                                    const fechaCompra = document.getElementById('fecha_compra').value;
-                                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
-                                    
-                                    if (selectTipo && fechaCompra) {
-                                        const option = selectTipo.options[selectTipo.selectedIndex];
-                                        
-                                        if (option) {
-                                            // Obtener precio y duración
-                                            this.precioTotal = option.dataset.precio || 0;
-                                            const duracion = option.dataset.duracion || 0;
-                                            this.nombreTipo = option.textContent || '';
-                                            
-                                            // Verificar si es una membresía por visitas
-                                            // Comprobar tanto por el nombre como por el atributo de visitas
-                                            const tieneVisitas = parseInt(option.dataset.visitas) > 0;
-                                            const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
-                                            this.showVisitasFields = tieneVisitas || nombreContieneVisita;
-                                            
-                                            // Si es membresía por visitas, establecer el valor predeterminado
-                                            if (this.showVisitasFields && option.dataset.visitas) {
-                                                document.getElementById('visitas_permitidas').value = option.dataset.visitas;
-                                            }
-                                            
-                                            // Calcular fecha de vencimiento
-                                            if (fechaCompra && duracion) {
-                                                const date = new Date(fechaCompra);
-                                                date.setDate(date.getDate() + parseInt(duracion));
-                                                
-                                                // Formatear fecha YYYY-MM-DD
-                                                const mes = (date.getMonth() + 1).toString().padStart(2, '0');
-                                                const dia = date.getDate().toString().padStart(2, '0');
-                                                fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
-                                            }
-                                        }
-                                    }
-                                }
-                            }">
-                                <!-- Usuario (oculto y fijo para el usuario actual) -->
-                                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-                                
-                                <!-- Tipo de Membresía -->
-                                <div>
-                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        <option value="" selected disabled>Selecciona un tipo</option>
-                                        @foreach(\App\Models\TipoMembresia::all() as $tipo)
-                                            <option value="{{ $tipo->id_tipo_membresia }}" 
-                                                    data-precio="{{ $tipo->precio }}"
-                                                    data-duracion="{{ $tipo->duracion_dias }}"
-                                                    data-visitas="{{ $tipo->numero_visitas }}"
-                                                    {{ old('id_tipo_membresia') == $tipo->id_tipo_membresia ? 'selected' : '' }}>
-                                                {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Precio Total -->
-                                <div>
-                                    <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" x-model="precioTotal" readonly />
-                                    <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Fecha de Compra -->
-                                <div>
-                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
-                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Fecha de Vencimiento -->
-                                <div>
-                                    <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
-                                    <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Visitas Permitidas - Solo visible para membresías por visitas -->
-                                <div x-show="showVisitasFields">
-                                    <x-input-label for="visitas_permitidas" :value="__('Visitas Permitidas')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="visitas_permitidas" class="block w-full" type="number" name="visitas_permitidas" :value="old('visitas_permitidas')" min="1" />
-                                    <x-input-error :messages="$errors->get('visitas_permitidas')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Renovación -->
-                                <div>
-                                    <div class="flex items-start">
-                                        <div class="flex items-center h-5">
-                                            <input id="renovacion" name="renovacion" type="checkbox" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" {{ old('renovacion') ? 'checked' : '' }} checked>
-                                        </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
-                                            <p class="text-gray-500">Marcar si es una renovación de membresía</p>
-                                        </div>
-                                    </div>
-                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-1" />
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-between mt-8">
-                                <button type="button" x-on:click="step = 3" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
-                                    Cancelar
-                                </button>
-                                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
-                                    Siguiente
                                 </button>
                             </div>
                         </div>
