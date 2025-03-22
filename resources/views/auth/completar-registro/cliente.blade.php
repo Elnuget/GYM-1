@@ -2,19 +2,35 @@
     @php
         // Verificar si el usuario actual tiene membresías
         $tieneMembresiaActiva = \App\Models\Membresia::where('id_usuario', auth()->id())->exists();
+        
+        // Verificar si tiene membresía pero con pagos pendientes
+        $tieneMembresiaConPagoPendiente = false;
+        if ($tieneMembresiaActiva) {
+            $membresia = \App\Models\Membresia::where('id_usuario', auth()->id())->latest()->first();
+            if ($membresia && $membresia->saldo_pendiente > 0) {
+                // Verificar si tiene algún pago registrado
+                $tienePago = \App\Models\Pago::where('id_membresia', $membresia->id_membresia)->exists();
+                $tieneMembresiaConPagoPendiente = !$tienePago;
+            }
+        }
+        
         $totalPasos = $tieneMembresiaActiva ? 3 : 5;
+        $pasoInicial = $tieneMembresiaConPagoPendiente ? 1 : (session('current_step', 1));
+        $subpasoInicial = $tieneMembresiaConPagoPendiente ? 2 : 1; // Si tiene membresía con pago pendiente, ir al subpaso 2 (pago)
     @endphp
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div x-data="{ 
-                step: {{ session('current_step', 1) }},
+                step: {{ $pasoInicial }},
                 showSuccessModal: false,
                 showErrorModal: false,
                 modalMessage: '',
                 errorMessage: '',
                 formData: {},
                 tieneMembresiaActiva: {{ $tieneMembresiaActiva ? 'true' : 'false' }},
+                tieneMembresiaConPagoPendiente: {{ $tieneMembresiaConPagoPendiente ? 'true' : 'false' }},
                 totalPasos: {{ $totalPasos }},
+                subpaso: {{ $subpasoInicial }},
                 
                 previewImage(event) {
                     const file = event.target.files[0];
@@ -86,7 +102,7 @@
                             console.log('Saldo pendiente enviado:', precioDecimal);
                         } else if (currentStep === 2) {
                             if (!formElement.monto_pago.value.trim()) camposFaltantes.push('Monto del Pago');
-                            if (!formElement.metodo_pago.value) camposFaltantes.push('Método de Pago');
+                            if (!formElement.id_metodo_pago.value) camposFaltantes.push('Método de Pago');
                             if (!formElement.fecha_pago.value.trim()) camposFaltantes.push('Fecha de Pago');
                             // Agregar estado pendiente por defecto
                             formData.append('estado', 'pendiente');
@@ -396,151 +412,179 @@
                             <div class="mb-6">
                                 <!-- Indicador de pasos para la membresía -->
                                 <div class="flex items-center">
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full" 
+                                         :class="{'bg-emerald-500': subpaso === 1, 'bg-gray-300': subpaso === 2}">
                                         <span class="text-white font-bold text-sm">1</span>
                                     </div>
-                                    <div class="ml-2 text-emerald-500 font-medium">MEMBRESÍA</div>
-                                    <div class="mx-4 h-1 w-24 bg-gray-200"></div>
-                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300">
+                                    <div class="ml-2" :class="{'text-emerald-500 font-medium': subpaso === 1, 'text-gray-500': subpaso === 2}">MEMBRESÍA</div>
+                                    <div class="mx-4 h-1 w-24" :class="{'bg-emerald-500': subpaso === 2, 'bg-gray-200': subpaso === 1}"></div>
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full" 
+                                         :class="{'bg-emerald-500': subpaso === 2, 'bg-gray-300': subpaso === 1}">
                                         <span class="text-white font-bold text-sm">2</span>
                                     </div>
-                                    <div class="ml-2 text-gray-500">PAGO</div>
+                                    <div class="ml-2" :class="{'text-emerald-500 font-medium': subpaso === 2, 'text-gray-500': subpaso === 1}">PAGO</div>
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-1 gap-6" x-data="{
-                                precioTotal: 0,
-                                nombreTipo: '',
-                                showVisitasFields: false,
-                                
-                                calcularVencimiento() {
-                                    const selectTipo = document.getElementById('id_tipo_membresia');
-                                    const fechaCompra = document.getElementById('fecha_compra').value;
-                                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+                            <!-- Subpaso 1: Selección de membresía -->
+                            <div x-show="subpaso === 1 && !tieneMembresiaConPagoPendiente" x-transition style="display: none;">
+                                <div class="grid grid-cols-1 gap-6" x-data="{
+                                    precioTotal: 0,
+                                    nombreTipo: '',
+                                    showVisitasFields: false,
                                     
-                                    if (selectTipo && fechaCompra) {
-                                        const option = selectTipo.options[selectTipo.selectedIndex];
+                                    calcularVencimiento() {
+                                        const selectTipo = document.getElementById('id_tipo_membresia');
+                                        const fechaCompra = document.getElementById('fecha_compra').value;
+                                        const fechaVencimiento = document.getElementById('fecha_vencimiento');
                                         
-                                        if (option) {
-                                            // Obtener el precio desde el atributo data
-                                            const precio = parseFloat(option.dataset.precio || 0).toFixed(2);
+                                        if (selectTipo && fechaCompra) {
+                                            const option = selectTipo.options[selectTipo.selectedIndex];
                                             
-                                            // Actualizar los campos de precio y saldo pendiente
-                                            this.precioTotal = precio;
-                                            document.getElementById('precio_total').value = precio;
-                                            document.getElementById('saldo_pendiente').value = precio;
-                                            
-                                            console.log('Precio establecido a:', precio);
-                                            console.log('Saldo pendiente establecido a:', document.getElementById('saldo_pendiente').value);
-                                            
-                                            const duracion = option.dataset.duracion || 0;
-                                            this.nombreTipo = option.textContent || '';
-                                            
-                                            const tieneVisitas = parseInt(option.dataset.visitas) > 0;
-                                            const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
-                                            this.showVisitasFields = tieneVisitas || nombreContieneVisita;
-                                            
-                                            if (this.showVisitasFields && option.dataset.visitas) {
-                                                document.getElementById('visitas_permitidas').value = option.dataset.visitas;
-                                            }
-                                            
-                                            if (fechaCompra && duracion) {
-                                                const date = new Date(fechaCompra);
-                                                date.setDate(date.getDate() + parseInt(duracion));
+                                            if (option) {
+                                                // Obtener el precio desde el atributo data
+                                                const precio = parseFloat(option.dataset.precio || 0).toFixed(2);
                                                 
-                                                const mes = (date.getMonth() + 1).toString().padStart(2, '0');
-                                                const dia = date.getDate().toString().padStart(2, '0');
-                                                fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                                                // Actualizar los campos de precio y saldo pendiente
+                                                this.precioTotal = precio;
+                                                document.getElementById('precio_total').value = precio;
+                                                document.getElementById('saldo_pendiente').value = precio;
+                                                
+                                                console.log('Precio establecido a:', precio);
+                                                console.log('Saldo pendiente establecido a:', document.getElementById('saldo_pendiente').value);
+                                                
+                                                const duracion = option.dataset.duracion || 0;
+                                                this.nombreTipo = option.textContent || '';
+                                                
+                                                const tieneVisitas = parseInt(option.dataset.visitas) > 0;
+                                                const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
+                                                this.showVisitasFields = tieneVisitas || nombreContieneVisita;
+                                                
+                                                if (this.showVisitasFields && option.dataset.visitas) {
+                                                    document.getElementById('visitas_permitidas').value = option.dataset.visitas;
+                                                }
+                                                
+                                                if (fechaCompra && duracion) {
+                                                    const date = new Date(fechaCompra);
+                                                    date.setDate(date.getDate() + parseInt(duracion));
+                                                    
+                                                    const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+                                                    const dia = date.getDate().toString().padStart(2, '0');
+                                                    fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }">
-                                <!-- Contenido del paso de membresía -->
-                                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-                                <input type="hidden" id="saldo_pendiente" name="saldo_pendiente" value="0">
-                                
-                                <div>
-                                    <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                        <option value="" selected disabled>Selecciona un tipo</option>
-                                        @foreach(\App\Models\TipoMembresia::all() as $tipo)
-                                            <option value="{{ $tipo->id_tipo_membresia }}" 
-                                                    data-precio="{{ $tipo->precio }}"
-                                                    data-duracion="{{ $tipo->duracion_dias }}"
-                                                    data-visitas="{{ $tipo->numero_visitas }}"
-                                                    {{ old('id_tipo_membresia') == $tipo->id_tipo_membresia ? 'selected' : '' }}>
-                                                {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Precio Total -->
-                                <div>
-                                    <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" value="0" readonly />
-                                    <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Fecha de Compra -->
-                                <div>
-                                    <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
-                                    <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Fecha de Vencimiento -->
-                                <div>
-                                    <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
-                                    <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Visitas Permitidas - Solo visible para membresías por visitas -->
-                                <div x-show="showVisitasFields">
-                                    <x-input-label for="visitas_permitidas" :value="__('Visitas Permitidas')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="visitas_permitidas" class="block w-full" type="number" name="visitas_permitidas" :value="old('visitas_permitidas')" min="1" />
-                                    <x-input-error :messages="$errors->get('visitas_permitidas')" class="mt-1" />
-                                </div>
-                                
-                                <!-- Renovación -->
-                                <div>
-                                    <div class="flex items-start">
-                                        <div class="flex items-center h-5">
-                                            <input id="renovacion" name="renovacion" type="checkbox" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" {{ old('renovacion') ? 'checked' : '' }} checked>
-                                        </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
-                                            <p class="text-gray-500">Marcar si es una renovación de membresía</p>
-                                        </div>
+                                }">
+                                    <!-- Contenido del paso de membresía -->
+                                    <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+                                    <input type="hidden" id="saldo_pendiente" name="saldo_pendiente" value="0">
+                                    
+                                    <div>
+                                        <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
+                                        <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="" selected disabled>Selecciona un tipo</option>
+                                            @foreach(\App\Models\TipoMembresia::all() as $tipo)
+                                                <option value="{{ $tipo->id_tipo_membresia }}" 
+                                                        data-precio="{{ $tipo->precio }}"
+                                                        data-duracion="{{ $tipo->duracion_dias }}"
+                                                        data-visitas="{{ $tipo->numero_visitas }}"
+                                                        {{ old('id_tipo_membresia') == $tipo->id_tipo_membresia ? 'selected' : '' }}>
+                                                    {{ $tipo->nombre }} - ${{ number_format($tipo->precio, 2) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('id_tipo_membresia')" class="mt-1" />
                                     </div>
-                                    <x-input-error :messages="$errors->get('renovacion')" class="mt-1" />
+                                    
+                                    <!-- Precio Total -->
+                                    <div>
+                                        <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
+                                        <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" value="0" readonly />
+                                        <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
+                                    </div>
+                                    
+                                    <!-- Fecha de Compra -->
+                                    <div>
+                                        <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
+                                        <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
+                                        <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
+                                    </div>
+                                    
+                                    <!-- Fecha de Vencimiento -->
+                                    <div>
+                                        <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
+                                        <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
+                                        <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
+                                    </div>
+                                    
+                                    <!-- Visitas Permitidas - Solo visible para membresías por visitas -->
+                                    <div x-show="showVisitasFields">
+                                        <x-input-label for="visitas_permitidas" :value="__('Visitas Permitidas')" class="mb-1 text-sm font-medium text-gray-700" />
+                                        <x-text-input id="visitas_permitidas" class="block w-full" type="number" name="visitas_permitidas" :value="old('visitas_permitidas')" min="1" />
+                                        <x-input-error :messages="$errors->get('visitas_permitidas')" class="mt-1" />
+                                    </div>
+                                    
+                                    <!-- Renovación -->
+                                    <div>
+                                        <div class="flex items-start">
+                                            <div class="flex items-center h-5">
+                                                <input id="renovacion" name="renovacion" type="checkbox" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" {{ old('renovacion') ? 'checked' : '' }} checked>
+                                            </div>
+                                            <div class="ml-3 text-sm">
+                                                <label for="renovacion" class="font-medium text-gray-700">Renovación</label>
+                                                <p class="text-gray-500">Marcar si es una renovación de membresía</p>
+                                            </div>
+                                        </div>
+                                        <x-input-error :messages="$errors->get('renovacion')" class="mt-1" />
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="flex justify-between mt-8">
-                                <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium" disabled>
-                                    Anterior
-                                </button>
-                                <button type="button" x-on:click="saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
-                                    Guardar y Continuar
-                                </button>
+                                
+                                <div class="flex justify-between mt-8">
+                                    <button type="button" @click="subpaso = 1" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium" 
+                                            x-show="!tieneMembresiaConPagoPendiente">
+                                        Anterior
+                                    </button>
+                                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md opacity-50 cursor-not-allowed" 
+                                            x-show="tieneMembresiaConPagoPendiente" disabled>
+                                        Anterior
+                                    </button>
+                                    <button type="button" x-on:click="saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+                                        Guardar y Continuar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Paso 2: Pago (solo si no tiene membresía activa) -->
-                        <div x-show="!tieneMembresiaActiva && step === 2" style="display: none;" x-data="{
+                        <div x-show="(!tieneMembresiaActiva && step === 2) || (tieneMembresiaConPagoPendiente && step === 1)" style="display: none;" x-data="{
                             montoPendiente: '',
                             
                             init() {
                                 // Establecer el monto pendiente igual al precio total
-                                this.montoPendiente = document.getElementById('precio_total').value;
-                                document.getElementById('monto_pago').value = this.montoPendiente;
+                                this.montoPendiente = document.getElementById('precio_total')?.value || '0';
+                                if (document.getElementById('monto_pago')) {
+                                    document.getElementById('monto_pago').value = this.montoPendiente;
+                                }
                             }
                         }">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Pago de Membresía</h2>
+                            
+                            <div x-show="tieneMembresiaConPagoPendiente" class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-yellow-800">Tienes una membresía pendiente de pago</h3>
+                                        <div class="mt-2 text-sm text-yellow-700">
+                                            <p>Se ha detectado que tienes una membresía sin pagos registrados. Por favor, completa el proceso de pago para continuar.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <div class="mb-6">
                                 <!-- Indicador de pasos para la membresía -->
@@ -609,7 +653,10 @@
                             </div>
                             
                             <div class="flex justify-between mt-8">
-                                <button type="button" @click="step = 1" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
+                                <button type="button" @click="step = 1" x-show="!tieneMembresiaConPagoPendiente" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
+                                    Anterior
+                                </button>
+                                <button type="button" disabled x-show="tieneMembresiaConPagoPendiente" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md opacity-50 cursor-not-allowed">
                                     Anterior
                                 </button>
                                 <button type="button" x-on:click="saveStep(2)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
