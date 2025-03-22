@@ -144,7 +144,17 @@ use Carbon\Carbon;
 
                 <!-- Menú Dueño de Gimnasio -->
                 @role('dueño')
-                <div x-data="{ open: {{ request()->routeIs('gimnasios.*') || request()->routeIs('clientes.*') || request()->routeIs('membresias.*') || request()->routeIs('tipos-membresia.*') || request()->routeIs('rutinas-predefinidas.*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ 
+                    request()->routeIs('gimnasios.*') || 
+                    request()->routeIs('clientes.*') || 
+                    request()->routeIs('membresias.*') || 
+                    request()->routeIs('tipos-membresia.*') || 
+                    request()->routeIs('rutinas-predefinidas.*') || 
+                    request()->routeIs('pagos.*') || 
+                    request()->routeIs('asistencias.*') || 
+                    request()->routeIs('nutricion.*') 
+                    ? 'true' : 'false' 
+                }} }">
                     <button @click="open = !open"
                         class="w-full flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                         :class="{'bg-emerald-600/30': open}">
@@ -476,7 +486,17 @@ use Carbon\Carbon;
 
             <!-- Menú Dueño de Gimnasio -->
             @role('dueño')
-            <div x-data="{ open: {{ request()->routeIs('gimnasios.*') || request()->routeIs('clientes.*') || request()->routeIs('membresias.*') || request()->routeIs('tipos-membresia.*') ? 'true' : 'false' }} }">
+            <div x-data="{ open: {{ 
+                request()->routeIs('gimnasios.*') || 
+                request()->routeIs('clientes.*') || 
+                request()->routeIs('membresias.*') || 
+                request()->routeIs('tipos-membresia.*') || 
+                request()->routeIs('rutinas-predefinidas.*') || 
+                request()->routeIs('pagos.*') || 
+                request()->routeIs('asistencias.*') || 
+                request()->routeIs('nutricion.*') 
+                ? 'true' : 'false' 
+            }} }">
                 <button @click="open = !open"
                     class="w-full flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200"
                     :class="{'bg-emerald-600/30': open}">
