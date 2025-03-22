@@ -112,17 +112,10 @@ class ClienteRegistroController extends Controller
                         
                         \Log::info('Pago creado:', ['id' => $pago->id_pago]);
                         
-                        // Actualizar el saldo pendiente de la membresía
-                        $nuevoSaldo = $membresia->saldo_pendiente - $request->monto_pago;
-                        $membresia->saldo_pendiente = max(0, $nuevoSaldo);
-                        $membresia->save();
-                        
-                        \Log::info('Saldo actualizado:', ['nuevo_saldo' => $membresia->saldo_pendiente]);
-                        
                         $message = "Pago registrado correctamente";
                         
                         // Determinar la URL de redirección con el siguiente paso
-                        $redirectUrl = route('completar.registro.cliente') . '?paso=3';
+                        $redirectUrl = route('completar.registro.cliente.form') . '?paso=3';
                         
                         return response()->json([
                             'success' => true,
@@ -162,7 +155,7 @@ class ClienteRegistroController extends Controller
                         $message = "Información personal guardada correctamente";
                         
                         // Determinar la URL de redirección al paso 4
-                        $redirectUrl = route('completar.registro.cliente') . '?paso=4';
+                        $redirectUrl = route('completar.registro.cliente.form') . '?paso=4';
                         
                         return response()->json([
                             'success' => true,
@@ -282,6 +275,15 @@ class ClienteRegistroController extends Controller
                         ]);
                         
                         $message = "Membresía registrada correctamente";
+                        
+                        // Determinar la URL de redirección al paso 2
+                        $redirectUrl = route('completar.registro.cliente.form') . '?paso=2';
+                        
+                        return response()->json([
+                            'success' => true,
+                            'message' => $message,
+                            'redirect' => $redirectUrl
+                        ]);
                         break;
                         
                     case 2:
@@ -331,17 +333,10 @@ class ClienteRegistroController extends Controller
                         
                         \Log::info('Pago creado:', ['id' => $pago->id_pago]);
                         
-                        // Actualizar el saldo pendiente de la membresía
-                        $nuevoSaldo = $membresia->saldo_pendiente - $request->monto_pago;
-                        $membresia->saldo_pendiente = max(0, $nuevoSaldo);
-                        $membresia->save();
-                        
-                        \Log::info('Saldo actualizado:', ['nuevo_saldo' => $membresia->saldo_pendiente]);
-                        
                         $message = "Pago registrado correctamente";
                         
                         // Determinar la URL de redirección con el siguiente paso
-                        $redirectUrl = route('completar.registro.cliente') . '?paso=3';
+                        $redirectUrl = route('completar.registro.cliente.form') . '?paso=3';
                         
                         return response()->json([
                             'success' => true,
@@ -381,7 +376,7 @@ class ClienteRegistroController extends Controller
                         $message = "Información personal guardada correctamente";
                         
                         // Determinar la URL de redirección al paso 4
-                        $redirectUrl = route('completar.registro.cliente') . '?paso=4';
+                        $redirectUrl = route('completar.registro.cliente.form') . '?paso=4';
                         
                         return response()->json([
                             'success' => true,

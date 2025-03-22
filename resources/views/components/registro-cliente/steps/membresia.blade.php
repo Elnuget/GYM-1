@@ -42,6 +42,86 @@
                 }
             }
         }
+    },
+    
+    guardarMembresia() {
+        // Validar campos obligatorios
+        let camposFaltantes = [];
+        
+        if (!document.getElementById('id_tipo_membresia')?.value) camposFaltantes.push('Tipo de Membresía');
+        if (!document.getElementById('precio_total')?.value) camposFaltantes.push('Precio Total');
+        if (!document.getElementById('fecha_compra')?.value) camposFaltantes.push('Fecha de Compra');
+        if (!document.getElementById('fecha_vencimiento')?.value) camposFaltantes.push('Fecha de Vencimiento');
+        
+        if (this.showVisitasFields && !document.getElementById('visitas_permitidas')?.value) {
+            camposFaltantes.push('Visitas Permitidas');
+        }
+        
+        if (camposFaltantes.length > 0) {
+            const errorMessage = 'Por favor, complete los campos obligatorios: ' + camposFaltantes.join(', ');
+            this.$dispatch('mostrar-error', { mensaje: errorMessage });
+            return;
+        }
+        
+        // Mostrar indicador de procesamiento
+        this.$dispatch('mostrar-success', { mensaje: 'Guardando membresía...' });
+        
+        // Crear FormData con los campos del paso 1
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('step', 1);
+        
+        // Añadir todos los campos del formulario
+        formData.append('id_tipo_membresia', document.getElementById('id_tipo_membresia').value);
+        formData.append('precio_total', document.getElementById('precio_total').value);
+        formData.append('fecha_compra', document.getElementById('fecha_compra').value);
+        formData.append('fecha_vencimiento', document.getElementById('fecha_vencimiento').value);
+        formData.append('saldo_pendiente', document.getElementById('saldo_pendiente').value);
+        
+        if (this.showVisitasFields) {
+            formData.append('visitas_permitidas', document.getElementById('visitas_permitidas').value);
+        }
+        
+        formData.append('renovacion', document.getElementById('renovacion').checked ? '1' : '0');
+        
+        // Enviar los datos
+        fetch('{{ route('guardar.paso.cliente') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.$dispatch('mostrar-success', { 
+                    mensaje: data.message || 'Membresía guardada exitosamente' 
+                });
+                
+                // Esperar un momento para mostrar el mensaje de éxito antes de continuar
+                setTimeout(() => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        // Si no hay redirección específica, avanzar al siguiente paso
+                        this.step = 2;
+                    }
+                }, 1500);
+            } else {
+                this.$dispatch('mostrar-error', { 
+                    mensaje: data.message || 'Error al guardar la membresía' 
+                });
+                console.error('Error en la respuesta:', data);
+            }
+        })
+        .catch(error => {
+            this.$dispatch('mostrar-error', { 
+                mensaje: 'Error de conexión al guardar la membresía' 
+            });
+            console.error('Error en la solicitud:', error);
+        });
     }
 }">
     <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Membresía</h2>
@@ -128,7 +208,7 @@
     </div>
     
     <div class="flex justify-end mt-8">
-        <button type="button" @click="$parent.saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+        <button type="button" @click="guardarMembresia()" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
             Guardar y Continuar
         </button>
     </div>
