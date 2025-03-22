@@ -2,7 +2,7 @@
     @php
         // Verificar si el usuario actual tiene membresías
         $tieneMembresiaActiva = \App\Models\Membresia::where('id_usuario', auth()->id())->exists();
-        $totalPasos = $tieneMembresiaActiva ? 3 : 4;
+        $totalPasos = $tieneMembresiaActiva ? 3 : 5;
     @endphp
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,19 +58,48 @@
                     // Validar campos obligatorios
                     let camposFaltantes = [];
                     
-                    if (currentStep === 1) {
-                        if (!formElement.fecha_nacimiento.value.trim()) camposFaltantes.push('Fecha de Nacimiento');
-                        if (!formElement.telefono.value.trim()) camposFaltantes.push('Teléfono');
-                        if (!formElement.genero.value) camposFaltantes.push('Género');
-                        if (!formElement.ocupacion.value.trim()) camposFaltantes.push('Ocupación');
-                        if (!formElement.direccion.value.trim()) camposFaltantes.push('Dirección');
-                    } else if (currentStep === 2) {
-                        if (!formElement.peso.value.trim()) camposFaltantes.push('Peso');
-                        if (!formElement.altura.value.trim()) camposFaltantes.push('Altura');
-                    } else if (currentStep === 3) {
-                        if (!formElement.objetivo_principal.value) camposFaltantes.push('Objetivo Principal');
-                        if (!formElement.nivel_experiencia.value) camposFaltantes.push('Nivel de Experiencia');
-                        if (!formElement.dias_entrenamiento.value) camposFaltantes.push('Días de Entrenamiento');
+                    if (!this.tieneMembresiaActiva) {
+                        // Flujo sin membresía activa: pasos: 1 = Membresía, 2 = Pago, 3 = Info Personal, 4 = Medidas, 5 = Objetivos
+                        if (currentStep === 1) {
+                            if (!formElement.id_tipo_membresia.value) camposFaltantes.push('Tipo de Membresía');
+                            if (!formElement.fecha_compra.value.trim()) camposFaltantes.push('Fecha de Compra');
+                            if (!formElement.fecha_vencimiento.value.trim()) camposFaltantes.push('Fecha de Vencimiento');
+                            // Agregar saldo pendiente igual al precio total
+                            formData.append('saldo_pendiente', formElement.precio_total.value);
+                        } else if (currentStep === 2) {
+                            if (!formElement.monto_pago.value.trim()) camposFaltantes.push('Monto del Pago');
+                            if (!formElement.metodo_pago.value) camposFaltantes.push('Método de Pago');
+                            if (!formElement.fecha_pago.value.trim()) camposFaltantes.push('Fecha de Pago');
+                        } else if (currentStep === 3) {
+                            if (!formElement.fecha_nacimiento.value.trim()) camposFaltantes.push('Fecha de Nacimiento');
+                            if (!formElement.telefono.value.trim()) camposFaltantes.push('Teléfono');
+                            if (!formElement.genero.value) camposFaltantes.push('Género');
+                            if (!formElement.ocupacion.value.trim()) camposFaltantes.push('Ocupación');
+                            if (!formElement.direccion.value.trim()) camposFaltantes.push('Dirección');
+                        } else if (currentStep === 4) {
+                            if (!formElement.peso.value.trim()) camposFaltantes.push('Peso');
+                            if (!formElement.altura.value.trim()) camposFaltantes.push('Altura');
+                        } else if (currentStep === 5) {
+                            if (!formElement.objetivo_principal.value) camposFaltantes.push('Objetivo Principal');
+                            if (!formElement.nivel_experiencia.value) camposFaltantes.push('Nivel de Experiencia');
+                            if (!formElement.dias_entrenamiento.value) camposFaltantes.push('Días de Entrenamiento');
+                        }
+                    } else {
+                        // Flujo con membresía activa: pasos: 1 = Información Personal, 2 = Medidas Corporales, 3 = Objetivos Fitness
+                        if (currentStep === 1) {
+                            if (!formElement.fecha_nacimiento.value.trim()) camposFaltantes.push('Fecha de Nacimiento');
+                            if (!formElement.telefono.value.trim()) camposFaltantes.push('Teléfono');
+                            if (!formElement.genero.value) camposFaltantes.push('Género');
+                            if (!formElement.ocupacion.value.trim()) camposFaltantes.push('Ocupación');
+                            if (!formElement.direccion.value.trim()) camposFaltantes.push('Dirección');
+                        } else if (currentStep === 2) {
+                            if (!formElement.peso.value.trim()) camposFaltantes.push('Peso');
+                            if (!formElement.altura.value.trim()) camposFaltantes.push('Altura');
+                        } else if (currentStep === 3) {
+                            if (!formElement.objetivo_principal.value) camposFaltantes.push('Objetivo Principal');
+                            if (!formElement.nivel_experiencia.value) camposFaltantes.push('Nivel de Experiencia');
+                            if (!formElement.dias_entrenamiento.value) camposFaltantes.push('Días de Entrenamiento');
+                        }
                     }
                     
                     if (camposFaltantes.length > 0) {
@@ -102,15 +131,12 @@
                             
                             setTimeout(() => {
                                 this.showSuccessModal = false;
-                                // Si es el último paso o tiene membresía activa y está en el paso 3, completar el registro
-                                if ((this.tieneMembresiaActiva && currentStep === 3) || (!this.tieneMembresiaActiva && currentStep < 4)) {
-                                    if (this.tieneMembresiaActiva && currentStep === 3) {
-                                        // Es el último paso cuando tiene membresía
-                                        window.location.href = '{{ route('dashboard') }}';
-                                    } else if (!this.tieneMembresiaActiva) {
-                                        // Avanzar al siguiente paso cuando no tiene membresía
-                                        this.step = currentStep + 1;
-                                    }
+                                if (this.tieneMembresiaActiva && currentStep === 3) {
+                                    // Es el último paso cuando tiene membresía
+                                    window.location.href = '{{ route('dashboard') }}';
+                                } else if (!this.tieneMembresiaActiva) {
+                                    // Avanzar al siguiente paso cuando no tiene membresía
+                                    this.step = currentStep + 1;
                                 }
                             }, 1500);
                         } else {
@@ -430,79 +456,65 @@
                             </div>
                         </div>
                         
-                        <!-- Paso 2/1: Información Personal -->
-                        <div x-show="step === (tieneMembresiaActiva ? 1 : 2)" style="display: none;">
-                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Información Personal</h2>
+                        <!-- Paso 2: Pago (solo si no tiene membresía activa) -->
+                        <div x-show="!tieneMembresiaActiva && step === 2" style="display: none;">
+                            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Pago de Membresía</h2>
                             
-                            <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Completa tu información personal para configurar tu perfil de cliente.</p>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                <!-- Foto de Perfil -->
-                                <div class="md:col-span-2">
-                                    <x-input-label for="foto_perfil" :value="__('Foto de Perfil')" />
-                                    <div class="mt-2 flex items-center">
-                                        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden" id="foto-perfil-container">
-                                            @if($user->foto_perfil && file_exists(public_path($user->foto_perfil)))
-                                                <img id="preview-image" src="{{ asset($user->foto_perfil) }}" alt="Vista previa" class="w-full h-full object-cover">
-                                            @else
-                                                <svg id="default-user-icon" class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                </svg>
-                                            @endif
-                                        </div>
-                                        <input type="file" 
-                                               id="foto_perfil" 
-                                               name="foto_perfil" 
-                                               class="ml-5 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" 
-                                               accept="image/*"
-                                               @change="previewImage($event)">
+                            <div class="mb-6">
+                                <!-- Indicador de pasos para la membresía -->
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
+                                        <span class="text-white font-bold text-sm">1</span>
                                     </div>
-                                    <x-input-error :messages="$errors->get('foto_perfil')" class="mt-2" />
-                                </div>
-                                
-                                <!-- Fecha de Nacimiento -->
-                                <div>
-                                    <x-input-label for="fecha_nacimiento" :value="__('Fecha de Nacimiento *')" />
-                                    <x-text-input id="fecha_nacimiento" class="block mt-1 w-full" type="date" name="fecha_nacimiento" :value="old('fecha_nacimiento')" required />
-                                    <x-input-error :messages="$errors->get('fecha_nacimiento')" class="mt-2" />
-                                </div>
-                                
-                                <!-- Teléfono -->
-                                <div>
-                                    <x-input-label for="telefono" :value="__('Teléfono *')" />
-                                    <x-text-input id="telefono" class="block mt-1 w-full" type="text" name="telefono" :value="old('telefono', $user->telefono ?? '')" required placeholder="0999999999" />
-                                    <x-input-error :messages="$errors->get('telefono')" class="mt-2" />
-                                </div>
-                                
-                                <!-- Género -->
-                                <div>
-                                    <x-input-label for="genero" :value="__('Género *')" />
-                                    <select id="genero" name="genero" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                        <option value="" selected disabled>Selecciona tu género</option>
-                                        <option value="Masculino" {{ old('genero') == 'Masculino' ? 'selected' : '' }}>Masculino</option>
-                                        <option value="Femenino" {{ old('genero') == 'Femenino' ? 'selected' : '' }}>Femenino</option>
-                                        <option value="Otro" {{ old('genero') == 'Otro' ? 'selected' : '' }}>Otro</option>
-                                    </select>
-                                    <x-input-error :messages="$errors->get('genero')" class="mt-2" />
-                                </div>
-                                
-                                <!-- Ocupación -->
-                                <div>
-                                    <x-input-label for="ocupacion" :value="__('Ocupación *')" />
-                                    <x-text-input id="ocupacion" class="block mt-1 w-full" type="text" name="ocupacion" :value="old('ocupacion')" required placeholder="Ej: Estudiante, Profesional, etc." />
-                                    <x-input-error :messages="$errors->get('ocupacion')" class="mt-2" />
-                                </div>
-                                
-                                <!-- Dirección -->
-                                <div class="md:col-span-2">
-                                    <x-input-label for="direccion" :value="__('Dirección *')" />
-                                    <x-text-input id="direccion" class="block mt-1 w-full" type="text" name="direccion" :value="old('direccion', $user->direccion ?? '')" required />
-                                    <x-input-error :messages="$errors->get('direccion')" class="mt-2" />
+                                    <div class="ml-2 text-emerald-500 font-medium">MEMBRESÍA</div>
+                                    <div class="mx-4 h-1 w-24 bg-emerald-500"></div>
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500">
+                                        <span class="text-white font-bold text-sm">2</span>
+                                    </div>
+                                    <div class="ml-2 text-emerald-500">PAGO</div>
                                 </div>
                             </div>
                             
-                            <div class="flex flex-col sm:flex-row justify-end mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
-                                <button type="button" x-on:click="saveStep(2)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <div class="grid grid-cols-1 gap-6">
+                                <!-- Monto del Pago -->
+                                <div>
+                                    <x-input-label for="monto_pago" :value="__('Monto del Pago *')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="monto_pago" class="block w-full" type="number" step="0.01" name="monto_pago" :value="old('monto_pago')" required />
+                                    <x-input-error :messages="$errors->get('monto_pago')" class="mt-1" />
+                                </div>
+
+                                <!-- Método de Pago -->
+                                <div>
+                                    <x-input-label for="metodo_pago" :value="__('Método de Pago *')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <select id="metodo_pago" name="metodo_pago" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
+                                        <option value="" selected disabled>Selecciona un método de pago</option>
+                                        <option value="efectivo">Efectivo</option>
+                                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+                                        <option value="transferencia">Transferencia Bancaria</option>
+                                    </select>
+                                    <x-input-error :messages="$errors->get('metodo_pago')" class="mt-1" />
+                                </div>
+
+                                <!-- Fecha de Pago -->
+                                <div>
+                                    <x-input-label for="fecha_pago" :value="__('Fecha de Pago *')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <x-text-input id="fecha_pago" class="block w-full" type="date" name="fecha_pago" :value="old('fecha_pago', date('Y-m-d'))" required />
+                                    <x-input-error :messages="$errors->get('fecha_pago')" class="mt-1" />
+                                </div>
+
+                                <!-- Observaciones -->
+                                <div>
+                                    <x-input-label for="observaciones" :value="__('Observaciones')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <textarea id="observaciones" name="observaciones" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="Observaciones adicionales sobre el pago">{{ old('observaciones') }}</textarea>
+                                    <x-input-error :messages="$errors->get('observaciones')" class="mt-1" />
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between mt-8">
+                                <button type="button" @click="step = 1" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
+                                    Anterior
+                                </button>
+                                <button type="button" x-on:click="saveStep(2)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
                                     Guardar y Continuar
                                 </button>
                             </div>
