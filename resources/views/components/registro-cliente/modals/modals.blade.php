@@ -5,6 +5,8 @@
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0 transform scale-90"
      x-transition:enter-end="opacity-100 transform scale-100"
+     @click.away="showSuccessModal = false"
+     @keydown.escape.window="showSuccessModal = false"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
      style="display: none;">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
@@ -15,6 +17,11 @@
         </div>
         <h3 class="text-lg font-medium text-center text-gray-900 mb-2">¡Éxito!</h3>
         <p class="text-center text-gray-600" x-text="modalMessage"></p>
+        <div class="mt-4 flex justify-center">
+            <button @click="showSuccessModal = false" class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700">
+                Cerrar
+            </button>
+        </div>
     </div>
 </div>
 
@@ -23,6 +30,8 @@
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0 transform scale-90"
      x-transition:enter-end="opacity-100 transform scale-100"
+     @click.away="showErrorModal = false"
+     @keydown.escape.window="showErrorModal = false"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
      style="display: none;">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">

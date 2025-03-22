@@ -1,63 +1,127 @@
 {{-- Paso 5: Objetivos Fitness --}}
-<div x-show="step === 5" style="display: none;">
+<div x-show="step === 5" style="display: none;" x-data="{
+    guardarObjetivosFitness() {
+        // Validar campos obligatorios
+        let camposFaltantes = [];
+        
+        if (!document.getElementById('objetivo_principal')?.value) camposFaltantes.push('Objetivo Principal');
+        if (!document.getElementById('nivel_experiencia')?.value) camposFaltantes.push('Nivel de Experiencia');
+        if (!document.getElementById('dias_entrenamiento')?.value) camposFaltantes.push('Días de Entrenamiento');
+        
+        if (camposFaltantes.length > 0) {
+            const errorMessage = 'Por favor, complete los campos obligatorios: ' + camposFaltantes.join(', ');
+            this.$dispatch('mostrar-error', { mensaje: errorMessage });
+            return;
+        }
+        
+        // Mostrar indicador de procesamiento
+        this.$dispatch('mostrar-success', { mensaje: 'Guardando objetivos fitness...' });
+        
+        // Crear FormData con los campos del paso 5
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('step', 5);
+        
+        // Añadir todos los campos del formulario
+        formData.append('objetivo_principal', document.getElementById('objetivo_principal').value);
+        formData.append('nivel_experiencia', document.getElementById('nivel_experiencia').value);
+        formData.append('dias_entrenamiento', document.getElementById('dias_entrenamiento').value);
+        formData.append('condiciones_medicas', document.getElementById('condiciones_medicas')?.value || '');
+        
+        // Enviar los datos
+        fetch('{{ route('guardar.paso.cliente') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.$dispatch('mostrar-success', { 
+                    mensaje: data.message || 'Objetivos fitness guardados exitosamente' 
+                });
+                
+                // Esperar un momento para mostrar el mensaje de éxito antes de redireccionar
+                setTimeout(() => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    }
+                }, 1500);
+            } else {
+                this.$dispatch('mostrar-error', { 
+                    mensaje: data.message || 'Error al guardar los objetivos fitness' 
+                });
+                console.error('Error en la respuesta:', data);
+            }
+        })
+        .catch(error => {
+            this.$dispatch('mostrar-error', { 
+                mensaje: 'Error de conexión al guardar los objetivos fitness' 
+            });
+            console.error('Error en la solicitud:', error);
+        });
+    }
+}">
     <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Objetivos Fitness</h2>
     
-    <p class="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">Define tus objetivos de entrenamiento para personalizar tu experiencia.</p>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Objetivo Principal -->
-        <div>
-            <x-input-label for="objetivo_principal" :value="__('Objetivo Principal *')" />
-            <select id="objetivo_principal" name="objetivo_principal" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+        <div class="md:col-span-2">
+            <x-input-label for="objetivo_principal" :value="__('Objetivo Principal *')" class="mb-1 text-sm font-medium text-gray-700" />
+            <select id="objetivo_principal" name="objetivo_principal" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
                 <option value="" selected disabled>Selecciona tu objetivo principal</option>
-                <option value="perdida_peso" {{ old('objetivo_principal') == 'perdida_peso' ? 'selected' : '' }}>Pérdida de Peso</option>
-                <option value="ganancia_muscular" {{ old('objetivo_principal') == 'ganancia_muscular' ? 'selected' : '' }}>Ganancia Muscular</option>
-                <option value="tonificacion" {{ old('objetivo_principal') == 'tonificacion' ? 'selected' : '' }}>Tonificación</option>
-                <option value="mejorar_resistencia" {{ old('objetivo_principal') == 'mejorar_resistencia' ? 'selected' : '' }}>Mejorar Resistencia</option>
-                <option value="fuerza" {{ old('objetivo_principal') == 'fuerza' ? 'selected' : '' }}>Fuerza</option>
-                <option value="flexibilidad" {{ old('objetivo_principal') == 'flexibilidad' ? 'selected' : '' }}>Flexibilidad</option>
+                <option value="perdida_peso">Pérdida de peso</option>
+                <option value="ganancia_muscular">Ganancia muscular</option>
+                <option value="tonificacion">Tonificación</option>
+                <option value="resistencia">Mejorar resistencia</option>
+                <option value="flexibilidad">Mejorar flexibilidad</option>
+                <option value="salud_general">Salud general</option>
             </select>
-            <x-input-error :messages="$errors->get('objetivo_principal')" class="mt-2" />
+            <x-input-error :messages="$errors->get('objetivo_principal')" class="mt-1" />
         </div>
         
         <!-- Nivel de Experiencia -->
         <div>
-            <x-input-label for="nivel_experiencia" :value="__('Nivel de Experiencia *')" />
-            <select id="nivel_experiencia" name="nivel_experiencia" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+            <x-input-label for="nivel_experiencia" :value="__('Nivel de Experiencia *')" class="mb-1 text-sm font-medium text-gray-700" />
+            <select id="nivel_experiencia" name="nivel_experiencia" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
                 <option value="" selected disabled>Selecciona tu nivel</option>
-                <option value="principiante" {{ old('nivel_experiencia') == 'principiante' ? 'selected' : '' }}>Principiante</option>
-                <option value="intermedio" {{ old('nivel_experiencia') == 'intermedio' ? 'selected' : '' }}>Intermedio</option>
-                <option value="avanzado" {{ old('nivel_experiencia') == 'avanzado' ? 'selected' : '' }}>Avanzado</option>
+                <option value="principiante">Principiante</option>
+                <option value="intermedio">Intermedio</option>
+                <option value="avanzado">Avanzado</option>
             </select>
-            <x-input-error :messages="$errors->get('nivel_experiencia')" class="mt-2" />
+            <x-input-error :messages="$errors->get('nivel_experiencia')" class="mt-1" />
         </div>
         
         <!-- Días de Entrenamiento -->
         <div>
-            <x-input-label for="dias_entrenamiento" :value="__('Días de Entrenamiento por Semana *')" />
-            <select id="dias_entrenamiento" name="dias_entrenamiento" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+            <x-input-label for="dias_entrenamiento" :value="__('Días de Entrenamiento por Semana *')" class="mb-1 text-sm font-medium text-gray-700" />
+            <select id="dias_entrenamiento" name="dias_entrenamiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
                 <option value="" selected disabled>Selecciona los días</option>
-                @for($i = 1; $i <= 7; $i++)
-                    <option value="{{ $i }}" {{ old('dias_entrenamiento') == $i ? 'selected' : '' }}>{{ $i }} día{{ $i > 1 ? 's' : '' }}</option>
+                @for ($i = 1; $i <= 7; $i++)
+                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'día' : 'días' }}</option>
                 @endfor
             </select>
-            <x-input-error :messages="$errors->get('dias_entrenamiento')" class="mt-2" />
+            <x-input-error :messages="$errors->get('dias_entrenamiento')" class="mt-1" />
         </div>
         
         <!-- Condiciones Médicas -->
         <div class="md:col-span-2">
-            <x-input-label for="condiciones_medicas" :value="__('Condiciones Médicas (opcional)')" />
-            <textarea id="condiciones_medicas" name="condiciones_medicas" rows="3" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Menciona cualquier condición médica, lesión o alergia que debamos tener en cuenta">{{ old('condiciones_medicas') }}</textarea>
-            <x-input-error :messages="$errors->get('condiciones_medicas')" class="mt-2" />
+            <x-input-label for="condiciones_medicas" :value="__('Condiciones Médicas o Lesiones (opcional)')" class="mb-1 text-sm font-medium text-gray-700" />
+            <textarea id="condiciones_medicas" name="condiciones_medicas" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="Describe cualquier condición médica o lesión que debamos tener en cuenta"></textarea>
+            <x-input-error :messages="$errors->get('condiciones_medicas')" class="mt-1" />
         </div>
     </div>
-    
-    <div class="flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0 sm:space-x-4">
-        <button type="button" x-on:click="step = 4" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+
+    <div class="flex justify-between mt-8">
+        <button type="button" @click="step = 4" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium">
             Anterior
         </button>
-        <button type="button" x-on:click="saveStep(5)" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150">
-            Completar Registro
+        
+        <button type="button" @click="guardarObjetivosFitness()" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+            Finalizar Registro
         </button>
     </div>
 </div> 

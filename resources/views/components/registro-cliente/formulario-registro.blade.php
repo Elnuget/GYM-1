@@ -45,6 +45,8 @@
     },
     
     saveStep(currentStep) {
+        console.log('Intentando guardar el paso:', currentStep);
+        
         const formElement = this.$refs.form;
         const formData = new FormData(formElement);
         formData.append('step', currentStep);
@@ -74,12 +76,66 @@
             }
         } else if (currentStep === 2) {
             // Paso 2: Pago
+            console.log('Validando campos del paso 2 (pago)');
+            
             if (!this.tieneMembresiaActiva || this.tieneMembresiaConPagoPendiente) {
-                if (!formElement.monto_pago.value.trim()) camposFaltantes.push('Monto del Pago');
-                if (!formElement.id_metodo_pago.value) camposFaltantes.push('Método de Pago');
-                if (!formElement.fecha_pago.value.trim()) camposFaltantes.push('Fecha de Pago');
+                console.log('Monto del pago:', formElement.monto_pago?.value);
+                console.log('Método de pago:', formElement.id_metodo_pago?.value);
+                console.log('Fecha de pago:', formElement.fecha_pago?.value);
+                console.log('ID de membresía:', document.getElementById('id_membresia')?.value);
+                
+                if (!formElement.monto_pago?.value?.trim()) camposFaltantes.push('Monto del Pago');
+                if (!formElement.id_metodo_pago?.value) camposFaltantes.push('Método de Pago');
+                if (!formElement.fecha_pago?.value?.trim()) camposFaltantes.push('Fecha de Pago');
+                if (!document.getElementById('id_membresia')?.value) camposFaltantes.push('ID de Membresía');
+                
                 // Agregar estado pendiente por defecto
                 formData.append('estado', 'pendiente');
+                
+                // Crear un nuevo FormData solo con los campos necesarios para el paso 2 (pago)
+                const pagoFormData = new FormData();
+                pagoFormData.append('step', currentStep);
+                pagoFormData.append('_token', '{{ csrf_token() }}');
+                
+                // Asegurarse de que los campos existen antes de intentar acceder a sus valores
+                if (formElement.monto_pago) {
+                    pagoFormData.append('monto_pago', formElement.monto_pago.value.trim());
+                }
+                
+                if (formElement.id_metodo_pago) {
+                    pagoFormData.append('id_metodo_pago', formElement.id_metodo_pago.value);
+                }
+                
+                if (formElement.fecha_pago) {
+                    pagoFormData.append('fecha_pago', formElement.fecha_pago.value.trim());
+                }
+                
+                pagoFormData.append('estado', 'pendiente');
+                
+                const idMembresia = document.getElementById('id_membresia')?.value;
+                if (idMembresia) {
+                    pagoFormData.append('id_membresia', idMembresia);
+                    console.log('ID de membresía añadido al FormData:', idMembresia);
+                } else {
+                    console.error('No se encontró el ID de membresía');
+                }
+                
+                if (formElement.notas) {
+                    pagoFormData.append('notas', formElement.notas.value);
+                }
+                
+                if (formElement.comprobante && formElement.comprobante.files[0]) {
+                    pagoFormData.append('comprobante', formElement.comprobante.files[0]);
+                }
+                
+                // Usar este FormData específico para el paso 2
+                formData = pagoFormData;
+                console.log('FormData creado para el paso 2:', formData);
+                
+                // Mostrar todas las entradas en el FormData para depuración
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
             }
         } else if (currentStep === 3) {
             // Paso 3: Información Personal
@@ -105,6 +161,8 @@
             return;
         }
         
+        console.log('Enviando datos para el paso ' + currentStep + ':', Object.fromEntries(formData));
+        
         // Mostrar indicador de procesamiento
         this.modalMessage = 'Guardando información...';
         this.showSuccessModal = true;
@@ -128,11 +186,16 @@
                 
                 setTimeout(() => {
                     this.showSuccessModal = false;
-                    if (currentStep === 5) {
+                    
+                    // Para el paso 1 (membresía), recargar la página y redireccionar al paso 2
+                    if (currentStep === 1) {
+                        // Guardar el paso 2 en la sesión y recargar la página
+                        window.location.href = '{{ route('completar.registro.cliente.form') }}?paso=2';
+                    } else if (currentStep === 5) {
                         // Es el último paso, redirigir al dashboard
                         window.location.href = '{{ route('dashboard') }}';
                     } else {
-                        // Avanzar al siguiente paso
+                        // Avanzar al siguiente paso normalmente sin recargar
                         this.step = currentStep + 1;
                     }
                 }, 1500);
@@ -145,9 +208,14 @@
             this.showSuccessModal = false;
             this.errorMessage = 'Error de conexión';
             this.showErrorModal = true;
+            console.error('Error en la solicitud:', error);
         });
     }
-}" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+}" 
+@mostrar-success="showSuccessModal = true; modalMessage = $event.detail.mensaje"
+@mostrar-error="showErrorModal = true; errorMessage = $event.detail.mensaje"
+@avanzar-paso.window="step = $event.detail.paso"
+class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
     <div class="p-6 bg-white border-b border-gray-200">
         <!-- Mensajes de Error o Éxito -->
         @if(session('error'))

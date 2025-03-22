@@ -128,7 +128,7 @@
     </div>
     
     <div class="flex justify-end mt-8">
-        <button type="button" x-on:click="saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+        <button type="button" @click="$parent.saveStep(1)" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
             Guardar y Continuar
         </button>
     </div>

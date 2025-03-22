@@ -200,4 +200,32 @@ Route::middleware('guest')->group(function () {
 // Rutas para Pagos
 Route::get('/api/membresias/{membresia}/pagos', [MembresiaController::class, 'pagos'])->name('membresias.pagos');
 
+// Ruta para obtener la membresía más reciente (API)
+Route::get('/api/membresia-reciente', function () {
+    try {
+        // Obtener la membresía más reciente del usuario autenticado
+        $membresia = \App\Models\Membresia::with(['tipoMembresia'])
+            ->where('id_usuario', auth()->id())
+            ->latest()
+            ->first();
+            
+        if ($membresia) {
+            return response()->json([
+                'success' => true,
+                'membresia' => $membresia
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró ninguna membresía'
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener la membresía: ' . $e->getMessage()
+        ], 500);
+    }
+})->middleware(['auth', 'verified'])->name('api.membresia.reciente');
+
 require __DIR__.'/auth.php';
