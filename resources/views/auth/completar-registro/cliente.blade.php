@@ -64,12 +64,32 @@
                             if (!formElement.id_tipo_membresia.value) camposFaltantes.push('Tipo de Membresía');
                             if (!formElement.fecha_compra.value.trim()) camposFaltantes.push('Fecha de Compra');
                             if (!formElement.fecha_vencimiento.value.trim()) camposFaltantes.push('Fecha de Vencimiento');
-                            // Agregar saldo pendiente igual al precio total
-                            formData.append('saldo_pendiente', formElement.precio_total.value);
+                            
+                            // Asegurar que el saldo pendiente sea igual al precio total
+                            const precioTotal = document.getElementById('precio_total').value;
+                            
+                            // MODIFICACION IMPORTANTE: Necesitamos enviar el saldo_pendiente como parte del precio_total
+                            // porque el controlador solo usa precio_total pero no saldo_pendiente
+                            const precioDecimal = parseFloat(precioTotal).toFixed(2);
+                            
+                            // Actualizar el campo oculto y establecer saldo_pendiente como parte de la petición
+                            document.getElementById('saldo_pendiente').value = precioDecimal;
+                            document.getElementById('precio_total').value = precioDecimal;
+                            
+                            // Enviar ambos valores para asegurar que se reciban correctamente
+                            formData.set('precio_total', precioDecimal);
+                            
+                            // Aunque el controlador no procesa este campo directamente, lo enviamos para DEBUG
+                            formData.set('saldo_pendiente', precioDecimal);
+                            
+                            console.log('Precio total enviado:', precioDecimal);
+                            console.log('Saldo pendiente enviado:', precioDecimal);
                         } else if (currentStep === 2) {
                             if (!formElement.monto_pago.value.trim()) camposFaltantes.push('Monto del Pago');
                             if (!formElement.metodo_pago.value) camposFaltantes.push('Método de Pago');
                             if (!formElement.fecha_pago.value.trim()) camposFaltantes.push('Fecha de Pago');
+                            // Agregar estado pendiente por defecto
+                            formData.append('estado', 'pendiente');
                         } else if (currentStep === 3) {
                             if (!formElement.fecha_nacimiento.value.trim()) camposFaltantes.push('Fecha de Nacimiento');
                             if (!formElement.telefono.value.trim()) camposFaltantes.push('Teléfono');
@@ -149,6 +169,49 @@
                         this.errorMessage = 'Error de conexión';
                         this.showErrorModal = true;
                     });
+                },
+                
+                calcularVencimiento() {
+                    const selectTipo = document.getElementById('id_tipo_membresia');
+                    const fechaCompra = document.getElementById('fecha_compra').value;
+                    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+                    
+                    if (selectTipo && fechaCompra) {
+                        const option = selectTipo.options[selectTipo.selectedIndex];
+                        
+                        if (option) {
+                            // Obtener el precio desde el atributo data
+                            const precio = parseFloat(option.dataset.precio || 0).toFixed(2);
+                            
+                            // Actualizar los campos de precio y saldo pendiente
+                            this.precioTotal = precio;
+                            document.getElementById('precio_total').value = precio;
+                            document.getElementById('saldo_pendiente').value = precio;
+                            
+                            console.log('Precio establecido a:', precio);
+                            console.log('Saldo pendiente establecido a:', document.getElementById('saldo_pendiente').value);
+                            
+                            const duracion = option.dataset.duracion || 0;
+                            this.nombreTipo = option.textContent || '';
+                            
+                            const tieneVisitas = parseInt(option.dataset.visitas) > 0;
+                            const nombreContieneVisita = this.nombreTipo.toLowerCase().includes('visita');
+                            this.showVisitasFields = tieneVisitas || nombreContieneVisita;
+                            
+                            if (this.showVisitasFields && option.dataset.visitas) {
+                                document.getElementById('visitas_permitidas').value = option.dataset.visitas;
+                            }
+                            
+                            if (fechaCompra && duracion) {
+                                const date = new Date(fechaCompra);
+                                date.setDate(date.getDate() + parseInt(duracion));
+                                
+                                const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+                                const dia = date.getDate().toString().padStart(2, '0');
+                                fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                            }
+                        }
+                    }
                 }
             }" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
@@ -359,7 +422,17 @@
                                         const option = selectTipo.options[selectTipo.selectedIndex];
                                         
                                         if (option) {
-                                            this.precioTotal = option.dataset.precio || 0;
+                                            // Obtener el precio desde el atributo data
+                                            const precio = parseFloat(option.dataset.precio || 0).toFixed(2);
+                                            
+                                            // Actualizar los campos de precio y saldo pendiente
+                                            this.precioTotal = precio;
+                                            document.getElementById('precio_total').value = precio;
+                                            document.getElementById('saldo_pendiente').value = precio;
+                                            
+                                            console.log('Precio establecido a:', precio);
+                                            console.log('Saldo pendiente establecido a:', document.getElementById('saldo_pendiente').value);
+                                            
                                             const duracion = option.dataset.duracion || 0;
                                             this.nombreTipo = option.textContent || '';
                                             
@@ -385,6 +458,7 @@
                             }">
                                 <!-- Contenido del paso de membresía -->
                                 <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+                                <input type="hidden" id="saldo_pendiente" name="saldo_pendiente" value="0">
                                 
                                 <div>
                                     <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
@@ -406,7 +480,7 @@
                                 <!-- Precio Total -->
                                 <div>
                                     <x-input-label for="precio_total" :value="__('Precio Total')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" x-model="precioTotal" readonly />
+                                    <x-text-input id="precio_total" class="block w-full bg-gray-100" type="number" step="0.01" name="precio_total" value="0" readonly />
                                     <x-input-error :messages="$errors->get('precio_total')" class="mt-1" />
                                 </div>
                                 
@@ -457,7 +531,15 @@
                         </div>
                         
                         <!-- Paso 2: Pago (solo si no tiene membresía activa) -->
-                        <div x-show="!tieneMembresiaActiva && step === 2" style="display: none;">
+                        <div x-show="!tieneMembresiaActiva && step === 2" style="display: none;" x-data="{
+                            montoPendiente: '',
+                            
+                            init() {
+                                // Establecer el monto pendiente igual al precio total
+                                this.montoPendiente = document.getElementById('precio_total').value;
+                                document.getElementById('monto_pago').value = this.montoPendiente;
+                            }
+                        }">
                             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">Pago de Membresía</h2>
                             
                             <div class="mb-6">
@@ -476,23 +558,27 @@
                             </div>
                             
                             <div class="grid grid-cols-1 gap-6">
+                                <!-- Campo oculto para estado -->
+                                <input type="hidden" name="estado" value="pendiente">
+                                
                                 <!-- Monto del Pago -->
                                 <div>
                                     <x-input-label for="monto_pago" :value="__('Monto del Pago *')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <x-text-input id="monto_pago" class="block w-full" type="number" step="0.01" name="monto_pago" :value="old('monto_pago')" required />
+                                    <x-text-input id="monto_pago" class="block w-full" type="number" step="0.01" name="monto_pago" :value="old('monto_pago')" required x-model="montoPendiente" />
+                                    <p class="mt-1 text-sm text-gray-500">Este es el monto pendiente de la membresía seleccionada.</p>
                                     <x-input-error :messages="$errors->get('monto_pago')" class="mt-1" />
                                 </div>
 
                                 <!-- Método de Pago -->
                                 <div>
                                     <x-input-label for="metodo_pago" :value="__('Método de Pago *')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <select id="metodo_pago" name="metodo_pago" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
+                                    <select id="metodo_pago" name="id_metodo_pago" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" required>
                                         <option value="" selected disabled>Selecciona un método de pago</option>
-                                        <option value="efectivo">Efectivo</option>
-                                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-                                        <option value="transferencia">Transferencia Bancaria</option>
+                                        <option value="1">Efectivo</option>
+                                        <option value="2">Tarjeta de Crédito/Débito</option>
+                                        <option value="3">Transferencia Bancaria</option>
                                     </select>
-                                    <x-input-error :messages="$errors->get('metodo_pago')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('id_metodo_pago')" class="mt-1" />
                                 </div>
 
                                 <!-- Fecha de Pago -->
@@ -501,12 +587,24 @@
                                     <x-text-input id="fecha_pago" class="block w-full" type="date" name="fecha_pago" :value="old('fecha_pago', date('Y-m-d'))" required />
                                     <x-input-error :messages="$errors->get('fecha_pago')" class="mt-1" />
                                 </div>
+                                
+                                <!-- Comprobante de Pago -->
+                                <div>
+                                    <x-input-label for="comprobante" :value="__('Comprobante de Pago (opcional)')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <input type="file" 
+                                          id="comprobante" 
+                                          name="comprobante" 
+                                          class="mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" 
+                                          accept="image/*,.pdf">
+                                    <p class="mt-1 text-sm text-gray-500">Puede subir una imagen o PDF del comprobante de pago (opcional).</p>
+                                    <x-input-error :messages="$errors->get('comprobante')" class="mt-1" />
+                                </div>
 
                                 <!-- Observaciones -->
                                 <div>
-                                    <x-input-label for="observaciones" :value="__('Observaciones')" class="mb-1 text-sm font-medium text-gray-700" />
-                                    <textarea id="observaciones" name="observaciones" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="Observaciones adicionales sobre el pago">{{ old('observaciones') }}</textarea>
-                                    <x-input-error :messages="$errors->get('observaciones')" class="mt-1" />
+                                    <x-input-label for="notas" :value="__('Observaciones')" class="mb-1 text-sm font-medium text-gray-700" />
+                                    <textarea id="notas" name="notas" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="Observaciones adicionales sobre el pago">{{ old('notas') }}</textarea>
+                                    <x-input-error :messages="$errors->get('notas')" class="mt-1" />
                                 </div>
                             </div>
                             
