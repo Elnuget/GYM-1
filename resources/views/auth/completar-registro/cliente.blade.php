@@ -404,6 +404,9 @@
                         @csrf
                         <input type="hidden" name="current_step" x-bind:value="step">
                         <input type="hidden" name="tiene_membresia" value="{{ $tieneMembresiaActiva ? '1' : '0' }}">
+                        @if($tieneMembresiaActiva && $tieneMembresiaConPagoPendiente)
+                            <input type="hidden" id="saldo_pendiente" value="{{ $membresia->saldo_pendiente }}">
+                        @endif
                         
                         <!-- Paso 1: Membresía (solo si no tiene membresía activa) -->
                         <div x-show="!tieneMembresiaActiva && step === 1" style="display: none;">
@@ -561,8 +564,9 @@
                             montoPendiente: '',
                             
                             init() {
-                                // Establecer el monto pendiente igual al precio total
-                                this.montoPendiente = document.getElementById('precio_total')?.value || '0';
+                                // Se intenta obtener el valor pendiente desde el input 'saldo_pendiente'
+                                let saldoElem = document.getElementById('saldo_pendiente');
+                                this.montoPendiente = saldoElem ? saldoElem.value : (document.getElementById('precio_total')?.value || '0');
                                 if (document.getElementById('monto_pago')) {
                                     document.getElementById('monto_pago').value = this.montoPendiente;
                                 }

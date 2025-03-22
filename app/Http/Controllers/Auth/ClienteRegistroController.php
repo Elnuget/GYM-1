@@ -153,6 +153,53 @@ class ClienteRegistroController extends Controller
                         break;
                         
                     case 2:
+                        // Pago de la membresía
+                        $request->validate([
+                            'monto_pago' => 'required|numeric|min:0',
+                            'id_metodo_pago' => 'required|exists:metodos_pago,id_metodo_pago',
+                            'fecha_pago' => 'required|date',
+                            'comprobante' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+                            'notas' => 'nullable|string'
+                        ]);
+                        
+                        // Obtener la membresía más reciente del usuario
+                        $membresia = \App\Models\Membresia::where('id_usuario', $user->id)
+                            ->latest()
+                            ->first();
+                            
+                        if (!$membresia) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'No se encontró una membresía asociada al usuario.'
+                            ], 404);
+                        }
+                        
+                        // Procesar el comprobante si se proporciona
+                        $rutaComprobante = null;
+                        if ($request->hasFile('comprobante')) {
+                            $rutaComprobante = $request->file('comprobante')->store('comprobantes', 'public');
+                        }
+                        
+                        // Crear el pago
+                        $pago = \App\Models\Pago::create([
+                            'id_membresia' => $membresia->id_membresia,
+                            'monto' => $request->monto_pago,
+                            'id_metodo_pago' => $request->id_metodo_pago,
+                            'fecha_pago' => $request->fecha_pago,
+                            'estado' => 'pendiente',
+                            'comprobante' => $rutaComprobante ? 'storage/' . $rutaComprobante : null,
+                            'notas' => $request->notas
+                        ]);
+                        
+                        // Actualizar el saldo pendiente de la membresía
+                        $nuevoSaldo = $membresia->saldo_pendiente - $request->monto_pago;
+                        $membresia->saldo_pendiente = max(0, $nuevoSaldo);
+                        $membresia->save();
+                        
+                        $message = "Pago registrado correctamente";
+                        break;
+                        
+                    case 3:
                         // Información Personal
                         $request->validate([
                             'fecha_nacimiento' => 'required|date',
@@ -183,7 +230,7 @@ class ClienteRegistroController extends Controller
                         $message = "Información personal guardada correctamente";
                         break;
                         
-                    case 3:
+                    case 4:
                         // Medidas Corporales
                         $request->validate([
                             'peso' => 'required|numeric|min:0',
@@ -210,7 +257,7 @@ class ClienteRegistroController extends Controller
                         $message = "Medidas corporales guardadas correctamente";
                         break;
                         
-                    case 4:
+                    case 5:
                         // Objetivos Fitness
                         $request->validate([
                             'objetivo_principal' => 'required|string',
@@ -242,7 +289,7 @@ class ClienteRegistroController extends Controller
             // Guardar el paso actual en la sesión
             session(['current_step' => $paso]);
             
-            $maxPasos = $tieneMembresiaActiva ? 3 : 4;
+            $maxPasos = $tieneMembresiaActiva ? 3 : 5;
             $siguientePaso = $paso < $maxPasos ? $paso + 1 : null;
             
             return response()->json([
