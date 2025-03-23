@@ -518,7 +518,9 @@
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Membresía</label>
-                                        <p class="mt-1 text-sm text-gray-900" x-text="currentPago?.membresia?.tipoMembresia?.nombre || 'No asignada'"></p>
+                                        <p class="mt-1 text-sm text-gray-900">
+                                            ID: <span x-text="currentPago?.id_membresia"></span>
+                                        </p>
                                     </div>
 
                                     <div>
@@ -533,7 +535,7 @@
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                                        <p class="mt-1 text-sm text-gray-900" x-html="formatMetodoPago(currentPago?.metodoPago?.nombre_metodo)"></p>
+                                        <p class="mt-1 text-sm text-gray-900" x-text="formatMetodoPago(currentPago?.metodo_pago?.nombre_metodo)"></p>
                                     </div>
 
                                     <div>
@@ -1139,55 +1141,27 @@
             
             toggleDetallesModal(pagoId = null) {
                 if (pagoId === null) {
-                    // Si no se proporciona ID, solo alternamos el estado del modal
                     this.isDetallesModalOpen = !this.isDetallesModalOpen;
-                    console.log('Modal detalles estado:', this.isDetallesModalOpen);
                     return;
                 }
                 
                 // Busca el pago en el array de pagos
                 const pago = this.pagos.find(p => p.id_pago === pagoId);
-                console.log('Pago encontrado para detalles:', pago);
                 
                 if (pago) {
-                    // Asegurarse de que tengamos todas las relaciones cargadas
-                    if (!pago._loaded) {
-                        console.log('Cargando información completa del pago...');
-                        
-                        // Crear una copia profunda del pago para no afectar el array original
-                        this.currentPago = JSON.parse(JSON.stringify(pago));
-                        
-                        // Marcar como cargado para no volver a procesar
-                        this.currentPago._loaded = true;
-                        
-                        // Asegurarnos de que los objetos relacionados estén presentes
-                        if (this.currentPago.metodoPago && typeof this.currentPago.metodoPago === 'object') {
-                            console.log('Método de pago cargado:', this.currentPago.metodoPago);
-                        } else {
-                            console.warn('Método de pago no disponible o no es un objeto');
-                        }
-                        
-                        if (this.currentPago.membresia && typeof this.currentPago.membresia === 'object') {
-                            console.log('Membresía cargada:', this.currentPago.membresia);
-                            
-                            if (this.currentPago.membresia.tipoMembresia && typeof this.currentPago.membresia.tipoMembresia === 'object') {
-                                console.log('Tipo de membresía cargado:', this.currentPago.membresia.tipoMembresia);
-                            } else {
-                                console.warn('Tipo de membresía no disponible o no es un objeto');
-                            }
-                        } else {
-                            console.warn('Membresía no disponible o no es un objeto');
-                        }
-                    } else {
-                        this.currentPago = pago;
+                    // Crear una copia profunda del pago
+                    this.currentPago = JSON.parse(JSON.stringify(pago));
+                    
+                    // Asegurarse de que las relaciones estén correctamente establecidas
+                    if (this.currentPago.membresia && !this.currentPago.membresia.tipoMembresia) {
+                        this.currentPago.membresia.tipoMembresia = pago.membresia?.tipoMembresia;
                     }
                     
+                    // Asegurarse de que el método de pago esté correctamente establecido
+                    this.currentPago.metodo_pago = pago.metodo_pago;
+                    
+                    console.log('Pago cargado:', this.currentPago);
                     this.isDetallesModalOpen = true;
-                    
-                    // Imprimir la URL del comprobante para depuración
-                    if (this.currentPago.comprobante_url) {
-                        console.log('URL del comprobante:', this.currentPago.comprobante_url);
-                    }
                 }
             },
             
@@ -1201,6 +1175,7 @@
             
             formatMetodoPago(metodo) {
                 if (!metodo) return 'No definido';
+                
                 switch(metodo) {
                     case 'tarjeta_credito':
                         return 'Tarjeta de Crédito';
