@@ -185,6 +185,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Teléfono</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Gimnasio</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Membresías</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Asistencias</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
@@ -290,6 +291,44 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            @php
+                                                $totalAsistencias = App\Models\Asistencia::where('cliente_id', $cliente->id_cliente)->count();
+                                                $ultimaAsistencia = App\Models\Asistencia::where('cliente_id', $cliente->id_cliente)
+                                                    ->orderBy('fecha', 'desc')
+                                                    ->orderBy('hora_entrada', 'desc')
+                                                    ->first();
+                                            @endphp
+                                            
+                                            <div class="flex flex-col space-y-2">
+                                                <div class="bg-emerald-600 text-white text-xs font-bold py-1 px-2 rounded-t-md">
+                                                    ASISTENCIAS: {{ $totalAsistencias }}
+                                                </div>
+                                                
+                                                @if($ultimaAsistencia)
+                                                    <div class="text-xs space-y-1">
+                                                        <div class="font-semibold text-gray-600">Última visita:</div>
+                                                        <div class="bg-gray-50 p-2 rounded-md">
+                                                            <div class="text-emerald-600">
+                                                                {{ \Carbon\Carbon::parse($ultimaAsistencia->fecha)->format('d/m/Y') }}
+                                                            </div>
+                                                            <div class="flex items-center justify-between text-gray-500">
+                                                                <span>Entrada: {{ \Carbon\Carbon::parse($ultimaAsistencia->hora_entrada)->format('H:i') }}</span>
+                                                                @if($ultimaAsistencia->hora_salida)
+                                                                    <span>Salida: {{ \Carbon\Carbon::parse($ultimaAsistencia->hora_salida)->format('H:i') }}</span>
+                                                                @else
+                                                                    <span class="text-orange-500">En curso</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="text-xs text-gray-500 py-1">
+                                                        Sin asistencias registradas
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-3">
                                                 <button @click="toggleViewModal({{ $cliente->toJson() }})" 
@@ -325,6 +364,98 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                     </svg>
                                                 </button>
+                                                
+                                                @php
+                                                    $asistenciaActiva = App\Models\Asistencia::where('cliente_id', $cliente->id_cliente)
+                                                        ->whereDate('fecha', \Carbon\Carbon::today())
+                                                        ->whereNull('hora_salida')
+                                                        ->first();
+                                                @endphp
+
+                                                @if($asistenciaActiva)
+                                                    <form action="{{ route('asistencias.registrar-salida', $asistenciaActiva->id_asistencia) }}" 
+                                                          method="POST" 
+                                                          class="inline"
+                                                          x-data="{ showNotification: false, message: '' }"
+                                                          @submit.prevent="
+                                                            fetch($el.action, {
+                                                                method: 'POST',
+                                                                body: new FormData($el),
+                                                                headers: {
+                                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                                    'Accept': 'application/json'
+                                                                }
+                                                            })
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                showNotificationModal = true;
+                                                                if (data.success) {
+                                                                    notificationType = 'success';
+                                                                    notificationMessage = 'Salida registrada correctamente';
+                                                                    setTimeout(() => window.location.reload(), 1500);
+                                                                } else {
+                                                                    notificationType = 'error';
+                                                                    notificationMessage = data.message || 'Error al registrar salida';
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                showNotificationModal = true;
+                                                                notificationType = 'error';
+                                                                notificationMessage = 'Error al procesar la solicitud';
+                                                            })">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                class="text-orange-600 hover:text-orange-900 p-1 rounded-full hover:bg-orange-100 transition-colors duration-150"
+                                                                title="Registrar salida">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <form action="{{ route('asistencias.entrada') }}" method="POST" class="inline"
+                                                          x-data="{ showNotification: false, message: '' }"
+                                                          @submit.prevent="
+                                                            fetch($el.action, {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                                    'Accept': 'application/json',
+                                                                    'Content-Type': 'application/json'
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    cliente_id: $el.querySelector('input[name=cliente_id]').value
+                                                                })
+                                                            })
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                showNotificationModal = true;
+                                                                if (data.success) {
+                                                                    notificationType = 'success';
+                                                                    notificationMessage = data.message;
+                                                                    setTimeout(() => window.location.reload(), 1500);
+                                                                } else {
+                                                                    notificationType = 'error';
+                                                                    notificationMessage = data.message;
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error:', error);
+                                                                showNotificationModal = true;
+                                                                notificationType = 'error';
+                                                                notificationMessage = 'Error al procesar la solicitud';
+                                                            })">
+                                                        @csrf
+                                                        <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
+                                                        <button type="submit" 
+                                                                class="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-100 transition-colors duration-150"
+                                                                title="Registrar entrada">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>

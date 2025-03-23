@@ -69,4 +69,9 @@ class Cliente extends Model
     {
         return \App\Models\Membresia::where('id_usuario', $this->user_id)->exists();
     }
+
+    public function asistencias()
+    {
+        return $this->hasMany(Asistencia::class, 'cliente_id', 'id_cliente');
+    }
 }

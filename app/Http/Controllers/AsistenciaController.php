@@ -165,7 +165,10 @@ class AsistenciaController extends Controller
     {
         try {
             if ($asistencia->hora_salida) {
-                return back()->with('error', 'Esta asistencia ya tiene registrada la salida.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta asistencia ya tiene registrada la salida.'
+                ], 400);
             }
 
             // Registrar la salida
@@ -177,9 +180,16 @@ class AsistenciaController extends Controller
             // Refrescar el modelo para asegurar que los datos estén actualizados
             $asistencia->refresh();
 
-            return back()->with('success', 'Salida registrada correctamente.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Salida registrada correctamente'
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al registrar la salida: ' . $e->getMessage());
+            Log::error('Error al registrar salida: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar la salida: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -196,20 +206,30 @@ class AsistenciaController extends Controller
                 ->first();
 
             if ($asistenciaActiva) {
-                return back()->with('error', 'Ya existe una asistencia activa para este cliente hoy.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya existe una asistencia activa para este cliente hoy.'
+                ], 400);
             }
 
-            // Crear nueva asistencia
-            Asistencia::create([
-                'cliente_id' => $cliente_id,
-                'fecha' => Carbon::today(),
-                'hora_entrada' => Carbon::now(),
-                'estado' => 'activa'
-            ]);
+            // Crear nueva asistencia con los campos exactos de la tabla
+            $asistencia = new Asistencia();
+            $asistencia->cliente_id = $cliente_id;
+            $asistencia->fecha = Carbon::today();
+            $asistencia->hora_entrada = Carbon::now()->format('H:i:s');
+            $asistencia->estado = 'activa';
+            $asistencia->save();
 
-            return back()->with('success', 'Entrada registrada correctamente.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Entrada registrada correctamente'
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al registrar la entrada: ' . $e->getMessage());
+            Log::error('Error al registrar entrada: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar la entrada: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
