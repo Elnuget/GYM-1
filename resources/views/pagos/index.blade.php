@@ -643,23 +643,36 @@
                                 <h2 class="text-lg font-medium text-gray-900 mb-4">
                                     Nuevo Pago
                                 </h2>
-                                <form action="{{ route('pagos.store') }}" method="POST" enctype="multipart/form-data">
+                                <form id="formNuevoPago" action="{{ route('pagos.store') }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm">
                                     @csrf
+                                    <!-- Contenedor de errores -->
+                                    <div x-show="errors" class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" style="display: none;">
+                                        <template x-for="(error, index) in Object.values(errors).flat()" :key="index">
+                                            <p x-text="error" class="text-sm"></p>
+                                        </template>
+                                    </div>
+
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Usuario</label>
-                                        <select name="id_usuario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <select name="id_usuario" x-model="selectedUserId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                             @foreach($usuarios as $usuario)
-                                                <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                                <option value="{{ $usuario->id }}" {{ $usuario->id == auth()->id() ? 'selected' : '' }}>
+                                                    {{ $usuario->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Membresía</label>
-                                        <select name="id_membresia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <select name="id_membresia" x-model="selectedMembresiaId" @change="updateMonto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="">Seleccione una membresía...</option>
                                             @foreach($membresias as $membresia)
-                                                <option value="{{ $membresia->id_membresia }}">
-                                                    {{ $membresia->tipoMembresia->nombre ?? 'No asignada' }} - {{ $membresia->usuario->name ?? 'Usuario no asignado' }}
+                                                <option value="{{ $membresia->id_membresia }}" 
+                                                        data-saldo="{{ $membresia->saldo_pendiente }}">
+                                                    {{ $membresia->tipoMembresia->nombre ?? 'No asignada' }} - 
+                                                    {{ $membresia->usuario->name ?? 'Usuario no asignado' }} 
+                                                    (Pendiente: ${{ number_format($membresia->saldo_pendiente, 2) }})
                                                 </option>
                                             @endforeach
                                         </select>
@@ -667,13 +680,38 @@
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Monto</label>
-                                        <input type="number" step="0.01" name="monto" required
+                                        <input type="number" step="0.01" name="monto" x-model="monto" required
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                     </div>
 
                                     <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                                        <select name="id_metodo_pago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="">Seleccione un método de pago...</option>
+                                            @foreach($metodosPago as $metodo)
+                                                <option value="{{ $metodo->id_metodo_pago }}">
+                                                    @switch($metodo->nombre_metodo)
+                                                        @case('tarjeta_credito')
+                                                            Tarjeta de Crédito
+                                                            @break
+                                                        @case('efectivo')
+                                                            Efectivo
+                                                            @break
+                                                        @case('transferencia_bancaria')
+                                                            Transferencia Bancaria
+                                                            @break
+                                                        @default
+                                                            {{ $metodo->nombre_metodo }}
+                                                    @endswitch
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Estado del Pago</label>
-                                        <select name="estado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <select name="estado_pago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="">Seleccione un estado...</option>
                                             <option value="pendiente">Pendiente</option>
                                             <option value="aprobado">Aprobado</option>
                                             <option value="rechazado">Rechazado</option>
@@ -693,29 +731,6 @@
                                         <label class="block text-sm font-medium text-gray-700">Notas</label>
                                         <textarea name="notas" rows="3"
                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                                        <select name="id_metodo_pago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($metodosPago as $metodo)
-                                                <option value="{{ $metodo->id_metodo_pago }}">
-                                                    @switch($metodo->nombre_metodo)
-                                                        @case('tarjeta_credito')
-                                                            Tarjeta de Crédito
-                                                            @break
-                                                        @case('efectivo')
-                                                            Efectivo
-                                                            @break
-                                                        @case('transferencia_bancaria')
-                                                            Transferencia Bancaria
-                                                            @break
-                                                        @default
-                                                            {{ $metodo->nombre_metodo }}
-                                                    @endswitch
-                                                </option>
-                                            @endforeach
-                                        </select>
                                     </div>
 
                                     <div class="mb-4">
@@ -919,7 +934,21 @@
             currentPago: null,
             pagos: @json($pagos),
             pagosFiltrados: @json($pagos),
+            selectedUserId: {{ auth()->id() }},
+            selectedMembresiaId: '',
+            monto: 0,
+            errors: null,
             
+            updateMonto() {
+                const select = document.querySelector('select[name="id_membresia"]');
+                const option = select.options[select.selectedIndex];
+                if (option && option.dataset.saldo) {
+                    this.monto = parseFloat(option.dataset.saldo);
+                } else {
+                    this.monto = 0;
+                }
+            },
+
             filtrarPorMetodo(metodo) {
                 if (metodo === null) {
                     // Mostrar todos los pagos
@@ -1058,7 +1087,11 @@
             
             toggleModal() {
                 this.isModalOpen = !this.isModalOpen;
-                console.log('Modal estado:', this.isModalOpen);
+                if (this.isModalOpen) {
+                    this.selectedUserId = {{ auth()->id() }};
+                    this.selectedMembresiaId = '';
+                    this.monto = 0;
+                }
             },
             
             toggleEditModal(pagoId = null) {
@@ -1195,6 +1228,52 @@
                     console.error('Error al formatear fecha:', e);
                     return fecha; // Devolver la fecha original si hay error
                 }
+            },
+
+            submitForm(event) {
+                const form = event.target;
+                const formData = new FormData(form);
+
+                // Limpiar errores anteriores
+                this.errors = null;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Agregar el nuevo pago al array de pagos
+                        this.pagos.unshift(data.data.pago);
+                        this.pagosFiltrados = [...this.pagos];
+                        
+                        // Actualizar la tabla
+                        this.actualizarTabla();
+                        
+                        // Cerrar el modal y limpiar el formulario
+                        this.toggleModal();
+                        form.reset();
+                        
+                        // Mostrar mensaje de éxito
+                        alert('Pago registrado correctamente');
+                    } else {
+                        // Si hay errores de validación
+                        if (data.errors) {
+                            this.errors = data.errors;
+                        } else {
+                            throw new Error(data.message || 'Error al registrar el pago');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Error al procesar la solicitud');
+                });
             }
         }));
     });

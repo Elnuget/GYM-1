@@ -30,6 +30,13 @@ class Pago extends Model
         'monto' => 'decimal:2'
     ];
 
+    protected $appends = ['comprobante_full_url'];
+
+    public function getComprobanteFullUrlAttribute()
+    {
+        return $this->comprobante_url ? asset('storage/' . $this->comprobante_url) : null;
+    }
+
     public function membresia(): BelongsTo
     {
         return $this->belongsTo(Membresia::class, 'id_membresia', 'id_membresia');

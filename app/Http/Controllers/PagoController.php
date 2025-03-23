@@ -22,6 +22,9 @@ class PagoController extends Controller
         $mostrarTodos = $request->input('mostrar_todos', false);
         $metodoPago = $request->input('metodo_pago');
         
+        // Obtener el usuario autenticado
+        $usuarioActual = auth()->user();
+        
         // Crear query base con relaciones necesarias
         $query = Pago::with([
             'membresia.tipoMembresia', 
@@ -47,7 +50,7 @@ class PagoController extends Controller
                   ->whereYear('fecha_pago', $anio);
         }
         
-        // Ejecutar la consulta ordenando por fecha de pago descendente - sin paginación
+        // Ejecutar la consulta ordenando por fecha de pago descendente
         $pagos = $query->orderBy('id_pago', 'desc')->get();
         
         // Obtener el total de pagos
@@ -86,7 +89,12 @@ class PagoController extends Controller
         
         // Datos para los selectores de filtro
         $usuarios = User::all();
-        $membresias = Membresia::with('tipoMembresia', 'usuario')->get();
+        
+        // Obtener solo las membresías con saldo pendiente
+        $membresias = Membresia::with(['tipoMembresia', 'usuario'])
+            ->where('saldo_pendiente', '>', 0)
+            ->get();
+            
         $metodosPago = MetodoPago::where('activo', true)->get();
         
         // Datos para el selector de mes
@@ -154,6 +162,23 @@ class PagoController extends Controller
                 'notas' => 'nullable|string|max:255',
                 'fecha_pago' => 'nullable|date',
                 'comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
+            ], [
+                'id_membresia.required' => 'Debe seleccionar una membresía',
+                'id_membresia.exists' => 'La membresía seleccionada no existe',
+                'id_usuario.required' => 'Debe seleccionar un usuario',
+                'id_usuario.exists' => 'El usuario seleccionado no existe',
+                'monto.required' => 'El monto es requerido',
+                'monto.numeric' => 'El monto debe ser un número',
+                'monto.min' => 'El monto debe ser mayor a 0',
+                'id_metodo_pago.required' => 'Debe seleccionar un método de pago',
+                'id_metodo_pago.exists' => 'El método de pago seleccionado no existe',
+                'estado_pago.required' => 'Debe seleccionar un estado',
+                'estado_pago.in' => 'El estado seleccionado no es válido',
+                'notas.max' => 'Las notas no pueden exceder los 255 caracteres',
+                'fecha_pago.date' => 'La fecha debe ser válida',
+                'comprobante.file' => 'El comprobante debe ser un archivo',
+                'comprobante.mimes' => 'El comprobante debe ser un archivo JPG, JPEG, PNG o PDF',
+                'comprobante.max' => 'El comprobante no debe exceder 5MB'
             ]);
 
             DB::beginTransaction();
@@ -170,7 +195,7 @@ class PagoController extends Controller
             // Si hay comprobante, guardarlo
             if ($request->hasFile('comprobante')) {
                 $file = $request->file('comprobante');
-                $filename = 'comprobante_' . time() . '.' . $file->getClientOriginalExtension();
+                $filename = 'comprobante_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('comprobantes', $filename, 'public');
                 $pago->comprobante_url = $path;
             }
@@ -187,13 +212,14 @@ class PagoController extends Controller
             if ($pago->estado === 'aprobado') {
                 $membresia = Membresia::findOrFail($validated['id_membresia']);
                 $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
-                
-                // Asegurarse de que el saldo no sea negativo
                 $membresia->saldo_pendiente = max(0, $nuevoSaldo);
                 $membresia->save();
             }
 
             DB::commit();
+
+            // Cargar las relaciones necesarias para la respuesta
+            $pago->load(['membresia.tipoMembresia', 'usuario', 'metodoPago']);
 
             return response()->json([
                 'success' => true,
