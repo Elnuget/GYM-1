@@ -10,6 +10,7 @@ class Pago extends Model
 {
     use HasFactory;
 
+    protected $table = 'pagos';
     protected $primaryKey = 'id_pago';
     
     protected $fillable = [
@@ -34,7 +35,17 @@ class Pago extends Model
 
     public function getComprobanteFullUrlAttribute()
     {
-        return $this->comprobante_url ? asset('storage/' . $this->comprobante_url) : null;
+        if (!$this->comprobante_url) {
+            return null;
+        }
+        
+        // Si la URL ya es completa (comienza con http o https), devolverla tal cual
+        if (str_starts_with($this->comprobante_url, 'http')) {
+            return $this->comprobante_url;
+        }
+        
+        // Si la URL comienza con 'storage/', construir la URL completa
+        return url($this->comprobante_url);
     }
 
     public function membresia(): BelongsTo

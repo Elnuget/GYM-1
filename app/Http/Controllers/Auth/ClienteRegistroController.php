@@ -83,11 +83,25 @@ class ClienteRegistroController extends Controller
                         
                         \Log::info('Validación de pago exitosa');
                         
-                        // Procesar el comprobante si existe
+                        // Procesar el comprobante si se proporciona
                         $rutaComprobante = null;
                         if ($request->hasFile('comprobante')) {
-                            $rutaComprobante = $request->file('comprobante')->store('comprobantes', 'public');
-                            \Log::info('Comprobante guardado en: ' . $rutaComprobante);
+                            try {
+                                $file = $request->file('comprobante');
+                                $fileName = time() . '_' . $file->getClientOriginalName();
+                                $rutaComprobante = $file->storeAs('comprobantes', $fileName, 'public');
+                                
+                                \Log::info('Comprobante guardado:', [
+                                    'nombre_original' => $file->getClientOriginalName(),
+                                    'nombre_guardado' => $fileName,
+                                    'ruta' => $rutaComprobante,
+                                    'mime_type' => $file->getMimeType(),
+                                    'tamaño' => $file->getSize()
+                                ]);
+                            } catch (\Exception $e) {
+                                \Log::error('Error al guardar el comprobante: ' . $e->getMessage());
+                                throw new \Exception('Error al procesar el comprobante de pago: ' . $e->getMessage());
+                            }
                         }
                         
                         // Obtener la membresía
@@ -106,7 +120,7 @@ class ClienteRegistroController extends Controller
                             'id_metodo_pago' => $request->id_metodo_pago,
                             'fecha_pago' => $request->fecha_pago,
                             'estado' => 'pendiente',
-                            'comprobante' => $rutaComprobante ? 'storage/' . $rutaComprobante : null,
+                            'comprobante_url' => $rutaComprobante,
                             'notas' => $request->notas
                         ]);
                         
@@ -316,7 +330,22 @@ class ClienteRegistroController extends Controller
                         // Procesar el comprobante si se proporciona
                         $rutaComprobante = null;
                         if ($request->hasFile('comprobante')) {
-                            $rutaComprobante = $request->file('comprobante')->store('comprobantes', 'public');
+                            try {
+                                $file = $request->file('comprobante');
+                                $fileName = time() . '_' . $file->getClientOriginalName();
+                                $rutaComprobante = $file->storeAs('comprobantes', $fileName, 'public');
+                                
+                                \Log::info('Comprobante guardado:', [
+                                    'nombre_original' => $file->getClientOriginalName(),
+                                    'nombre_guardado' => $fileName,
+                                    'ruta' => $rutaComprobante,
+                                    'mime_type' => $file->getMimeType(),
+                                    'tamaño' => $file->getSize()
+                                ]);
+                            } catch (\Exception $e) {
+                                \Log::error('Error al guardar el comprobante: ' . $e->getMessage());
+                                throw new \Exception('Error al procesar el comprobante de pago: ' . $e->getMessage());
+                            }
                         }
                         
                         // Crear el pago
@@ -327,7 +356,7 @@ class ClienteRegistroController extends Controller
                             'id_metodo_pago' => $request->id_metodo_pago,
                             'fecha_pago' => $request->fecha_pago,
                             'estado' => 'pendiente',
-                            'comprobante' => $rutaComprobante ? 'storage/' . $rutaComprobante : null,
+                            'comprobante_url' => $rutaComprobante,
                             'notas' => $request->notas
                         ]);
                         

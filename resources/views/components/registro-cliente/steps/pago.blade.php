@@ -7,6 +7,7 @@
     showErrorModal: false,
     modalMessage: '',
     errorMessage: '',
+    fileMessage: '',
     
     init() {
         // Obtener información de la membresía más reciente
@@ -66,6 +67,32 @@
         });
     },
     
+    validateFile(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            this.fileMessage = '';
+            return;
+        }
+        
+        // Validar tipo de archivo
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+            this.fileMessage = 'Tipo de archivo no válido. Solo se permiten imágenes (JPG, PNG, GIF) y PDF.';
+            event.target.value = '';
+            return;
+        }
+        
+        // Validar tamaño (5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            this.fileMessage = 'El archivo es demasiado grande. El tamaño máximo permitido es 5MB.';
+            event.target.value = '';
+            return;
+        }
+        
+        this.fileMessage = `Archivo seleccionado: ${file.name}`;
+    },
+    
     guardarPago() {
         console.log('Iniciando proceso de guardado de pago...');
         
@@ -76,12 +103,14 @@
         const metodoInput = document.getElementById('id_metodo_pago');
         const fechaInput = document.getElementById('fecha_pago');
         const idMembresiaInput = document.getElementById('id_membresia');
+        const comprobanteInput = document.getElementById('comprobante');
         
         console.log('Valores de campos antes de la validación:');
         console.log('- Monto:', montoInput?.value);
         console.log('- Método:', metodoInput?.value);
         console.log('- Fecha:', fechaInput?.value);
         console.log('- ID Membresía:', idMembresiaInput?.value);
+        console.log('- Comprobante:', comprobanteInput?.files[0]?.name);
         
         if (!montoInput?.value?.trim()) camposFaltantes.push('Monto del Pago');
         if (!metodoInput?.value) camposFaltantes.push('Método de Pago');
@@ -98,9 +127,9 @@
         // Crear FormData con los campos del pago
         const pagoFormData = new FormData();
         
-        // Añadir campos básicos y asegurarnos que el paso es correcto
+        // Añadir campos básicos
         pagoFormData.append('_token', '{{ csrf_token() }}');
-        pagoFormData.append('step', 2); // Cambiado de 'current_step' a 'step'
+        pagoFormData.append('step', 2);
         
         // Añadir campos del formulario con validación adicional
         const monto = montoInput.value.trim();
@@ -128,10 +157,29 @@
             console.log('Notas añadidas');
         }
         
-        const comprobanteInput = document.getElementById('comprobante');
+        // Manejo del comprobante
         if (comprobanteInput?.files[0]) {
-            pagoFormData.append('comprobante', comprobanteInput.files[0]);
-            console.log('Comprobante añadido:', comprobanteInput.files[0].name);
+            const file = comprobanteInput.files[0];
+            // Validar el tipo de archivo
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                this.$dispatch('mostrar-error', { 
+                    mensaje: 'El tipo de archivo no es válido. Solo se permiten imágenes (JPG, PNG, GIF) y PDF.' 
+                });
+                return;
+            }
+            
+            // Validar el tamaño del archivo (5MB máximo)
+            const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+            if (file.size > maxSize) {
+                this.$dispatch('mostrar-error', { 
+                    mensaje: 'El archivo es demasiado grande. El tamaño máximo permitido es 5MB.' 
+                });
+                return;
+            }
+            
+            pagoFormData.append('comprobante', file);
+            console.log('Comprobante añadido:', file.name);
         }
         
         // Mostrar mensaje de procesamiento
@@ -265,14 +313,18 @@
         </div>
         
         <!-- Comprobante de Pago -->
-        <div>
-            <x-input-label for="comprobante" :value="__('Comprobante de Pago (opcional)')" class="mb-1 text-sm font-medium text-gray-700" />
+        <div class="mb-4">
+            <label for="comprobante" class="block text-sm font-medium text-gray-700">
+                Comprobante de Pago
+                <span class="text-xs text-gray-500">(Formatos permitidos: JPG, PNG, GIF, PDF. Máximo 5MB)</span>
+            </label>
             <input type="file" 
-                  id="comprobante" 
-                  name="comprobante" 
-                  class="mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" 
-                  accept="image/*,.pdf">
-            <p class="mt-1 text-sm text-gray-500">Puede subir una imagen o PDF del comprobante de pago (opcional).</p>
+                   id="comprobante" 
+                   name="comprobante" 
+                   accept="image/jpeg,image/png,image/gif,application/pdf"
+                   @change="validateFile($event)"
+                   class="mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 w-full">
+            <p class="mt-1 text-xs text-gray-500" x-text="fileMessage || 'Sube una imagen o PDF de tu comprobante de pago.'"></p>
             <x-input-error :messages="$errors->get('comprobante')" class="mt-1" />
         </div>
 
