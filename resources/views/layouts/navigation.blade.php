@@ -177,13 +177,7 @@ use Carbon\Carbon;
                             </svg>
                             <span>{{ __('Clientes') }}</span>
                         </x-nav-link>
-                        <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <span>{{ __('Gimnasios') }}</span>
-                        </x-nav-link>
+                        
                         <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,22 +186,8 @@ use Carbon\Carbon;
                             </svg>
                             <span>{{ __('Membresías') }}</span>
                         </x-nav-link>
-                        <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <span>{{ __('Tipos de Membresía') }}</span>
-                        </x-nav-link>
-                        <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')"
-                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                            <span>{{ __('Rutinas') }}</span>
-                        </x-nav-link>
+                        
+                        
                         <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
 
@@ -228,6 +208,30 @@ use Carbon\Carbon;
                             </svg>
                             <span>{{ __('Asistencias') }}</span>
                         </x-nav-link>
+                        
+                        <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')"
+                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span>{{ __('Gimnasios') }}</span>
+                        </x-nav-link>
+                        <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')"
+                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <span>{{ __('Tipos de Membresía') }}</span>
+                        </x-nav-link>
+                        <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')"
+                            class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span>{{ __('Rutinas') }}</span>
+                        </x-nav-link>
                         <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
                             class="flex items-center p-3 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,9 +240,6 @@ use Carbon\Carbon;
                             </svg>
                             <span>{{ __('Nutrición') }}</span>
                         </x-nav-link>
-
-
-
                     </div>
                 </div>
                 @endrole
@@ -518,13 +519,7 @@ use Carbon\Carbon;
                         </svg>
                         <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Clientes') }}</span>
                     </x-nav-link>
-                    <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')"
-                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Gimnasios') }}</span>
-                    </x-nav-link>
+                    
                     <x-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')"
                         class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -532,20 +527,8 @@ use Carbon\Carbon;
                         </svg>
                         <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Membresías') }}</span>
                     </x-nav-link>
-                    <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')"
-                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Tipos de Membresía') }}</span>
-                    </x-nav-link>
-                    <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')"
-                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Rutinas') }}</span>
-                    </x-nav-link>
+                    
+                    
                     <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')"
                         class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
 
@@ -568,6 +551,28 @@ use Carbon\Carbon;
                         </svg>
                         <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Asistencias') }}</span>
                     </x-nav-link>
+                    
+                    <x-nav-link :href="route('gimnasios.index')" :active="request()->routeIs('gimnasios.*')"
+                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Gimnasios') }}</span>
+                    </x-nav-link>
+                    <x-nav-link :href="route('tipos-membresia.index')" :active="request()->routeIs('tipos-membresia.*')"
+                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Tipos de Membresía') }}</span>
+                    </x-nav-link>
+                    <x-nav-link :href="route('rutinas-predefinidas.index')" :active="request()->routeIs('rutinas-predefinidas.*')"
+                        class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Rutinas') }}</span>
+                    </x-nav-link>
                     <x-nav-link :href="route('nutricion.index')" :active="request()->routeIs('nutricion.*')"
                         class="flex items-center p-2 rounded-lg text-gray-100 hover:bg-emerald-600/50 hover:text-white transition-all duration-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -576,7 +581,6 @@ use Carbon\Carbon;
                         </svg>
                         <span x-cloak x-show="isExpanded" class="ml-3 whitespace-nowrap">{{ __('Nutrición') }}</span>
                     </x-nav-link>
-
                 </div>
             </div>
             @endrole
