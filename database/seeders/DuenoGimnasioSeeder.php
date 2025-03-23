@@ -236,5 +236,174 @@ class DuenoGimnasioSeeder extends Seeder
                 $membresia->save();
             }
         }
+
+        // Crear segundo dueño
+        $user2 = User::create([
+            'name' => 'dueno2',
+            'email' => 'dueno2@outlook.es',
+            'password' => Hash::make('gym'),
+            'email_verified_at' => now(),
+            'rol' => 'dueño',
+            'configuracion_completa' => true,
+            'telefono' => '0988888888',
+            'direccion' => 'Avenida Secundaria 456, Ciudad',
+            'foto_perfil' => null
+        ]);
+        $user2->assignRole('dueño');
+
+        // Crear el segundo dueño del gimnasio
+        $dueno2 = DuenoGimnasio::create([
+            'user_id' => $user2->id,
+            'nombre_comercial' => 'PowerGym Plus',
+            'telefono_gimnasio' => '0988888888',
+            'direccion_gimnasio' => 'Avenida Secundaria 456, Ciudad',
+            'logo' => null
+        ]);
+
+        // Crear el segundo gimnasio
+        $gimnasio2 = Gimnasio::create([
+            'nombre' => 'PowerGym Plus',
+            'direccion' => 'Avenida Secundaria 456, Ciudad',
+            'telefono' => '0988888888',
+            'descripcion' => 'El gimnasio más completo para alcanzar tus metas',
+            'logo' => null,
+            'dueno_id' => $dueno2->id_dueno,
+            'estado' => true
+        ]);
+
+        // Crear tipos de membresía para el segundo gimnasio
+        TipoMembresia::create([
+            'gimnasio_id' => $gimnasio2->id_gimnasio,
+            'nombre' => 'Plan Básico',
+            'descripcion' => 'Acceso básico mensual',
+            'precio' => 39.99,
+            'duracion_dias' => 30,
+            'tipo' => 'mensual',
+            'estado' => true,
+        ]);
+
+        TipoMembresia::create([
+            'gimnasio_id' => $gimnasio2->id_gimnasio,
+            'nombre' => 'Plan Premium Anual',
+            'descripcion' => 'Acceso total por un año',
+            'precio' => 399.99,
+            'duracion_dias' => 365,
+            'tipo' => 'anual',
+            'estado' => true,
+        ]);
+
+        // Crear clientes de prueba para el segundo gimnasio
+        $clientes2 = [
+            [
+                'name' => 'Ana Martínez',
+                'email' => 'ana@example.com',
+                'password' => Hash::make('password'),
+                'telefono' => '0987776665',
+                'direccion' => 'Calle Norte 789, Ciudad',
+                'fecha_nacimiento' => '1995-07-12',
+                'genero' => 'F',
+                'ocupacion' => 'Diseñadora',
+                'peso' => 62.0,
+                'altura' => 168,
+                'objetivo_fitness' => 'Tonificación',
+                'condiciones_medicas' => 'Ninguna',
+                'nivel_actividad' => 'intermedio',
+                'membresia' => [
+                    'tipo' => 'mensual',
+                    'fecha_compra' => now(),
+                    'renovacion' => true,
+                    'pagos' => [
+                        ['monto' => 39.99, 'fecha_pago' => now()]
+                    ]
+                ]
+            ],
+            [
+                'name' => 'Pedro Sánchez',
+                'email' => 'pedro@example.com',
+                'password' => Hash::make('password'),
+                'telefono' => '0986665554',
+                'direccion' => 'Avenida Sur 321, Ciudad',
+                'fecha_nacimiento' => '1989-11-25',
+                'genero' => 'M',
+                'ocupacion' => 'Médico',
+                'peso' => 78.0,
+                'altura' => 178,
+                'objetivo_fitness' => 'Fuerza',
+                'condiciones_medicas' => 'Ninguna',
+                'nivel_actividad' => 'avanzado',
+                'membresia' => [
+                    'tipo' => 'anual',
+                    'fecha_compra' => now(),
+                    'renovacion' => true,
+                    'pagos' => [
+                        ['monto' => 399.99, 'fecha_pago' => now()]
+                    ]
+                ]
+            ]
+        ];
+
+        foreach ($clientes2 as $clienteData) {
+            // Crear usuario
+            $user = User::create([
+                'name' => $clienteData['name'],
+                'email' => $clienteData['email'],
+                'password' => $clienteData['password'],
+                'email_verified_at' => now(),
+                'rol' => 'cliente',
+                'configuracion_completa' => true,
+                'telefono' => $clienteData['telefono'],
+                'direccion' => $clienteData['direccion'],
+                'foto_perfil' => null
+            ]);
+
+            // Crear cliente
+            $cliente = Cliente::create([
+                'user_id' => $user->id,
+                'gimnasio_id' => $gimnasio2->id_gimnasio,
+                'nombre' => $clienteData['name'],
+                'email' => $clienteData['email'],
+                'fecha_nacimiento' => $clienteData['fecha_nacimiento'],
+                'telefono' => $clienteData['telefono'],
+                'genero' => $clienteData['genero'],
+                'ocupacion' => $clienteData['ocupacion']
+            ]);
+
+            // Obtener el tipo de membresía correspondiente
+            $tipoMembresia = TipoMembresia::where('gimnasio_id', $gimnasio2->id_gimnasio)
+                ->where('tipo', $clienteData['membresia']['tipo'])
+                ->first();
+
+            // Calcular fecha de vencimiento
+            $fechaVencimiento = null;
+            if ($clienteData['membresia']['tipo'] !== 'visitas') {
+                $fechaVencimiento = $clienteData['membresia']['fecha_compra']->copy()->addDays($tipoMembresia->duracion_dias);
+            }
+
+            // Crear membresía
+            $membresia = Membresia::create([
+                'id_usuario' => $user->id,
+                'id_tipo_membresia' => $tipoMembresia->id_tipo_membresia,
+                'precio_total' => $tipoMembresia->precio,
+                'saldo_pendiente' => 0, // Pagado completamente
+                'fecha_compra' => $clienteData['membresia']['fecha_compra'],
+                'fecha_vencimiento' => $fechaVencimiento,
+                'renovacion' => $clienteData['membresia']['renovacion']
+            ]);
+
+            // Crear pagos
+            foreach ($clienteData['membresia']['pagos'] as $pagoData) {
+                Pago::create([
+                    'id_membresia' => $membresia->id_membresia,
+                    'id_usuario' => $user->id,
+                    'monto' => $pagoData['monto'],
+                    'fecha_pago' => $pagoData['fecha_pago'],
+                    'estado' => 'aprobado',
+                    'id_metodo_pago' => 1,
+                    'comprobante_url' => null,
+                    'notas' => 'Pago de prueba',
+                    'fecha_aprobacion' => $pagoData['fecha_pago']
+                ]);
+            }
+        }
     }
 } 
