@@ -304,7 +304,7 @@ use Carbon\Carbon;
                     </div>
                     <div class="ml-3">
                         <div class="text-sm font-medium text-emerald-100">{{ Auth::user()->name }}</div>
-                        <div class="text-xs text-emerald-300">{{ Auth::user()->email }}</div>
+                        <div class="text-xs text-emerald-300 truncate uppercase font-semibold">{{ Auth::user()->rol === 'dueño' ? 'PROPIETARIO' : Auth::user()->rol }}</div>
                     </div>
                 </div>
 
@@ -712,7 +712,7 @@ use Carbon\Carbon;
                     <div x-cloak x-show="isExpanded"
                         class="ml-3 flex-1 min-w-0">
                         <div class="text-sm font-medium text-emerald-100 truncate">{{ Auth::user()->name }}</div>
-                        <div class="text-xs text-emerald-300 truncate uppercase font-semibold">{{ Auth::user()->rol }}</div>
+                        <div class="text-xs text-emerald-300 truncate uppercase font-semibold">{{ Auth::user()->rol === 'dueño' ? 'PROPIETARIO' : Auth::user()->rol }}</div>
                     </div>
                 </div>
 
