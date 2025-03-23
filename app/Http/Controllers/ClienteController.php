@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Gimnasio;
 use App\Models\Membresia;
 use App\Models\User;
+use App\Models\DuenoGimnasio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,17 +18,56 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        $clientes = Cliente::with('gimnasio')->get();
-        $gimnasios = Gimnasio::all();
+        // Obtener el usuario autenticado
+        $user = auth()->user();
         
-        // Cargar todas las membresías con sus relaciones necesarias
-        $todasLasMembresias = Membresia::with(['usuario', 'tipoMembresia'])->get();
+        // Verificar si el usuario es un dueño de gimnasio
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
         
-        // Cargar todos los pagos con sus relaciones
-        $todosLosPagos = \App\Models\Pago::with(['usuario', 'membresia.tipoMembresia', 'metodoPago'])->get();
-        
-        // Cargar todas las asistencias con sus relaciones
-        $todasLasAsistencias = \App\Models\Asistencia::with('cliente')->get();
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar clientes que pertenecen a los gimnasios del dueño
+            $clientes = Cliente::with('gimnasio')
+                ->whereIn('gimnasio_id', $gimnasiosIds)
+                ->get();
+                
+            // Obtener solo los gimnasios asociados al dueño
+            $gimnasios = Gimnasio::whereIn('id_gimnasio', $gimnasiosIds)->get();
+            
+            // Filtrar membresías de los clientes de los gimnasios del dueño
+            $todasLasMembresias = Membresia::with(['usuario', 'tipoMembresia'])
+                ->whereHas('usuario', function($query) use ($gimnasiosIds) {
+                    $query->whereHas('cliente', function($q) use ($gimnasiosIds) {
+                        $q->whereIn('gimnasio_id', $gimnasiosIds);
+                    });
+                })
+                ->get();
+            
+            // Filtrar pagos de las membresías de los clientes de los gimnasios del dueño
+            $todosLosPagos = \App\Models\Pago::with(['usuario', 'membresia.tipoMembresia', 'metodoPago'])
+                ->whereHas('usuario', function($query) use ($gimnasiosIds) {
+                    $query->whereHas('cliente', function($q) use ($gimnasiosIds) {
+                        $q->whereIn('gimnasio_id', $gimnasiosIds);
+                    });
+                })
+                ->get();
+            
+            // Filtrar asistencias de los clientes de los gimnasios del dueño
+            $todasLasAsistencias = \App\Models\Asistencia::with('cliente')
+                ->whereHas('cliente', function($query) use ($gimnasiosIds) {
+                    $query->whereIn('gimnasio_id', $gimnasiosIds);
+                })
+                ->get();
+        } else {
+            // Si no es dueño, mostrar todos los datos (para administradores)
+            $clientes = Cliente::with('gimnasio')->get();
+            $gimnasios = Gimnasio::all();
+            $todasLasMembresias = Membresia::with(['usuario', 'tipoMembresia'])->get();
+            $todosLosPagos = \App\Models\Pago::with(['usuario', 'membresia.tipoMembresia', 'metodoPago'])->get();
+            $todasLasAsistencias = \App\Models\Asistencia::with('cliente')->get();
+        }
         
         return view('clientes.index', compact('clientes', 'gimnasios', 'todasLasMembresias', 'todosLosPagos', 'todasLasAsistencias'));
     }
@@ -47,6 +87,24 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         try {
+            // Verificar si el usuario es dueño y si el gimnasio le pertenece
+            $user = auth()->user();
+            $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si el gimnasio pertenece al dueño
+                $gimnasioPertenece = $dueno->gimnasios()
+                    ->where('id_gimnasio', $request->gimnasio_id)
+                    ->exists();
+                    
+                if (!$gimnasioPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para crear clientes en este gimnasio.'
+                    ], 403);
+                }
+            }
+
             $validator = $request->validate([
                 'gimnasio_id' => ['required', 'exists:gimnasios,id_gimnasio'],
                 'nombre' => ['required', 'string', 'max:255'],
@@ -129,6 +187,42 @@ class ClienteController extends Controller
     public function update(Request $request, Cliente $cliente)
     {
         try {
+            // Verificar si el usuario es dueño y si el gimnasio le pertenece
+            $user = auth()->user();
+            $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si el gimnasio pertenece al dueño
+                $gimnasioPertenece = $dueno->gimnasios()
+                    ->where('id_gimnasio', $request->gimnasio_id)
+                    ->exists();
+                    
+                if (!$gimnasioPertenece) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para modificar clientes de este gimnasio.'
+                        ], 403);
+                    }
+                    return redirect()->back()->with('error', 'No tienes permiso para modificar clientes de este gimnasio.');
+                }
+                
+                // Verificar si el cliente actual pertenece a uno de los gimnasios del dueño
+                $clientePertenece = $dueno->gimnasios()
+                    ->where('id_gimnasio', $cliente->gimnasio_id)
+                    ->exists();
+                    
+                if (!$clientePertenece) {
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para modificar este cliente.'
+                        ], 403);
+                    }
+                    return redirect()->back()->with('error', 'No tienes permiso para modificar este cliente.');
+                }
+            }
+
             $validated = $request->validate([
                 'gimnasio_id' => 'required|exists:gimnasios,id_gimnasio',
                 'nombre' => 'required|string|max:255',
@@ -195,6 +289,27 @@ class ClienteController extends Controller
     public function destroy(Cliente $cliente)
     {
         try {
+            // Verificar si el usuario es dueño y si el cliente pertenece a uno de sus gimnasios
+            $user = auth()->user();
+            $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si el cliente pertenece a uno de los gimnasios del dueño
+                $clientePertenece = $dueno->gimnasios()
+                    ->where('id_gimnasio', $cliente->gimnasio_id)
+                    ->exists();
+                    
+                if (!$clientePertenece) {
+                    if (request()->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para eliminar este cliente.'
+                        ], 403);
+                    }
+                    return redirect()->back()->with('error', 'No tienes permiso para eliminar este cliente.');
+                }
+            }
+
             DB::beginTransaction();
 
             // Si el cliente tiene un usuario asociado
