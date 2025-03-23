@@ -649,23 +649,13 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Usuario</label>
-                                        <select name="id_usuario" x-model="selectedUserId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($usuarios as $usuario)
-                                                <option value="{{ $usuario->id }}" {{ $usuario->id == auth()->id() ? 'selected' : '' }}>
-                                                    {{ $usuario->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Membresía</label>
-                                        <select name="id_membresia" x-model="selectedMembresiaId" @change="updateMonto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <select name="id_membresia" x-model="selectedMembresiaId" @change="updateMembresiaSeleccionada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                             <option value="">Seleccione una membresía...</option>
                                             @foreach($membresias as $membresia)
                                                 <option value="{{ $membresia->id_membresia }}" 
-                                                        data-saldo="{{ $membresia->saldo_pendiente }}">
+                                                        data-saldo="{{ $membresia->saldo_pendiente }}"
+                                                        data-usuario-id="{{ $membresia->id_usuario }}">
                                                     {{ $membresia->tipoMembresia->nombre ?? 'No asignada' }} - 
                                                     {{ $membresia->usuario->name ?? 'Usuario no asignado' }} 
                                                     (Pendiente: ${{ number_format($membresia->saldo_pendiente, 2) }})
@@ -673,6 +663,8 @@
                                             @endforeach
                                         </select>
                                     </div>
+
+                                    <input type="hidden" name="id_usuario" x-model="selectedUserId">
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Monto</label>
@@ -934,12 +926,15 @@
             monto: 0,
             errors: null,
             
-            updateMonto() {
+            updateMembresiaSeleccionada() {
                 const select = document.querySelector('select[name="id_membresia"]');
                 const option = select.options[select.selectedIndex];
-                if (option && option.dataset.saldo) {
-                    this.monto = parseFloat(option.dataset.saldo);
+                
+                if (option && option.dataset.usuarioId) {
+                    this.selectedUserId = option.dataset.usuarioId;
+                    this.monto = parseFloat(option.dataset.saldo) || 0;
                 } else {
+                    this.selectedUserId = '';
                     this.monto = 0;
                 }
             },
