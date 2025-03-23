@@ -737,4 +737,56 @@ class MembresiaController extends Controller
             'usuarioSeleccionado'
         ));
     }
+
+    /**
+     * Renovar la última membresía de un usuario.
+     */
+    public function renovar(Request $request, $id_usuario)
+    {
+        try {
+            DB::beginTransaction();
+            
+            // Obtener la última membresía del usuario
+            $ultimaMembresia = Membresia::where('id_usuario', $id_usuario)
+                ->orderBy('fecha_vencimiento', 'desc')
+                ->firstOrFail();
+            
+            // Crear nueva membresía con los mismos datos pero fechas actualizadas
+            $nuevaMembresia = Membresia::create([
+                'id_usuario' => $id_usuario,
+                'id_tipo_membresia' => $ultimaMembresia->id_tipo_membresia,
+                'precio_total' => $ultimaMembresia->precio_total,
+                'saldo_pendiente' => $ultimaMembresia->precio_total,
+                'fecha_compra' => now(),
+                'fecha_vencimiento' => now()->addDays($ultimaMembresia->tipoMembresia->duracion_dias),
+                'visitas_permitidas' => $ultimaMembresia->visitas_permitidas,
+                'visitas_restantes' => $ultimaMembresia->visitas_permitidas,
+                'renovacion' => true
+            ]);
+            
+            // Crear pago inicial con los mismos datos que el último pago
+            $ultimoPago = Pago::where('id_membresia', $ultimaMembresia->id_membresia)
+                ->orderBy('fecha_pago', 'desc')
+                ->first();
+                
+            if ($ultimoPago) {
+                Pago::create([
+                    'id_membresia' => $nuevaMembresia->id_membresia,
+                    'id_usuario' => $id_usuario,
+                    'monto' => $ultimoPago->monto,
+                    'fecha_pago' => now(),
+                    'estado' => 'pendiente',
+                    'id_metodo_pago' => $ultimoPago->id_metodo_pago
+                ]);
+            }
+            
+            DB::commit();
+            
+            return redirect()->back()->with('success', 'Membresía renovada exitosamente');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error al renovar la membresía: ' . $e->getMessage());
+        }
+    }
 } 

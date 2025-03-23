@@ -134,6 +134,8 @@ Route::middleware('auth')->group(function () {
         ->name('membresias.activas');
     Route::get('membresias-pendientes', [MembresiaController::class, 'saldosPendientes'])
         ->name('membresias.saldos-pendientes');
+    Route::post('membresias/renovar/{id_usuario}', [MembresiaController::class, 'renovar'])
+        ->name('membresias.renovar');
     Route::resource('pagos', PagoController::class);
     Route::post('/pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
     Route::resource('metodos-pago', MetodoPagoController::class, [
