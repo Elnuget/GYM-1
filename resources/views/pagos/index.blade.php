@@ -448,14 +448,13 @@
                                                 </svg>
                                             </button>
                                             @if($pago->estado === 'pendiente')
-                                                <form action="{{ route('pagos.aprobar', $pago->id_pago) }}" method="POST" class="inline-block">
-                                                    @csrf
-                                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-2" title="Aprobar Pago">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                        </svg>
-                                                    </button>
-                                                </form>
+                                                <button @click.prevent="aprobarPago({{ $pago->id_pago }})" 
+                                                        class="text-green-600 hover:text-green-900 mr-2" 
+                                                        title="Aprobar Pago">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                </button>
                                             @endif
                                             <button type="button" @click="toggleEditModal({{ $pago->id_pago }})"
                                                     class="text-emerald-600 hover:text-emerald-900 mr-2" title="Editar">
@@ -463,18 +462,13 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </button>
-                                            <form class="inline-block" action="{{ route('pagos.destroy', $pago) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="text-red-600 hover:text-red-900" 
-                                                        title="Eliminar"
-                                                        onclick="return confirm('¿Estás seguro de que deseas eliminar este pago?')">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                            <button type="button" @click="eliminarPago({{ $pago->id_pago }})" 
+                                                    class="text-red-600 hover:text-red-900" 
+                                                    title="Eliminar">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -785,7 +779,10 @@
                                 <h2 class="text-lg font-medium text-gray-900 mb-4">
                                     Editar Pago
                                 </h2>
-                                <form :action="'/pagos/' + currentPago?.id_pago" method="POST" enctype="multipart/form-data">
+                                <form :action="'/pagos/' + currentPago?.id_pago" 
+                                      method="POST" 
+                                      enctype="multipart/form-data"
+                                      @submit.prevent="submitEditForm($event)">
                                     @csrf
                                     @method('PUT')
 
@@ -800,13 +797,9 @@
 
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700">Membresía</label>
-                                        <select name="id_membresia" id="edit_id_membresia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                                            @foreach($membresias as $membresia)
-                                                <option value="{{ $membresia->id_membresia }}">
-                                                    {{ $membresia->tipoMembresia->nombre ?? 'No asignada' }} - {{ $membresia->usuario->name ?? 'Usuario no asignado' }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <input type="text" :value="currentPago?.id_membresia" readonly
+                                               class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                        <input type="hidden" name="id_membresia" :value="currentPago?.id_membresia">
                                     </div>
 
                                     <div class="mb-4">
@@ -1054,14 +1047,13 @@
                                 </svg>
                             </button>
                             @if($pago->estado === 'pendiente')
-                                <form action="{{ route('pagos.aprobar', $pago->id_pago) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-2" title="Aprobar Pago">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </button>
-                                </form>
+                                <button @click.prevent="aprobarPago({{ $pago->id_pago }})" 
+                                        class="text-green-600 hover:text-green-900 mr-2" 
+                                        title="Aprobar Pago">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </button>
                             @endif
                             <button type="button" @click="toggleEditModal(${pago.id_pago})"
                                     class="text-emerald-600 hover:text-emerald-900 mr-2" title="Editar">
@@ -1069,18 +1061,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
-                            <form class="inline-block" action="/pagos/${pago.id_pago}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="text-red-600 hover:text-red-900" 
-                                        title="Eliminar"
-                                        onclick="return confirm('¿Estás seguro de que deseas eliminar este pago?')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </form>
+                            <button type="button" @click="eliminarPago({{ $pago->id_pago }})" 
+                                    class="text-red-600 hover:text-red-900" 
+                                    title="Eliminar">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
                         </td>`;
                     
                     tbody.appendChild(tr);
@@ -1098,18 +1085,16 @@
             
             toggleEditModal(pagoId = null) {
                 if (pagoId === null) {
-                    // Si no se proporciona ID, solo alternamos el estado del modal
                     this.isEditModalOpen = !this.isEditModalOpen;
-                    console.log('Modal edición estado:', this.isEditModalOpen);
                     return;
                 }
                 
                 // Busca el pago en el array de pagos
                 const pago = this.pagos.find(p => p.id_pago === pagoId);
-                console.log('Pago encontrado para edición:', pago);
                 
                 if (pago) {
-                    this.currentPago = pago;
+                    // Crear una copia profunda del pago
+                    this.currentPago = JSON.parse(JSON.stringify(pago));
                     this.isEditModalOpen = true;
                     
                     this.$nextTick(() => {
@@ -1124,7 +1109,10 @@
                             document.getElementById('edit_monto').value = pago.monto;
                         }
                         if (document.getElementById('edit_fecha_pago')) {
-                            document.getElementById('edit_fecha_pago').value = pago.fecha_pago;
+                            // Formatear la fecha al formato YYYY-MM-DD requerido por el input type="date"
+                            const fecha = new Date(pago.fecha_pago);
+                            const fechaFormateada = fecha.toISOString().split('T')[0];
+                            document.getElementById('edit_fecha_pago').value = fechaFormateada;
                         }
                         if (document.getElementById('edit_estado')) {
                             document.getElementById('edit_estado').value = pago.estado;
@@ -1135,6 +1123,17 @@
                         if (document.getElementById('edit_notas')) {
                             document.getElementById('edit_notas').value = pago.notas || '';
                         }
+
+                        // Imprimir en consola para verificar los valores
+                        console.log('Datos del pago cargados en el modal:', {
+                            id_membresia: pago.id_membresia,
+                            id_usuario: pago.id_usuario,
+                            monto: pago.monto,
+                            fecha_pago: fechaFormateada,
+                            estado: pago.estado,
+                            id_metodo_pago: pago.id_metodo_pago,
+                            notas: pago.notas
+                        });
                     });
                 }
             },
@@ -1205,11 +1204,76 @@
                 }
             },
 
+            eliminarPago(pagoId) {
+                if (!confirm('¿Estás seguro de que deseas eliminar este pago?')) {
+                    return;
+                }
+
+                fetch(`/pagos/${pagoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        window.location.href = '/pagos';
+                    } else {
+                        throw new Error(data?.message || 'Error al eliminar el pago');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Error al eliminar el pago');
+                });
+            },
+
+            aprobarPago(pagoId) {
+                if (!confirm('¿Estás seguro de que deseas aprobar este pago?')) {
+                    return;
+                }
+
+                fetch(`/pagos/${pagoId}/aprobar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        window.location.href = '/pagos';
+                    } else {
+                        throw new Error(data?.message || 'Error al aprobar el pago');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Error al aprobar el pago');
+                });
+            },
+
             submitForm(event) {
                 const form = event.target;
                 const formData = new FormData(form);
 
-                // Limpiar errores anteriores
                 this.errors = null;
 
                 fetch(form.action, {
@@ -1220,36 +1284,61 @@
                         'Accept': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success) {
-                        // Agregar el nuevo pago al array de pagos
-                        this.pagos.unshift(data.data.pago);
-                        this.pagosFiltrados = [...this.pagos];
-                        
-                        // Actualizar la tabla
-                        this.actualizarTabla();
-                        
-                        // Cerrar el modal y limpiar el formulario
-                        this.toggleModal();
-                        form.reset();
-                        
-                        // Mostrar mensaje de éxito
-                        alert('Pago registrado correctamente');
+                    if (data && data.success) {
+                        window.location.href = '/pagos';
+                    } else if (data && data.errors) {
+                        this.errors = data.errors;
                     } else {
-                        // Si hay errores de validación
-                        if (data.errors) {
-                            this.errors = data.errors;
-                        } else {
-                            throw new Error(data.message || 'Error al registrar el pago');
-                        }
+                        throw new Error(data?.message || 'Error al registrar el pago');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert(error.message || 'Error al procesar la solicitud');
                 });
-            }
+            },
+
+            submitEditForm(event) {
+                const form = event.target;
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        window.location.href = '/pagos';
+                    } else if (data && data.errors) {
+                        this.errors = data.errors;
+                    } else {
+                        throw new Error(data?.message || 'Error al actualizar el pago');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Error al procesar la solicitud');
+                });
+            },
         }));
     });
 </script> 
