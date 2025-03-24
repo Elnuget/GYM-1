@@ -24,7 +24,7 @@ class Gimnasio extends Model
 
     public function dueno()
     {
-        return $this->belongsTo(User::class, 'dueno_id');
+        return $this->belongsTo(DuenoGimnasio::class, 'dueno_id', 'id_dueno');
     }
 
     public function clientes()
