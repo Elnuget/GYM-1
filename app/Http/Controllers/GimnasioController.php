@@ -14,8 +14,28 @@ class GimnasioController extends Controller
      */
     public function index()
     {
-        $gimnasios = Gimnasio::with('dueno.user')->get();
-        $duenos = DuenoGimnasio::with('user')->get();
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        
+        // Verificar si el usuario es un dueño de gimnasio
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Si es dueño, mostrar solo sus gimnasios
+            $gimnasios = Gimnasio::with('dueno.user')
+                ->where('dueno_id', $dueno->id_dueno)
+                ->get();
+            
+            // Solo necesita ver su propio registro de dueño
+            $duenos = DuenoGimnasio::with('user')
+                ->where('id_dueno', $dueno->id_dueno)
+                ->get();
+        } else {
+            // Si es admin, mostrar todos los gimnasios
+            $gimnasios = Gimnasio::with('dueno.user')->get();
+            $duenos = DuenoGimnasio::with('user')->get();
+        }
+
         return view('gimnasios.index', compact('gimnasios', 'duenos'));
     }
 
@@ -24,7 +44,20 @@ class GimnasioController extends Controller
      */
     public function create()
     {
-        $duenos = DuenoGimnasio::with('user')->get();
+        // Verificar si el usuario es un dueño
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Si es dueño, solo puede seleccionarse a sí mismo
+            $duenos = DuenoGimnasio::with('user')
+                ->where('id_dueno', $dueno->id_dueno)
+                ->get();
+        } else {
+            // Si es admin, puede seleccionar cualquier dueño
+            $duenos = DuenoGimnasio::with('user')->get();
+        }
+        
         return view('gimnasios.create', compact('duenos'));
     }
 
@@ -33,6 +66,16 @@ class GimnasioController extends Controller
      */
     public function store(Request $request)
     {
+        // Verificar si el usuario es un dueño
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno && $request->dueno_id != $dueno->id_dueno) {
+            // Si es dueño, solo puede crear gimnasios para sí mismo
+            return redirect()->route('gimnasios.index')
+                ->with('error', 'No tienes permiso para crear gimnasios para otros dueños.');
+        }
+
         $validated = $request->validate([
             'dueno_id' => 'required|exists:duenos_gimnasios,id_dueno',
             'nombre' => 'required|string|max:255',
@@ -51,6 +94,15 @@ class GimnasioController extends Controller
      */
     public function show(Gimnasio $gimnasio)
     {
+        // Verificar si el usuario es un dueño y tiene permiso para ver este gimnasio
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno && $gimnasio->dueno_id != $dueno->id_dueno) {
+            return redirect()->route('gimnasios.index')
+                ->with('error', 'No tienes permiso para ver este gimnasio.');
+        }
+        
         return view('gimnasios.show', compact('gimnasio'));
     }
 
@@ -59,7 +111,25 @@ class GimnasioController extends Controller
      */
     public function edit(Gimnasio $gimnasio)
     {
-        $duenos = DuenoGimnasio::with('user')->get();
+        // Verificar si el usuario es un dueño y tiene permiso para editar este gimnasio
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno && $gimnasio->dueno_id != $dueno->id_dueno) {
+            return redirect()->route('gimnasios.index')
+                ->with('error', 'No tienes permiso para editar este gimnasio.');
+        }
+        
+        if ($dueno) {
+            // Si es dueño, solo puede seleccionarse a sí mismo
+            $duenos = DuenoGimnasio::with('user')
+                ->where('id_dueno', $dueno->id_dueno)
+                ->get();
+        } else {
+            // Si es admin, puede seleccionar cualquier dueño
+            $duenos = DuenoGimnasio::with('user')->get();
+        }
+        
         return view('gimnasios.edit', compact('gimnasio', 'duenos'));
     }
 
@@ -68,6 +138,24 @@ class GimnasioController extends Controller
      */
     public function update(Request $request, Gimnasio $gimnasio)
     {
+        // Verificar si el usuario es un dueño y tiene permiso para actualizar este gimnasio
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Si es dueño, verificar que el gimnasio le pertenece
+            if ($gimnasio->dueno_id != $dueno->id_dueno) {
+                return redirect()->route('gimnasios.index')
+                    ->with('error', 'No tienes permiso para editar este gimnasio.');
+            }
+            
+            // Además, no puede cambiar el dueño a otro que no sea él mismo
+            if ($request->dueno_id != $dueno->id_dueno) {
+                return redirect()->route('gimnasios.index')
+                    ->with('error', 'No puedes transferir el gimnasio a otro dueño.');
+            }
+        }
+
         $validated = $request->validate([
             'dueno_id' => 'required|exists:duenos_gimnasios,id_dueno',
             'nombre' => 'required|string|max:255',
@@ -86,6 +174,15 @@ class GimnasioController extends Controller
      */
     public function destroy(Gimnasio $gimnasio)
     {
+        // Verificar si el usuario es un dueño y tiene permiso para eliminar este gimnasio
+        $user = auth()->user();
+        $dueno = DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno && $gimnasio->dueno_id != $dueno->id_dueno) {
+            return redirect()->route('gimnasios.index')
+                ->with('error', 'No tienes permiso para eliminar este gimnasio.');
+        }
+        
         $gimnasio->delete();
 
         return redirect()->route('gimnasios.index')
