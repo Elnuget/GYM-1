@@ -12,6 +12,7 @@
         tablaAsistenciasAbierta: false,
         searchTerm: '',
         filteredClientes: [],
+        activeFilterLabel: '',
         
         formatearFecha(fecha) {
             if (!fecha) return 'N/A';
@@ -40,6 +41,11 @@
             
             // Observador para filtrar clientes en tiempo real al escribir
             this.$watch('searchTerm', (value) => {
+                if (this.activeFilterLabel) {
+                    // Si hay un filtro activo, no hacer nada - el usuario debe quitar el filtro primero
+                    return;
+                }
+                
                 if (value.trim() === '') {
                     // Si el término de búsqueda está vacío, mostrar todos los clientes
                     this.filteredClientes = [...document.querySelectorAll('tr[data-cliente-id]')];
@@ -71,6 +77,70 @@
                 }
             });
         },
+        
+        // Métodos para aplicar filtros especiales
+        applyFilter(filterType) {
+            // Limpiar la búsqueda por texto
+            this.searchTerm = '';
+            
+            const allRows = [...document.querySelectorAll('tr[data-cliente-id]')];
+            const mesActual = new Date().getMonth(); // 0-11
+            const añoActual = new Date().getFullYear();
+            
+            allRows.forEach(row => {
+                // Ocultar todas las filas por defecto
+                row.classList.add('hidden');
+                
+                if (filterType === 'nuevos') {
+                    // Clientes Nuevos del Mes
+                    const fechaRegistro = row.getAttribute('data-fecha-registro');
+                    if (fechaRegistro) {
+                        const fecha = new Date(fechaRegistro);
+                        if (fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual) {
+                            row.classList.remove('hidden');
+                        }
+                    }
+                    this.activeFilterLabel = 'Clientes Nuevos del Mes';
+                    
+                } else if (filterType === 'instalaciones') {
+                    // Clientes en Instalaciones (con entrada pero sin salida)
+                    if (row.getAttribute('data-en-instalaciones') === 'true') {
+                        row.classList.remove('hidden');
+                    }
+                    this.activeFilterLabel = 'Clientes Actualmente en Instalaciones';
+                    
+                } else if (filterType === 'vencidas') {
+                    // Clientes con Membresías Vencidas
+                    if (row.getAttribute('data-membresia-vencida') === 'true') {
+                        row.classList.remove('hidden');
+                    }
+                    this.activeFilterLabel = 'Clientes con Membresía Vencida';
+                    
+                } else if (filterType === 'pendientes') {
+                    // Clientes con Pagos Pendientes
+                    if (row.getAttribute('data-pagos-pendientes') === 'true') {
+                        row.classList.remove('hidden');
+                    }
+                    this.activeFilterLabel = 'Clientes con Pagos Pendientes';
+                }
+            });
+            
+            // Actualizar la lista filtrada
+            this.filteredClientes = allRows.filter(row => !row.classList.contains('hidden'));
+        },
+        
+        clearFilter() {
+            // Quitar filtro activo y mostrar todos los clientes
+            this.activeFilterLabel = '';
+            this.searchTerm = '';
+            
+            const allRows = [...document.querySelectorAll('tr[data-cliente-id]')];
+            allRows.forEach(row => {
+                row.classList.remove('hidden');
+            });
+            this.filteredClientes = allRows;
+        },
+        
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
         },
@@ -184,8 +254,169 @@
     }">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Tarjetas informativas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Clientes Nuevos del Mes -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-emerald-500">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-emerald-100 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Clientes Nuevos del Mes
+                                    </dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">
+                                            @php
+                                                $mesActual = \Carbon\Carbon::now()->month;
+                                                $añoActual = \Carbon\Carbon::now()->year;
+                                                $clientesNuevosMes = $clientes->filter(function($cliente) use ($mesActual, $añoActual) {
+                                                    $fechaCreacion = \Carbon\Carbon::parse($cliente->created_at);
+                                                    return $fechaCreacion->month === $mesActual && $fechaCreacion->year === $añoActual;
+                                                })->count();
+                                            @endphp
+                                            {{ $clientesNuevosMes }}
+                                        </div>
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button @click="applyFilter('nuevos')" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-sm font-medium py-2 px-4 rounded-md transition-colors duration-150">
+                                    Ver todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clientes en Instalaciones -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Clientes en Instalaciones
+                                    </dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">
+                                            @php
+                                                $clientesEnInstalaciones = App\Models\Asistencia::whereDate('fecha', \Carbon\Carbon::today())
+                                                    ->whereNull('hora_salida')
+                                                    ->count();
+                                            @endphp
+                                            {{ $clientesEnInstalaciones }}
+                                        </div>
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button @click="applyFilter('instalaciones')" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 text-sm font-medium py-2 px-4 rounded-md transition-colors duration-150">
+                                    Ver todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membresías Vencidas -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-amber-500">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-amber-100 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Membresías Vencidas
+                                    </dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">
+                                            @php
+                                                $membresiasVencidas = 0;
+                                                if (isset($todasLasMembresias)) {
+                                                    $membresiasVencidas = $todasLasMembresias->filter(function($membresia) {
+                                                        $hoy = \Carbon\Carbon::now();
+                                                        return isset($membresia->fecha_vencimiento) && 
+                                                            \Carbon\Carbon::parse($membresia->fecha_vencimiento)->lt($hoy);
+                                                    })->groupBy('usuario_id')->count();
+                                                }
+                                            @endphp
+                                            {{ $membresiasVencidas }}
+                                        </div>
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button @click="applyFilter('vencidas')" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 text-sm font-medium py-2 px-4 rounded-md transition-colors duration-150">
+                                    Ver todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagos Pendientes -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-red-500">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Pagos Pendientes
+                                    </dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">
+                                            @php
+                                                $clientesConPagosPendientes = 0;
+                                                if (isset($todasLasMembresias)) {
+                                                    $clientesConPagosPendientes = $todasLasMembresias->filter(function($membresia) {
+                                                        return $membresia->saldo_pendiente > 0;
+                                                    })->groupBy('usuario_id')->count();
+                                                }
+                                            @endphp
+                                            {{ $clientesConPagosPendientes }}
+                                        </div>
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button @click="applyFilter('pendientes')" class="w-full bg-red-100 hover:bg-red-200 text-red-800 text-sm font-medium py-2 px-4 rounded-md transition-colors duration-150">
+                                    Ver todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Cuadro de búsqueda -->
                 <div class="mb-6">
+                    <!-- Indicador de filtro activo -->
+                    <div x-show="activeFilterLabel" class="mb-4 flex items-center justify-between bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            <span class="font-medium text-blue-800" x-text="'Filtro activo: ' + activeFilterLabel"></span>
+                        </div>
+                        <button @click="clearFilter()" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Quitar filtro
+                        </button>
+                    </div>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,17 +426,19 @@
                         <input 
                             type="search" 
                             x-model="searchTerm"
-                            class="block w-full p-3 pl-10 pr-4 text-sm text-gray-900 border border-emerald-200 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500"
+                            :disabled="activeFilterLabel !== ''"
+                            class="block w-full p-3 pl-10 pr-4 text-sm text-gray-900 border border-emerald-200 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50 disabled:text-gray-500"
                             placeholder="Buscar clientes por nombre, teléfono o gimnasio..."
                         >
                     </div>
                     <p class="mt-2 text-sm text-emerald-600" x-text="searchTerm.trim() !== '' ? `Mostrando ${filteredClientes.length} resultado(s) para '${searchTerm}'` : ''"></p>
                 </div>
+
                 <!-- Header con gradiente -->
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
                     <div class="flex items-center space-x-4 mb-4 sm:mb-0">
                         <div class="flex items-center">
-                            <h2 class="text-2xl font-semibold text-white mr-2">
+                            <h2 class="text-2xl font-semibold text-white mr-2" x-text="activeFilterLabel || 'Clientes'">
                                 Clientes
                             </h2>
                         </div>
@@ -251,8 +484,41 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-emerald-100">
                                 @foreach($clientes->sortByDesc('id_cliente') as $cliente)
+                                    @php
+                                        // Determinar si el cliente está actualmente en las instalaciones
+                                        $enInstalaciones = App\Models\Asistencia::where('cliente_id', $cliente->id_cliente)
+                                            ->whereDate('fecha', \Carbon\Carbon::today())
+                                            ->whereNull('hora_salida')
+                                            ->exists();
+                                        
+                                        // Determinar si el cliente tiene membresía vencida
+                                        $tieneMembresiasVencidas = false;
+                                        $tienePagosPendientes = false;
+                                        
+                                        if (isset($todasLasMembresias)) {
+                                            $membresiasCliente = $todasLasMembresias->filter(function($membresia) use ($cliente) {
+                                                return isset($membresia->usuario) && 
+                                                      (strtolower($membresia->usuario->name) == strtolower($cliente->nombre) || 
+                                                       (isset($cliente->user) && isset($cliente->user->id) && 
+                                                        isset($membresia->usuario->id) && 
+                                                        $membresia->usuario->id == $cliente->user->id));
+                                            });
+                                            
+                                            $tieneMembresiasVencidas = $membresiasCliente->filter(function($membresia) {
+                                                $hoy = \Carbon\Carbon::now();
+                                                return isset($membresia->fecha_vencimiento) && 
+                                                      \Carbon\Carbon::parse($membresia->fecha_vencimiento)->lt($hoy);
+                                            })->count() > 0;
+                                            
+                                            $tienePagosPendientes = $membresiasCliente->sum('saldo_pendiente') > 0;
+                                        }
+                                    @endphp
                                     <tr class="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-colors duration-150"
-                                        data-cliente-id="{{ $cliente->id_cliente }}">
+                                        data-cliente-id="{{ $cliente->id_cliente }}"
+                                        data-fecha-registro="{{ $cliente->created_at }}"
+                                        data-en-instalaciones="{{ $enInstalaciones ? 'true' : 'false' }}"
+                                        data-membresia-vencida="{{ $tieneMembresiasVencidas ? 'true' : 'false' }}"
+                                        data-pagos-pendientes="{{ $tienePagosPendientes ? 'true' : 'false' }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center justify-center">
                                                 @if($cliente->user && $cliente->user->foto_perfil && file_exists(public_path($cliente->user->foto_perfil)))
