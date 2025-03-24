@@ -25,11 +25,33 @@ class AsistenciaController extends Controller
      */
     public function index()
     {
-        // Obtener todas las asistencias para el dueño del gimnasio
-        $asistencias = Asistencia::with('cliente')
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        // Inicializar la consulta base
+        $query = Asistencia::with(['cliente.gimnasio'])
             ->orderBy('fecha', 'desc')
-            ->orderBy('hora_entrada', 'desc')
-            ->paginate(10);
+            ->orderBy('hora_entrada', 'desc');
+            
+        // Verificar si el usuario es un dueño de gimnasio
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar asistencias que pertenecen a los gimnasios del dueño
+            $query->whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+            
+            // Filtrar clientes para mostrar solo los de los gimnasios del dueño
+            $clientes = Cliente::whereIn('gimnasio_id', $gimnasiosIds)->get();
+        } else {
+            // Si no es dueño, mostrar todos los datos (para administradores)
+            $clientes = Cliente::all();
+        }
+
+        $asistencias = $query->paginate(10);
         
         // Asegurarnos de que la duración y el estado se calculen correctamente
         foreach ($asistencias as $asistencia) {
@@ -46,8 +68,6 @@ class AsistenciaController extends Controller
                 }
             }
         }
-        
-        $clientes = Cliente::all();
         
         return view('asistencias.index', compact('asistencias', 'clientes'));
     }
@@ -69,6 +89,21 @@ class AsistenciaController extends Controller
         ]);
 
         try {
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si el cliente pertenece a uno de los gimnasios del dueño
+                $cliente = Cliente::find($request->cliente_id);
+                $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+                
+                if (!$cliente || !in_array($cliente->gimnasio_id, $gimnasiosIds->toArray())) {
+                    return redirect()->route('asistencias.index')
+                        ->with('error', 'No tienes permiso para registrar asistencias para este cliente.');
+                }
+            }
+
             // Determinar el estado inicial
             $estado = 'activa';
             if ($request->hora_salida) {
@@ -122,6 +157,23 @@ class AsistenciaController extends Controller
             'hora_entrada' => 'required',
         ]);
 
+        // Verificar si el usuario es un dueño de gimnasio
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Verificar si la asistencia pertenece a un cliente de uno de los gimnasios del dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            $clientePertenece = Cliente::where('id_cliente', $request->cliente_id)
+                ->whereIn('gimnasio_id', $gimnasiosIds)
+                ->exists();
+                
+            if (!$clientePertenece) {
+                return redirect()->route('asistencias.index')
+                    ->with('error', 'No tienes permiso para modificar esta asistencia.');
+            }
+        }
+
         // Determinar el estado basado en la presencia de hora_salida
         $estado = $request->hora_salida ? 'completada' : 'activa';
 
@@ -152,6 +204,23 @@ class AsistenciaController extends Controller
      */
     public function destroy(Asistencia $asistencia)
     {
+        // Verificar si el usuario es un dueño de gimnasio
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Verificar si la asistencia pertenece a un cliente de uno de los gimnasios del dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            $clientePertenece = Cliente::where('id_cliente', $asistencia->cliente_id)
+                ->whereIn('gimnasio_id', $gimnasiosIds)
+                ->exists();
+                
+            if (!$clientePertenece) {
+                return redirect()->route('asistencias.index')
+                    ->with('error', 'No tienes permiso para eliminar esta asistencia.');
+            }
+        }
+
         $asistencia->delete();
 
         return redirect()->route('asistencias.index')
@@ -164,6 +233,25 @@ class AsistenciaController extends Controller
     public function registrarSalida(Asistencia $asistencia)
     {
         try {
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si la asistencia pertenece a un cliente de uno de los gimnasios del dueño
+                $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+                $clientePertenece = Cliente::where('id_cliente', $asistencia->cliente_id)
+                    ->whereIn('gimnasio_id', $gimnasiosIds)
+                    ->exists();
+                    
+                if (!$clientePertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para registrar la salida de esta asistencia.'
+                    ], 403);
+                }
+            }
+
             if ($asistencia->hora_salida) {
                 return response()->json([
                     'success' => false,
@@ -198,6 +286,25 @@ class AsistenciaController extends Controller
     {
         try {
             $cliente_id = $request->cliente_id;
+            
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si el cliente pertenece a uno de los gimnasios del dueño
+                $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+                $clientePertenece = Cliente::where('id_cliente', $cliente_id)
+                    ->whereIn('gimnasio_id', $gimnasiosIds)
+                    ->exists();
+                    
+                if (!$clientePertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para registrar la entrada de este cliente.'
+                    ], 403);
+                }
+            }
             
             // Verificar si ya existe una entrada sin salida
             $asistenciaActiva = Asistencia::where('cliente_id', $cliente_id)
