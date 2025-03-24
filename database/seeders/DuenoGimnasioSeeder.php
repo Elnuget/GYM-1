@@ -55,7 +55,7 @@ class DuenoGimnasioSeeder extends Seeder
             'telefono' => '0999999999',
             'descripcion' => 'Tu gimnasio de confianza con equipamiento moderno',
             'logo' => null,
-            'dueno_id' => $dueno->id_dueno,
+            'dueno_id' => $user->id,
             'estado' => true
         ]);
 
@@ -267,7 +267,7 @@ class DuenoGimnasioSeeder extends Seeder
             'telefono' => '0988888888',
             'descripcion' => 'El gimnasio más completo para alcanzar tus metas',
             'logo' => null,
-            'dueno_id' => $dueno2->id_dueno,
+            'dueno_id' => $user2->id,
             'estado' => true
         ]);
 
