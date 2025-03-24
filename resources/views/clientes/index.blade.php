@@ -10,6 +10,9 @@
         tablaMembresiaAbierta: false,
         tablaPagosAbierta: false,
         tablaAsistenciasAbierta: false,
+        searchTerm: '',
+        filteredClientes: [],
+        
         formatearFecha(fecha) {
             if (!fecha) return 'N/A';
             try {
@@ -29,6 +32,44 @@
                 console.error('Error al formatear fecha:', e);
                 return fecha;
             }
+        },
+        
+        init() {
+            // Inicializar la lista filtrada con todos los clientes al cargar
+            this.filteredClientes = [...document.querySelectorAll('tr[data-cliente-id]')];
+            
+            // Observador para filtrar clientes en tiempo real al escribir
+            this.$watch('searchTerm', (value) => {
+                if (value.trim() === '') {
+                    // Si el término de búsqueda está vacío, mostrar todos los clientes
+                    this.filteredClientes = [...document.querySelectorAll('tr[data-cliente-id]')];
+                    this.filteredClientes.forEach(row => {
+                        row.classList.remove('hidden');
+                    });
+                } else {
+                    // Filtrar clientes según el término de búsqueda (case insensitive)
+                    const searchTermLower = value.toLowerCase();
+                    const allRows = [...document.querySelectorAll('tr[data-cliente-id]')];
+                    
+                    allRows.forEach(row => {
+                        const clienteNombre = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                        const clienteTelefono = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                        const clienteGimnasio = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                        
+                        // Buscar en nombre, teléfono y gimnasio
+                        if (clienteNombre.includes(searchTermLower) || 
+                            clienteTelefono.includes(searchTermLower) || 
+                            clienteGimnasio.includes(searchTermLower)) {
+                            row.classList.remove('hidden');
+                        } else {
+                            row.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Actualizar la lista filtrada
+                    this.filteredClientes = allRows.filter(row => !row.classList.contains('hidden'));
+                }
+            });
         },
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
@@ -143,6 +184,23 @@
     }">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Cuadro de búsqueda -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input 
+                            type="search" 
+                            x-model="searchTerm"
+                            class="block w-full p-3 pl-10 pr-4 text-sm text-gray-900 border border-emerald-200 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500"
+                            placeholder="Buscar clientes por nombre, teléfono o gimnasio..."
+                        >
+                    </div>
+                    <p class="mt-2 text-sm text-emerald-600" x-text="searchTerm.trim() !== '' ? `Mostrando ${filteredClientes.length} resultado(s) para '${searchTerm}'` : ''"></p>
+                </div>
                 <!-- Header con gradiente -->
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
                     <div class="flex items-center space-x-4 mb-4 sm:mb-0">
@@ -173,6 +231,8 @@
                         {{ session('success') }}
                     </div>
                 @endif
+
+                
 
                 <!-- Tabla -->
                 <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100 mb-8">
