@@ -191,6 +191,33 @@ class PagoController extends Controller
         ));
     }
 
+    public function pendientes()
+    {
+        $usuarioActual = auth()->user();
+        
+        // Crear query base con relaciones necesarias
+        $query = Pago::with([
+            'membresia.tipoMembresia', 
+            'usuario', 
+            'metodoPago'
+        ])->where('estado', 'pendiente');
+
+        // Si el usuario es un dueño de gimnasio, filtrar solo sus pagos
+        if ($usuarioActual->hasRole('dueño')) {
+            $duenoGimnasio = DuenoGimnasio::where('user_id', $usuarioActual->id)->first();
+            if ($duenoGimnasio) {
+                $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                $query->whereHas('membresia.tipoMembresia', function($q) use ($gimnasiosIds) {
+                    $q->whereIn('gimnasio_id', $gimnasiosIds);
+                });
+            }
+        }
+
+        $pagos = $query->orderBy('fecha_pago', 'desc')->get();
+        
+        return view('pagos.pendientes', compact('pagos'));
+    }
+
     public function create()
     {
         $membresias = Membresia::all();

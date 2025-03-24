@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
         ->name('membresias.renovar');
     Route::resource('pagos', PagoController::class);
     Route::post('/pagos/{pago}/aprobar', [PagoController::class, 'aprobar'])->name('pagos.aprobar');
+    Route::get('/pagos/pendientes', [PagoController::class, 'pendientes'])->name('pagos.pendientes');
     Route::resource('metodos-pago', MetodoPagoController::class, [
         'parameters' => ['metodos-pago' => 'metodoPago']
     ]);
