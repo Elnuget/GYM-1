@@ -59,7 +59,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $gimnasio->nombre }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $gimnasio->direccion }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $gimnasio->telefono }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $gimnasio->dueno->name ?? 'Sin dueño asignado' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $gimnasio->dueno->user->name ?? 'Sin dueño asignado' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-3">
                                             <button @click="toggleEditModal({{ $gimnasio->toJson() }})" 
@@ -104,8 +104,8 @@
                                                     class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                 <option value="">Seleccione un dueño</option>
                                                 @foreach($duenos as $dueno)
-                                                    <option value="{{ $dueno->id }}">
-                                                        {{ $dueno->name }} - {{ $dueno->email }}
+                                                    <option value="{{ $dueno->id_dueno }}">
+                                                        {{ $dueno->user->name }} - {{ $dueno->user->email }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -168,8 +168,8 @@
                                                     class="mt-1 block w-full rounded-lg border-emerald-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                                                 <option value="">Seleccione un dueño</option>
                                                 @foreach($duenos as $dueno)
-                                                    <option value="{{ $dueno->id }}">
-                                                        {{ $dueno->name }} - {{ $dueno->email }}
+                                                    <option value="{{ $dueno->id_dueno }}">
+                                                        {{ $dueno->user->name }} - {{ $dueno->user->email }}
                                                     </option>
                                                 @endforeach
                                             </select>

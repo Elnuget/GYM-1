@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gimnasio;
 use App\Models\User;
+use App\Models\DuenoGimnasio;
 use Illuminate\Http\Request;
 
 class GimnasioController extends Controller
@@ -13,8 +14,8 @@ class GimnasioController extends Controller
      */
     public function index()
     {
-        $gimnasios = Gimnasio::with('dueno')->get();
-        $duenos = User::where('rol', 'dueño')->get();
+        $gimnasios = Gimnasio::with('dueno.user')->get();
+        $duenos = DuenoGimnasio::with('user')->get();
         return view('gimnasios.index', compact('gimnasios', 'duenos'));
     }
 
@@ -23,7 +24,7 @@ class GimnasioController extends Controller
      */
     public function create()
     {
-        $duenos = User::where('rol', 'dueño')->get();
+        $duenos = DuenoGimnasio::with('user')->get();
         return view('gimnasios.create', compact('duenos'));
     }
 
@@ -33,7 +34,7 @@ class GimnasioController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'dueno_id' => 'required|exists:users,id',
+            'dueno_id' => 'required|exists:duenos_gimnasios,id_dueno',
             'nombre' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
             'telefono' => 'nullable|string|max:20',
@@ -58,7 +59,7 @@ class GimnasioController extends Controller
      */
     public function edit(Gimnasio $gimnasio)
     {
-        $duenos = User::where('rol', 'dueño')->get();
+        $duenos = DuenoGimnasio::with('user')->get();
         return view('gimnasios.edit', compact('gimnasio', 'duenos'));
     }
 
@@ -68,7 +69,7 @@ class GimnasioController extends Controller
     public function update(Request $request, Gimnasio $gimnasio)
     {
         $validated = $request->validate([
-            'dueno_id' => 'required|exists:users,id',
+            'dueno_id' => 'required|exists:duenos_gimnasios,id_dueno',
             'nombre' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
             'telefono' => 'nullable|string|max:20',
