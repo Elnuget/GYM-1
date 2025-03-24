@@ -14,8 +14,39 @@ class MembresiaController extends Controller
 {
     public function index(Request $request)
     {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        
+        // Inicializar la consulta base
         $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
             ->orderBy('id_membresia', 'desc');
+            
+        // Verificar si el usuario es un dueño de gimnasio
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar membresías que pertenecen a los gimnasios del dueño
+            $query->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+            
+            // Filtrar usuarios para mostrar solo los de los gimnasios del dueño
+            $usuarios = \App\Models\User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })->with(['cliente.gimnasio'])->get();
+            
+            // Filtrar tipos de membresía para mostrar solo los de los gimnasios del dueño
+            $tiposMembresia = \App\Models\TipoMembresia::whereIn('gimnasio_id', $gimnasiosIds)
+                ->where('estado', 1)
+                ->get();
+        } else {
+            // Si no es dueño, mostrar todos los datos (para administradores)
+            $usuarios = \App\Models\User::with(['cliente.gimnasio'])->get();
+            $tiposMembresia = \App\Models\TipoMembresia::where('estado', 1)->get();
+        }
             
         // Definir mes y año actuales como valores predeterminados
         $mesActual = date('n');
@@ -45,9 +76,7 @@ class MembresiaController extends Controller
         
         // Obtener todas las membresías sin paginación
         $membresias = $query->get();
-        $usuarios = User::with(['cliente.gimnasio'])->get();
-        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
-        $metodosPago = MetodoPago::all();
+        $metodosPago = \App\Models\MetodoPago::all();
         
         // Datos para el selector de mes/año
         $meses = [
@@ -66,56 +95,70 @@ class MembresiaController extends Controller
         ];
         
         // Generar años desde el actual hasta 3 años en el futuro
-        $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
-        // Obtener nombre del usuario si existe
-        $usuarioSeleccionado = null;
-        if ($idUsuario) {
-            $usuarioSeleccionado = User::find($idUsuario);
-        }
+        // Obtener usuario seleccionado si existe
+        $usuarioSeleccionado = $idUsuario ? \App\Models\User::find($idUsuario) : null;
         
-        // Calcular membresías vencidas en el mes actual (desde el primer día hasta la fecha actual)
+        // Calcular estadísticas
         $fechaActual = now();
-        $primerDiaMes = $fechaActual->copy()->startOfMonth();
         
-        // Membresías vencidas en el mes actual (con fecha de vencimiento anterior a hoy pero dentro del mes actual)
-        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+        if ($dueno) {
+            // Estadísticas filtradas por gimnasios del dueño
+            $membresiasVencidasMes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->count();
-        
-        // Total de membresías activas este mes (con fecha de vencimiento en el mes actual)
-        $totalMembresiasActivas = Membresia::whereMonth('fecha_vencimiento', $fechaActual->month)
-            ->whereYear('fecha_vencimiento', $fechaActual->year)
+            
+            $membresiasActivas = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
             ->count();
+            
+            $totalSaldosPendientes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->sum('saldo_pendiente');
+            
+            $membresiasPendientesPago = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->count();
+            
+            // Membresías sin renovar
+            $usuariosConMembresias = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->distinct('id_usuario')
+            ->pluck('id_usuario');
+        } else {
+            // Estadísticas para todos los gimnasios
+            $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+                ->whereMonth('fecha_vencimiento', $fechaActual->month)
+                ->whereYear('fecha_vencimiento', $fechaActual->year)
+                ->count();
+                
+            $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            
+            $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
+            $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
+            
+            $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
+        }
         
-        // Calcular porcentaje
-        $porcentajeVencidas = $totalMembresiasActivas > 0 
-            ? round(($membresiasVencidasMes / $totalMembresiasActivas) * 100) 
-            : 0;
-        
-        // Membresías activas (con fecha de vencimiento mayor o igual a la fecha actual)
-        $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
-        
-        // Cálculo de saldos pendientes
-        $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
-        $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
-        
-        // Membresías vencidas sin renovar
-        // Ahora buscamos usuarios cuya última membresía ha vencido en un mes anterior al actual
         $membresiasNoRenovadas = 0;
-        
-        // Obtener todos los usuarios que tienen membresías
-        $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
-        
         foreach ($usuariosConMembresias as $idUsuarioMem) {
-            // Obtener la membresía más reciente de este usuario (por fecha de vencimiento)
+            // Obtener la membresía más reciente de este usuario
             $ultimaMembresia = Membresia::where('id_usuario', $idUsuarioMem)
                 ->orderBy('fecha_vencimiento', 'desc')
                 ->first();
             
-            // Verificar si la última membresía del usuario ha vencido en un mes anterior al actual
             if ($ultimaMembresia && 
                 $ultimaMembresia->fecha_vencimiento && 
                 $ultimaMembresia->fecha_vencimiento < $fechaActual &&
@@ -124,8 +167,6 @@ class MembresiaController extends Controller
                 $membresiasNoRenovadas++;
             }
         }
-        
-        // Ya no necesitamos calcular tasa de no renovación pues eliminamos la barra de porcentaje
         
         return view('membresias.index', compact(
             'membresias', 
@@ -142,7 +183,6 @@ class MembresiaController extends Controller
             'usuarioSeleccionado',
             'membresiasVencidasMes',
             'membresiasNoRenovadas',
-            'porcentajeVencidas',
             'membresiasActivas',
             'totalSaldosPendientes',
             'membresiasPendientesPago'
@@ -159,6 +199,33 @@ class MembresiaController extends Controller
     public function store(Request $request)
     {
         try {
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Obtener el gimnasio asociado al tipo de membresía
+                $tipoMembresia = \App\Models\TipoMembresia::find($request->id_tipo_membresia);
+                if (!$tipoMembresia) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El tipo de membresía no existe.'
+                    ], 404);
+                }
+                
+                // Verificar si el gimnasio pertenece al dueño
+                $gimnasioPertenece = $dueno->gimnasios()
+                    ->where('id_gimnasio', $tipoMembresia->gimnasio_id)
+                    ->exists();
+                    
+                if (!$gimnasioPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para crear membresías en este gimnasio.'
+                    ], 403);
+                }
+            }
+
             $validated = $request->validate([
                 'id_usuario' => 'required|exists:users,id',
                 'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
@@ -196,7 +263,7 @@ class MembresiaController extends Controller
             ]);
 
             // Crear el pago
-            $pago = new Pago();
+            $pago = new \App\Models\Pago();
             $pago->id_membresia = $membresia->id_membresia;
             $pago->id_usuario = $validated['id_usuario'];
             $pago->monto = $validated['monto_pago'];
@@ -260,33 +327,100 @@ class MembresiaController extends Controller
 
     public function update(Request $request, Membresia $membresia)
     {
-        $validated = $request->validate([
-            'id_usuario' => 'required|exists:users,id',
-            'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
-            'precio_total' => 'required|numeric|min:0',
-            'saldo_pendiente' => 'required|numeric|min:0',
-            'fecha_compra' => 'required|date',
-            'fecha_vencimiento' => 'required|date|after:fecha_compra',
-            'visitas_permitidas' => 'nullable|integer',
-            'renovacion' => 'boolean'
-        ]);
+        try {
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si la membresía actual pertenece a uno de los gimnasios del dueño
+                $membresiaPertenece = $dueno->gimnasios()
+                    ->whereHas('tiposMembresia', function($q) use ($membresia) {
+                        $q->where('id_tipo_membresia', $membresia->id_tipo_membresia);
+                    })
+                    ->exists();
+                    
+                if (!$membresiaPertenece) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permiso para modificar esta membresía.'
+                    ], 403);
+                }
+                
+                // Si se está cambiando el tipo de membresía, verificar que el nuevo tipo pertenezca a uno de los gimnasios del dueño
+                if ($request->id_tipo_membresia != $membresia->id_tipo_membresia) {
+                    $nuevoTipoPertenece = $dueno->gimnasios()
+                        ->whereHas('tiposMembresia', function($q) use ($request) {
+                            $q->where('id_tipo_membresia', $request->id_tipo_membresia);
+                        })
+                        ->exists();
+                        
+                    if (!$nuevoTipoPertenece) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para asignar este tipo de membresía.'
+                        ], 403);
+                    }
+                }
+            }
 
-        if ($validated['visitas_permitidas']) {
-            $validated['visitas_restantes'] = $validated['visitas_permitidas'];
+            $validated = $request->validate([
+                'id_usuario' => 'required|exists:users,id',
+                'id_tipo_membresia' => 'required|exists:tipos_membresia,id_tipo_membresia',
+                'precio_total' => 'required|numeric|min:0',
+                'saldo_pendiente' => 'required|numeric|min:0',
+                'fecha_compra' => 'required|date',
+                'fecha_vencimiento' => 'required|date|after:fecha_compra',
+                'visitas_permitidas' => 'nullable|integer',
+                'renovacion' => 'boolean'
+            ]);
+
+            if ($validated['visitas_permitidas']) {
+                $validated['visitas_restantes'] = $validated['visitas_permitidas'];
+            }
+
+            $membresia->update($validated);
+
+            return redirect()->route('membresias.index')
+                ->with('success', 'Membresía actualizada exitosamente');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al actualizar la membresía: ' . $e->getMessage())
+                ->withInput();
         }
-
-        $membresia->update($validated);
-
-        return redirect()->route('membresias.index')
-            ->with('success', 'Membresía actualizada exitosamente');
     }
 
     public function destroy(Membresia $membresia)
     {
-        $membresia->delete();
+        try {
+            // Verificar si el usuario es un dueño de gimnasio
+            $user = auth()->user();
+            $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+            
+            if ($dueno) {
+                // Verificar si la membresía pertenece a uno de los gimnasios del dueño
+                $membresiaPertenece = $dueno->gimnasios()
+                    ->whereHas('tiposMembresia', function($q) use ($membresia) {
+                        $q->where('id_tipo_membresia', $membresia->id_tipo_membresia);
+                    })
+                    ->exists();
+                    
+                if (!$membresiaPertenece) {
+                    return redirect()->back()
+                        ->with('error', 'No tienes permiso para eliminar esta membresía.');
+                }
+            }
 
-        return redirect()->route('membresias.index')
-            ->with('success', 'Membresía eliminada exitosamente');
+            $membresia->delete();
+
+            return redirect()->route('membresias.index')
+                ->with('success', 'Membresía eliminada exitosamente');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al eliminar la membresía: ' . $e->getMessage());
+        }
     }
 
     public function registrarVisita(Membresia $membresia)
@@ -315,40 +449,54 @@ class MembresiaController extends Controller
      */
     public function vencidas()
     {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
         // Obtener fecha actual
         $fechaActual = now();
         
-        // Consultar membresías vencidas en el mes actual
-        $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
-            ->whereDate('fecha_vencimiento', '<', $fechaActual)
+        // Inicializar la consulta base
+        $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio']);
+        
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar membresías que pertenecen a los gimnasios del dueño
+            $query->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+            
+            // Filtrar usuarios y tipos de membresía
+            $usuarios = \App\Models\User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })->with(['cliente.gimnasio'])->get();
+            
+            $tiposMembresia = \App\Models\TipoMembresia::whereIn('gimnasio_id', $gimnasiosIds)
+                ->where('estado', 1)
+                ->get();
+        } else {
+            $usuarios = \App\Models\User::with(['cliente.gimnasio'])->get();
+            $tiposMembresia = \App\Models\TipoMembresia::where('estado', 1)->get();
+        }
+        
+        // Aplicar filtros de fecha
+        $query->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->orderBy('fecha_vencimiento', 'desc');
             
         $membresias = $query->get();
-        
-        // Obtener datos necesarios para la vista
-        $usuarios = User::with(['cliente.gimnasio'])->get();
-        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
-        $metodosPago = MetodoPago::all();
+        $metodosPago = \App\Models\MetodoPago::all();
         
         // Datos para el selector de mes/año
         $meses = [
-            1 => 'Enero', 
-            2 => 'Febrero', 
-            3 => 'Marzo', 
-            4 => 'Abril', 
-            5 => 'Mayo', 
-            6 => 'Junio', 
-            7 => 'Julio', 
-            8 => 'Agosto', 
-            9 => 'Septiembre', 
-            10 => 'Octubre', 
-            11 => 'Noviembre', 
-            12 => 'Diciembre'
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         
-        // Generar años desde el actual hasta 3 años en el futuro
         $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
@@ -360,33 +508,59 @@ class MembresiaController extends Controller
         $tipoFiltro = 'vencimiento';
         $usuarioSeleccionado = null;
         
-        // Membresías vencidas en el mes actual
-        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+        // Calcular estadísticas
+        if ($dueno) {
+            $membresiasVencidasMes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->count();
             
-        // Membresías activas (con fecha de vencimiento mayor o igual a la fecha actual)
-        $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            $membresiasActivas = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
+            ->count();
+            
+            $totalSaldosPendientes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->sum('saldo_pendiente');
+            
+            $membresiasPendientesPago = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->count();
+            
+            $usuariosConMembresias = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->distinct('id_usuario')
+            ->pluck('id_usuario');
+        } else {
+            $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+                ->whereMonth('fecha_vencimiento', $fechaActual->month)
+                ->whereYear('fecha_vencimiento', $fechaActual->year)
+                ->count();
+                
+            $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            
+            $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
+            $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
+            
+            $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
+        }
         
-        // Cálculo de saldos pendientes
-        $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
-        $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
-        
-        // Membresías vencidas sin renovar
-        // Ahora buscamos usuarios cuya última membresía ha vencido en un mes anterior al actual
         $membresiasNoRenovadas = 0;
-        
-        // Obtener todos los usuarios que tienen membresías
-        $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
-        
         foreach ($usuariosConMembresias as $idUsuarioMem) {
-            // Obtener la membresía más reciente de este usuario (por fecha de vencimiento)
             $ultimaMembresia = Membresia::where('id_usuario', $idUsuarioMem)
                 ->orderBy('fecha_vencimiento', 'desc')
                 ->first();
             
-            // Verificar si la última membresía del usuario ha vencido en un mes anterior al actual
             if ($ultimaMembresia && 
                 $ultimaMembresia->fecha_vencimiento && 
                 $ultimaMembresia->fecha_vencimiento < $fechaActual &&
@@ -423,20 +597,44 @@ class MembresiaController extends Controller
      */
     public function sinRenovar()
     {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
         // Obtener fecha actual
         $fechaActual = now();
         
-        // Obtener todos los usuarios que tienen membresías
-        $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
-        $usuariosSinRenovar = [];
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Obtener usuarios con membresías de los gimnasios del dueño
+            $usuariosConMembresias = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->distinct('id_usuario')
+            ->pluck('id_usuario');
+            
+            // Filtrar usuarios y tipos de membresía
+            $usuarios = \App\Models\User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })->with(['cliente.gimnasio'])->get();
+            
+            $tiposMembresia = \App\Models\TipoMembresia::whereIn('gimnasio_id', $gimnasiosIds)
+                ->where('estado', 1)
+                ->get();
+        } else {
+            $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
+            $usuarios = \App\Models\User::with(['cliente.gimnasio'])->get();
+            $tiposMembresia = \App\Models\TipoMembresia::where('estado', 1)->get();
+        }
         
+        $usuariosSinRenovar = [];
         foreach ($usuariosConMembresias as $idUsuarioMem) {
-            // Obtener la membresía más reciente de este usuario (por fecha de vencimiento)
             $ultimaMembresia = Membresia::where('id_usuario', $idUsuarioMem)
                 ->orderBy('fecha_vencimiento', 'desc')
                 ->first();
             
-            // Verificar si la última membresía del usuario ha vencido en un mes anterior al actual
             if ($ultimaMembresia && 
                 $ultimaMembresia->fecha_vencimiento && 
                 $ultimaMembresia->fecha_vencimiento < $fechaActual &&
@@ -448,39 +646,30 @@ class MembresiaController extends Controller
         
         // Consultar membresías sin renovar
         $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
-            ->whereIn('id_membresia', $usuariosSinRenovar)
-            ->orderBy('fecha_vencimiento', 'desc');
+            ->whereIn('id_membresia', $usuariosSinRenovar);
             
-        $membresias = $query->get();
+        if ($dueno) {
+            $query->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+        }
         
-        // Obtener datos necesarios para la vista
-        $usuarios = User::with(['cliente.gimnasio'])->get();
-        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
-        $metodosPago = MetodoPago::all();
+        $membresias = $query->orderBy('fecha_vencimiento', 'desc')->get();
+        $metodosPago = \App\Models\MetodoPago::all();
         
         // Datos para el selector de mes/año
         $meses = [
-            1 => 'Enero', 
-            2 => 'Febrero', 
-            3 => 'Marzo', 
-            4 => 'Abril', 
-            5 => 'Mayo', 
-            6 => 'Junio', 
-            7 => 'Julio', 
-            8 => 'Agosto', 
-            9 => 'Septiembre', 
-            10 => 'Octubre', 
-            11 => 'Noviembre', 
-            12 => 'Diciembre'
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         
-        // Generar años desde el actual hasta 3 años en el futuro
         $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
         $mes = $fechaActual->month;
         $anio = $fechaActual->year;
-        $mostrarSinRenovar = true; // Variable para indicar que estamos mostrando las membresías sin renovar
+        $mostrarSinRenovar = true;
         $idUsuario = null;
         $mostrarTodos = false;
         $mostrarVencidas = false;
@@ -488,20 +677,45 @@ class MembresiaController extends Controller
         $usuarioSeleccionado = null;
         
         // Calcular estadísticas
-        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+        if ($dueno) {
+            $membresiasVencidasMes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->count();
             
-        // Membresías sin renovar (reutilizamos el cálculo anterior)
+            $membresiasActivas = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
+            ->count();
+            
+            $totalSaldosPendientes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->sum('saldo_pendiente');
+            
+            $membresiasPendientesPago = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->count();
+        } else {
+            $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+                ->whereMonth('fecha_vencimiento', $fechaActual->month)
+                ->whereYear('fecha_vencimiento', $fechaActual->year)
+                ->count();
+                
+            $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            
+            $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
+            $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
+        }
+        
         $membresiasNoRenovadas = count($usuariosSinRenovar);
-        
-        // Membresías activas (con fecha de vencimiento mayor o igual a la fecha actual)
-        $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
-        
-        // Cálculo de saldos pendientes
-        $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
-        $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
         
         return view('membresias.index', compact(
             'membresias', 
@@ -516,11 +730,11 @@ class MembresiaController extends Controller
             'mostrarVencidas',
             'membresiasVencidasMes',
             'membresiasNoRenovadas',
+            'membresiasActivas',
             'idUsuario',
             'mostrarTodos',
             'tipoFiltro',
             'usuarioSeleccionado',
-            'membresiasActivas',
             'totalSaldosPendientes',
             'membresiasPendientesPago'
         ));
@@ -531,44 +745,55 @@ class MembresiaController extends Controller
      */
     public function activas()
     {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
         // Obtener fecha actual
         $fechaActual = now();
         
-        // Consultar membresías activas
+        // Inicializar la consulta base
         $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
-            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
-            ->orderBy('fecha_vencimiento', 'asc'); // Ordenadas por fecha de vencimiento ascendente
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual);
             
-        $membresias = $query->get();
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar membresías que pertenecen a los gimnasios del dueño
+            $query->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+            
+            // Filtrar usuarios y tipos de membresía
+            $usuarios = \App\Models\User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })->with(['cliente.gimnasio'])->get();
+            
+            $tiposMembresia = \App\Models\TipoMembresia::whereIn('gimnasio_id', $gimnasiosIds)
+                ->where('estado', 1)
+                ->get();
+        } else {
+            $usuarios = \App\Models\User::with(['cliente.gimnasio'])->get();
+            $tiposMembresia = \App\Models\TipoMembresia::where('estado', 1)->get();
+        }
         
-        // Obtener datos necesarios para la vista
-        $usuarios = User::with(['cliente.gimnasio'])->get();
-        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
-        $metodosPago = MetodoPago::all();
+        $membresias = $query->orderBy('fecha_vencimiento', 'asc')->get();
+        $metodosPago = \App\Models\MetodoPago::all();
         
         // Datos para el selector de mes/año
         $meses = [
-            1 => 'Enero', 
-            2 => 'Febrero', 
-            3 => 'Marzo', 
-            4 => 'Abril', 
-            5 => 'Mayo', 
-            6 => 'Junio', 
-            7 => 'Julio', 
-            8 => 'Agosto', 
-            9 => 'Septiembre', 
-            10 => 'Octubre', 
-            11 => 'Noviembre', 
-            12 => 'Diciembre'
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         
-        // Generar años desde el actual hasta 3 años en el futuro
         $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
         $mes = $fechaActual->month;
         $anio = $fechaActual->year;
-        $mostrarActivas = true; // Variable para indicar que estamos mostrando las membresías activas
+        $mostrarActivas = true;
         $idUsuario = null;
         $mostrarTodos = false;
         $mostrarVencidas = false;
@@ -577,22 +802,53 @@ class MembresiaController extends Controller
         $usuarioSeleccionado = null;
         
         // Calcular estadísticas
-        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+        if ($dueno) {
+            $membresiasVencidasMes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->count();
             
-        // Membresías activas
-        $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            $membresiasActivas = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
+            ->count();
+            
+            $totalSaldosPendientes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->sum('saldo_pendiente');
+            
+            $membresiasPendientesPago = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->count();
+            
+            $usuariosConMembresias = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->distinct('id_usuario')
+            ->pluck('id_usuario');
+        } else {
+            $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+                ->whereMonth('fecha_vencimiento', $fechaActual->month)
+                ->whereYear('fecha_vencimiento', $fechaActual->year)
+                ->count();
+                
+            $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            
+            $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
+            $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
+            
+            $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
+        }
         
-        // Cálculo de saldos pendientes
-        $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
-        $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
-        
-        // Membresías sin renovar
-        $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
         $membresiasNoRenovadas = 0;
-        
         foreach ($usuariosConMembresias as $idUsuarioMem) {
             $ultimaMembresia = Membresia::where('id_usuario', $idUsuarioMem)
                 ->orderBy('fecha_vencimiento', 'desc')
@@ -636,44 +892,55 @@ class MembresiaController extends Controller
      */
     public function saldosPendientes()
     {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $dueno = \App\Models\DuenoGimnasio::where('user_id', $user->id)->first();
+        
         // Obtener fecha actual
         $fechaActual = now();
         
-        // Consultar membresías con saldo pendiente
+        // Inicializar la consulta base
         $query = Membresia::with(['usuario', 'tipoMembresia.gimnasio'])
-            ->where('saldo_pendiente', '>', 0)
-            ->orderBy('saldo_pendiente', 'desc'); // Ordenadas por monto pendiente descendente
+            ->where('saldo_pendiente', '>', 0);
             
-        $membresias = $query->get();
+        if ($dueno) {
+            // Obtener los IDs de los gimnasios asociados al dueño
+            $gimnasiosIds = $dueno->gimnasios->pluck('id_gimnasio');
+            
+            // Filtrar membresías que pertenecen a los gimnasios del dueño
+            $query->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            });
+            
+            // Filtrar usuarios y tipos de membresía
+            $usuarios = \App\Models\User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })->with(['cliente.gimnasio'])->get();
+            
+            $tiposMembresia = \App\Models\TipoMembresia::whereIn('gimnasio_id', $gimnasiosIds)
+                ->where('estado', 1)
+                ->get();
+        } else {
+            $usuarios = \App\Models\User::with(['cliente.gimnasio'])->get();
+            $tiposMembresia = \App\Models\TipoMembresia::where('estado', 1)->get();
+        }
         
-        // Obtener datos necesarios para la vista
-        $usuarios = User::with(['cliente.gimnasio'])->get();
-        $tiposMembresia = TipoMembresia::where('estado', 1)->get();
-        $metodosPago = MetodoPago::all();
+        $membresias = $query->orderBy('saldo_pendiente', 'desc')->get();
+        $metodosPago = \App\Models\MetodoPago::all();
         
         // Datos para el selector de mes/año
         $meses = [
-            1 => 'Enero', 
-            2 => 'Febrero', 
-            3 => 'Marzo', 
-            4 => 'Abril', 
-            5 => 'Mayo', 
-            6 => 'Junio', 
-            7 => 'Julio', 
-            8 => 'Agosto', 
-            9 => 'Septiembre', 
-            10 => 'Octubre', 
-            11 => 'Noviembre', 
-            12 => 'Diciembre'
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         
-        // Generar años desde el actual hasta 3 años en el futuro
         $anioActual = date('Y');
         $anios = range($anioActual - 2, $anioActual + 3);
         
         $mes = $fechaActual->month;
         $anio = $fechaActual->year;
-        $mostrarSaldosPendientes = true; // Variable para indicar que estamos mostrando membresías con saldo pendiente
+        $mostrarSaldosPendientes = true;
         $idUsuario = null;
         $mostrarTodos = false;
         $mostrarVencidas = false;
@@ -683,22 +950,53 @@ class MembresiaController extends Controller
         $usuarioSeleccionado = null;
         
         // Calcular estadísticas
-        $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+        if ($dueno) {
+            $membresiasVencidasMes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '<', $fechaActual)
             ->whereMonth('fecha_vencimiento', $fechaActual->month)
             ->whereYear('fecha_vencimiento', $fechaActual->year)
             ->count();
             
-        // Membresías activas
-        $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            $membresiasActivas = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->whereDate('fecha_vencimiento', '>=', $fechaActual)
+            ->count();
+            
+            $totalSaldosPendientes = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->sum('saldo_pendiente');
+            
+            $membresiasPendientesPago = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->where('saldo_pendiente', '>', 0)
+            ->count();
+            
+            $usuariosConMembresias = Membresia::whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                $q->whereIn('gimnasio_id', $gimnasiosIds);
+            })
+            ->distinct('id_usuario')
+            ->pluck('id_usuario');
+        } else {
+            $membresiasVencidasMes = Membresia::whereDate('fecha_vencimiento', '<', $fechaActual)
+                ->whereMonth('fecha_vencimiento', $fechaActual->month)
+                ->whereYear('fecha_vencimiento', $fechaActual->year)
+                ->count();
+                
+            $membresiasActivas = Membresia::whereDate('fecha_vencimiento', '>=', $fechaActual)->count();
+            
+            $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
+            $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
+            
+            $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
+        }
         
-        // Cálculo de saldos pendientes
-        $totalSaldosPendientes = Membresia::where('saldo_pendiente', '>', 0)->sum('saldo_pendiente');
-        $membresiasPendientesPago = Membresia::where('saldo_pendiente', '>', 0)->count();
-        
-        // Membresías sin renovar
-        $usuariosConMembresias = Membresia::distinct('id_usuario')->pluck('id_usuario');
         $membresiasNoRenovadas = 0;
-        
         foreach ($usuariosConMembresias as $idUsuarioMem) {
             $ultimaMembresia = Membresia::where('id_usuario', $idUsuarioMem)
                 ->orderBy('fecha_vencimiento', 'desc')

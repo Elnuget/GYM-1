@@ -6,6 +6,7 @@ use App\Models\Pago;
 use App\Models\Membresia;
 use App\Models\MetodoPago;
 use App\Models\User;
+use App\Models\DuenoGimnasio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,17 @@ class PagoController extends Controller
             'usuario', 
             'metodoPago'
         ]);
+
+        // Si el usuario es un dueño de gimnasio, filtrar solo sus pagos
+        if ($usuarioActual->hasRole('dueño')) {
+            $duenoGimnasio = DuenoGimnasio::where('user_id', $usuarioActual->id)->first();
+            if ($duenoGimnasio) {
+                $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                $query->whereHas('membresia.tipoMembresia', function($q) use ($gimnasiosIds) {
+                    $q->whereIn('gimnasio_id', $gimnasiosIds);
+                });
+            }
+        }
         
         // Aplicar filtro por usuario si está presente
         if ($idUsuario) {
@@ -59,14 +71,26 @@ class PagoController extends Controller
         // Estadísticas de pagos
         $estadisticasQuery = DB::table('pagos')
             ->join('metodos_pago', 'pagos.id_metodo_pago', '=', 'metodos_pago.id_metodo_pago')
-            ->select(
-                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "tarjeta_credito" THEN pagos.monto ELSE 0 END) as total_tarjeta'),
-                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "efectivo" THEN pagos.monto ELSE 0 END) as total_efectivo'),
-                DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "transferencia_bancaria" THEN pagos.monto ELSE 0 END) as total_transferencia'),
-                DB::raw('SUM(pagos.monto) as total_general'),
-                DB::raw('COUNT(CASE WHEN pagos.estado = "aprobado" THEN 1 END) as pagos_aprobados'),
-                DB::raw('COUNT(CASE WHEN pagos.estado = "pendiente" THEN 1 END) as pagos_pendientes')
-            );
+            ->join('membresias', 'pagos.id_membresia', '=', 'membresias.id_membresia')
+            ->join('tipos_membresia', 'membresias.id_tipo_membresia', '=', 'tipos_membresia.id_tipo_membresia');
+
+        // Si es dueño de gimnasio, filtrar las estadísticas
+        if ($usuarioActual->hasRole('dueño')) {
+            $duenoGimnasio = DuenoGimnasio::where('user_id', $usuarioActual->id)->first();
+            if ($duenoGimnasio) {
+                $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                $estadisticasQuery->whereIn('tipos_membresia.gimnasio_id', $gimnasiosIds);
+            }
+        }
+
+        $estadisticasQuery->select(
+            DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "tarjeta_credito" THEN pagos.monto ELSE 0 END) as total_tarjeta'),
+            DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "efectivo" THEN pagos.monto ELSE 0 END) as total_efectivo'),
+            DB::raw('SUM(CASE WHEN metodos_pago.nombre_metodo = "transferencia_bancaria" THEN pagos.monto ELSE 0 END) as total_transferencia'),
+            DB::raw('SUM(pagos.monto) as total_general'),
+            DB::raw('COUNT(CASE WHEN pagos.estado = "aprobado" THEN 1 END) as pagos_aprobados'),
+            DB::raw('COUNT(CASE WHEN pagos.estado = "pendiente" THEN 1 END) as pagos_pendientes')
+        );
 
         // Aplicar filtros si no se seleccionó "mostrar todos"
         if (!$mostrarTodos) {
@@ -87,13 +111,40 @@ class PagoController extends Controller
         $totalPagosAprobados = $estadisticas->pagos_aprobados ?? 0;
         $totalPagosPendientes = $estadisticas->pagos_pendientes ?? 0;
         
-        // Datos para los selectores de filtro
-        $usuarios = User::all();
+        // Obtener usuarios según el rol del usuario actual
+        if ($usuarioActual->hasRole('dueño')) {
+            $duenoGimnasio = DuenoGimnasio::where('user_id', $usuarioActual->id)->first();
+            if ($duenoGimnasio) {
+                $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                $usuarios = User::whereHas('cliente', function($q) use ($gimnasiosIds) {
+                    $q->whereIn('gimnasio_id', $gimnasiosIds);
+                })->get();
+            } else {
+                $usuarios = collect();
+            }
+        } else {
+            $usuarios = User::all();
+        }
         
-        // Obtener solo las membresías con saldo pendiente
-        $membresias = Membresia::with(['tipoMembresia', 'usuario'])
-            ->where('saldo_pendiente', '>', 0)
-            ->get();
+        // Obtener solo las membresías con saldo pendiente según el rol
+        if ($usuarioActual->hasRole('dueño')) {
+            $duenoGimnasio = DuenoGimnasio::where('user_id', $usuarioActual->id)->first();
+            if ($duenoGimnasio) {
+                $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                $membresias = Membresia::with(['tipoMembresia', 'usuario'])
+                    ->where('saldo_pendiente', '>', 0)
+                    ->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                        $q->whereIn('gimnasio_id', $gimnasiosIds);
+                    })
+                    ->get();
+            } else {
+                $membresias = collect();
+            }
+        } else {
+            $membresias = Membresia::with(['tipoMembresia', 'usuario'])
+                ->where('saldo_pendiente', '>', 0)
+                ->get();
+        }
             
         $metodosPago = MetodoPago::where('activo', true)->get();
         
@@ -153,6 +204,30 @@ class PagoController extends Controller
     public function store(Request $request)
     {
         try {
+            // Verificar si el usuario es dueño y si la membresía pertenece a uno de sus gimnasios
+            $user = auth()->user();
+            if ($user->hasRole('dueño')) {
+                $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+                if ($duenoGimnasio) {
+                    $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                    
+                    // Verificar si la membresía pertenece a uno de los gimnasios del dueño
+                    $membresia = Membresia::with('tipoMembresia')
+                        ->where('id_membresia', $request->id_membresia)
+                        ->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                            $q->whereIn('gimnasio_id', $gimnasiosIds);
+                        })
+                        ->first();
+                    
+                    if (!$membresia) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para crear pagos para esta membresía.'
+                        ], 403);
+                    }
+                }
+            }
+
             $validated = $request->validate([
                 'id_membresia' => 'required|exists:membresias,id_membresia',
                 'id_usuario' => 'required|exists:users,id',
@@ -258,6 +333,44 @@ class PagoController extends Controller
     public function update(Request $request, Pago $pago)
     {
         try {
+            // Verificar si el usuario es dueño y si la membresía pertenece a uno de sus gimnasios
+            $user = auth()->user();
+            if ($user->hasRole('dueño')) {
+                $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+                if ($duenoGimnasio) {
+                    $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                    
+                    // Verificar si la membresía actual pertenece a uno de los gimnasios del dueño
+                    $membresiaPago = $pago->membresia()->with('tipoMembresia')->first();
+                    $perteneceADueno = $membresiaPago && $membresiaPago->tipoMembresia && 
+                                     in_array($membresiaPago->tipoMembresia->gimnasio_id, $gimnasiosIds->toArray());
+                    
+                    if (!$perteneceADueno) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para modificar este pago.'
+                        ], 403);
+                    }
+                    
+                    // Si se está cambiando la membresía, verificar que la nueva también pertenezca al dueño
+                    if ($request->filled('id_membresia') && $request->id_membresia != $pago->id_membresia) {
+                        $nuevaMembresia = Membresia::with('tipoMembresia')
+                            ->where('id_membresia', $request->id_membresia)
+                            ->whereHas('tipoMembresia', function($q) use ($gimnasiosIds) {
+                                $q->whereIn('gimnasio_id', $gimnasiosIds);
+                            })
+                            ->first();
+                        
+                        if (!$nuevaMembresia) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'No tienes permiso para asignar el pago a esta membresía.'
+                            ], 403);
+                        }
+                    }
+                }
+            }
+
             $validated = $request->validate([
                 'id_membresia' => 'required|exists:membresias,id_membresia',
                 'id_usuario' => 'required|exists:users,id',
@@ -329,27 +442,50 @@ class PagoController extends Controller
     /**
      * Approve a pending payment.
      */
-    public function aprobar(Pago $pago)
+    public function aprobar(Request $request, Pago $pago)
     {
-        if ($pago->estado !== 'pendiente') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se pueden aprobar pagos pendientes'
-            ], 422);
-        }
-
-        DB::beginTransaction();
         try {
-            // Actualizar el pago
+            // Verificar si el usuario es dueño y si la membresía pertenece a uno de sus gimnasios
+            $user = auth()->user();
+            if ($user->hasRole('dueño')) {
+                $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+                if ($duenoGimnasio) {
+                    $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                    
+                    // Verificar si la membresía pertenece a uno de los gimnasios del dueño
+                    $membresiaPago = $pago->membresia()->with('tipoMembresia')->first();
+                    $perteneceADueno = $membresiaPago && $membresiaPago->tipoMembresia && 
+                                     in_array($membresiaPago->tipoMembresia->gimnasio_id, $gimnasiosIds->toArray());
+                    
+                    if (!$perteneceADueno) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para aprobar este pago.'
+                        ], 403);
+                    }
+                }
+            }
+
+            if ($pago->estado !== 'pendiente') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este pago ya no está pendiente de aprobación.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
             $pago->estado = 'aprobado';
             $pago->fecha_aprobacion = now();
             $pago->save();
 
             // Actualizar el saldo pendiente de la membresía
-            $membresia = Membresia::findOrFail($pago->id_membresia);
-            $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
-            $membresia->saldo_pendiente = max(0, $nuevoSaldo);
-            $membresia->save();
+            $membresia = $pago->membresia;
+            if ($membresia) {
+                $nuevoSaldo = $membresia->saldo_pendiente - $pago->monto;
+                $membresia->saldo_pendiente = max(0, $nuevoSaldo);
+                $membresia->save();
+            }
 
             DB::commit();
 
@@ -378,13 +514,36 @@ class PagoController extends Controller
     public function destroy(Pago $pago)
     {
         try {
+            // Verificar si el usuario es dueño y si la membresía pertenece a uno de sus gimnasios
+            $user = auth()->user();
+            if ($user->hasRole('dueño')) {
+                $duenoGimnasio = DuenoGimnasio::where('user_id', $user->id)->first();
+                if ($duenoGimnasio) {
+                    $gimnasiosIds = $duenoGimnasio->gimnasios->pluck('id_gimnasio');
+                    
+                    // Verificar si la membresía pertenece a uno de los gimnasios del dueño
+                    $membresiaPago = $pago->membresia()->with('tipoMembresia')->first();
+                    $perteneceADueno = $membresiaPago && $membresiaPago->tipoMembresia && 
+                                     in_array($membresiaPago->tipoMembresia->gimnasio_id, $gimnasiosIds->toArray());
+                    
+                    if (!$perteneceADueno) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No tienes permiso para eliminar este pago.'
+                        ], 403);
+                    }
+                }
+            }
+
             DB::beginTransaction();
 
-            // Si el pago estaba aprobado, revertir el saldo pendiente de la membresía
+            // Si el pago estaba aprobado, actualizar el saldo pendiente de la membresía
             if ($pago->estado === 'aprobado') {
-                $membresia = Membresia::findOrFail($pago->id_membresia);
-                $membresia->saldo_pendiente += $pago->monto;
-                $membresia->save();
+                $membresia = $pago->membresia;
+                if ($membresia) {
+                    $membresia->saldo_pendiente += $pago->monto;
+                    $membresia->save();
+                }
             }
 
             // Eliminar el comprobante si existe
@@ -398,10 +557,7 @@ class PagoController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pago eliminado correctamente',
-                'data' => [
-                    'membresia' => $membresia ?? null
-                ]
+                'message' => 'Pago eliminado correctamente'
             ]);
 
         } catch (\Exception $e) {

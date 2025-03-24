@@ -32,13 +32,17 @@
                     document.getElementById('visitas_permitidas').value = option.dataset.visitas;
                 }
                 
-                if (fechaCompra && duracion) {
-                    const date = new Date(fechaCompra);
-                    date.setDate(date.getDate() + parseInt(duracion));
-                    
-                    const mes = (date.getMonth() + 1).toString().padStart(2, '0');
-                    const dia = date.getDate().toString().padStart(2, '0');
-                    fechaVencimiento.value = `${date.getFullYear()}-${mes}-${dia}`;
+                // Calcular fecha de vencimiento
+                if (fechaVencimiento && fechaCompra) {
+                    if (this.showVisitasFields) {
+                        // Si es membresía por visitas, mantener la fecha actual
+                        fechaVencimiento.value = new Date().toISOString().split('T')[0];
+                    } else if (duracion) {
+                        // Para otros tipos de membresía, calcular según la duración
+                        const fecha = new Date(fechaCompra);
+                        fecha.setDate(fecha.getDate() + parseInt(duracion));
+                        fechaVencimiento.value = fecha.toISOString().split('T')[0];
+                    }
                 }
             }
         }
@@ -131,11 +135,22 @@
         <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
         <input type="hidden" id="saldo_pendiente" name="saldo_pendiente" value="0">
         
+        @php
+            // Obtener el cliente actual y su gimnasio
+            $cliente = auth()->user()->cliente;
+            $gimnasioId = $cliente ? $cliente->gimnasio_id : null;
+            
+            // Filtrar tipos de membresía por el gimnasio del cliente
+            $tiposMembresia = \App\Models\TipoMembresia::where('gimnasio_id', $gimnasioId)
+                ->where('estado', true)
+                ->get();
+        @endphp
+        
         <div>
             <x-input-label for="id_tipo_membresia" :value="__('Tipo de Membresía')" class="mb-1 text-sm font-medium text-gray-700" />
             <select id="id_tipo_membresia" name="id_tipo_membresia" required @change="calcularVencimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                 <option value="" selected disabled>Selecciona un tipo</option>
-                @foreach(\App\Models\TipoMembresia::all() as $tipo)
+                @foreach($tiposMembresia as $tipo)
                     <option value="{{ $tipo->id_tipo_membresia }}" 
                             data-precio="{{ $tipo->precio }}"
                             data-duracion="{{ $tipo->duracion_dias }}"
@@ -158,14 +173,14 @@
         <!-- Fecha de Compra -->
         <div>
             <x-input-label for="fecha_compra" :value="__('Fecha de Compra')" class="mb-1 text-sm font-medium text-gray-700" />
-            <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" @change="calcularVencimiento" required />
+            <x-text-input id="fecha_compra" class="block w-full" type="date" name="fecha_compra" :value="old('fecha_compra', date('Y-m-d'))" required @change="calcularVencimiento" />
             <x-input-error :messages="$errors->get('fecha_compra')" class="mt-1" />
         </div>
         
         <!-- Fecha de Vencimiento -->
         <div>
             <x-input-label for="fecha_vencimiento" :value="__('Fecha de Vencimiento')" class="mb-1 text-sm font-medium text-gray-700" />
-            <x-text-input id="fecha_vencimiento" class="block w-full" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento', date('Y-m-d'))" required />
+            <x-text-input id="fecha_vencimiento" class="block w-full bg-gray-100" type="date" name="fecha_vencimiento" :value="old('fecha_vencimiento')" required readonly />
             <x-input-error :messages="$errors->get('fecha_vencimiento')" class="mt-1" />
         </div>
         
