@@ -3,6 +3,10 @@
         isModalOpen: false,
         isEditModalOpen: false,
         currentAsistencia: null,
+        totalAsistencias: 0,
+        initCounter() {
+            this.totalAsistencias = document.querySelectorAll('tbody tr').length;
+        },
         toggleModal() {
             this.isModalOpen = !this.isModalOpen;
         },
@@ -19,14 +23,45 @@
                 });
             }
         }
-    }">
+    }" x-init="initCounter">
         <div class="py-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Header con gradiente -->
                 <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-lg shadow-lg">
-                    <h2 class="text-2xl font-semibold text-white">
-                        Asistencias
-                    </h2>
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-semibold text-white">
+                            @if(!$mostrarTodas)
+                                Asistencias del {{ \Carbon\Carbon::parse($fechaFiltro)->format('d/m/Y') }}
+                            @else
+                                Todas las Asistencias
+                            @endif
+                        </h2>
+                        <form action="{{ route('asistencias.index') }}" method="GET" class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <label for="fecha" class="text-white">Fecha:</label>
+                                <input type="date" 
+                                       id="fecha" 
+                                       name="fecha" 
+                                       value="{{ $fechaFiltro }}"
+                                       class="rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <button type="submit" 
+                                    class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                                Filtrar
+                            </button>
+                            @if(!$mostrarTodas)
+                                <a href="{{ route('asistencias.index', ['mostrar_todas' => true]) }}" 
+                                   class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                                    Mostrar Todas
+                                </a>
+                            @else
+                                <a href="{{ route('asistencias.index') }}" 
+                                   class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
+                                    Mostrar Día Actual
+                                </a>
+                            @endif
+                        </form>
+                    </div>
                     <button @click="toggleModal()" 
                             class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-lg transition duration-150 ease-in-out shadow-md backdrop-blur-sm">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,6 +69,34 @@
                         </svg>
                         Nueva Asistencia
                     </button>
+                </div>
+
+                <!-- Tarjeta de Contador de Asistencias -->
+                <div class="mb-6">
+                    <div class="bg-white overflow-hidden shadow-xl rounded-lg border border-emerald-100">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-emerald-500 rounded-md p-3">
+                                    <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">
+                                            @if(!$mostrarTodas)
+                                                Visitas del {{ \Carbon\Carbon::parse($fechaFiltro)->format('d/m/Y') }}
+                                            @else
+                                                Total de Visitas
+                                            @endif
+                                        </dt>
+                                        <dd class="mt-1 text-3xl font-semibold text-emerald-600" x-text="totalAsistencias">
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tabla con nuevo diseño -->
@@ -110,11 +173,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <!-- Paginación con estilo mejorado -->
-                <div class="mt-4">
-                    {{ $asistencias->links() }}
                 </div>
 
                 <!-- Modal de Nueva Asistencia -->

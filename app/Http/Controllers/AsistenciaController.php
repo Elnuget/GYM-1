@@ -23,7 +23,7 @@ class AsistenciaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // Obtener el usuario autenticado
         $user = auth()->user();
@@ -51,7 +51,15 @@ class AsistenciaController extends Controller
             $clientes = Cliente::all();
         }
 
-        $asistencias = $query->paginate(10);
+        // Verificar si se solicita mostrar todas las asistencias
+        $mostrarTodas = $request->has('mostrar_todas');
+        $fechaFiltro = $request->input('fecha', Carbon::today()->format('Y-m-d'));
+
+        if (!$mostrarTodas) {
+            $query->whereDate('fecha', $fechaFiltro);
+        }
+
+        $asistencias = $query->get();
         
         // Asegurarnos de que la duración y el estado se calculen correctamente
         foreach ($asistencias as $asistencia) {
@@ -69,7 +77,7 @@ class AsistenciaController extends Controller
             }
         }
         
-        return view('asistencias.index', compact('asistencias', 'clientes'));
+        return view('asistencias.index', compact('asistencias', 'clientes', 'mostrarTodas', 'fechaFiltro'));
     }
 
     /**
